@@ -15,8 +15,7 @@ const skillItems = [
   "剪口播",
   "口播成片",
   "导入字幕",
-  "自进化",
-  "高清化"
+  "自进化"
 ];
 
 function printHelp() {

@@ -1,28 +1,41 @@
 # chengfeng-videocut-skills
 
-> Codex / Claude Code 可用的口播视频剪辑 Skills 包。
+> 给 Codex / Claude Code 用的口播视频剪辑 Skills 包。
 
-这个仓库把我自己的视频剪辑流程拆成了一组 Skills：先剪口播、再处理字幕，最后把视频、字幕和素材组织成可审核、可修改、可导出的竖屏成片。
+这个项目把我的口播视频剪辑流程做成了一组可安装的 Skills：剪口播、出字幕、拆分镜、看预览、导出竖屏成片。
 
-它不是一个剪辑软件，也不是万能视频生成器。它更像是一个给 Agent 用的工作流：你把视频、字幕和素材放好，Agent 按 Skill 往下跑，人只需要看页面、提修改意见、确认结果。
+它不是一个通用剪辑软件，也不是一键生成所有类型视频的工具。它聚焦一类很具体的内容：口播教程、产品演示、知识讲解、结果展示。
 
-## 一句话安装
+核心思路是：把视频剪辑从“人在时间线上操作”，变成“Agent 可以读写的工作流”。人只需要看页面、提修改意见、确认结果。
 
-复制这条命令即可：
+## 官方来源
 
-```bash
-npx chengfeng-videocut-skills install
+本项目由 **chengfeng / AI产品自由** 原创并维护。
+
+```text
+GitHub: Agentchengfeng
+X: chengfeng240928
+小红书: AI产品自由
+公众号: AI产品自由
+B站: AI产品自由
+抖音 / 视频号: AI产品自由
 ```
 
-这个 npm 包只是一个很小的安装器。真正的 Skills 源码在 GitHub：
+原始仓库：
 
 ```text
 https://github.com/Agentchengfeng/chengfeng-videocut-skills
 ```
 
-安装器每次会从 GitHub 拉取最新版本，所以我只需要维护这个仓库。
+如果你使用、转载、翻译、二次发布或改造成自己的 Skill，请保留原作者、原始仓库链接、`LICENSE` 和 `NOTICE.md`。
 
-默认会安装到两个位置：
+## 一句话安装
+
+```bash
+npx chengfeng-videocut-skills install
+```
+
+默认安装到：
 
 ```text
 ~/.claude/skills/chengfeng-videocut-skills
@@ -41,70 +54,42 @@ npx chengfeng-videocut-skills install --target codex
 npx chengfeng-videocut-skills install --target claude
 ```
 
-指定安装目录：
+指定目录：
 
 ```bash
 npx chengfeng-videocut-skills install --dir ~/.codex/skills/chengfeng-videocut-skills
 ```
 
-## 它能做什么
+这个 npm 包只是一个很小的安装器。真正的 Skills 源码在 GitHub，每次安装都会从这里拉取最新版本：
 
 ```text
-原始口播视频
-    |
-    v
-剪口播
-转录、识别口误/重复/静音，生成审核页，确认后导出剪后视频
-    |
-    v
-导入字幕
-重新转录剪后视频，校对字幕，输出 SRT 或剪映草稿
-    |
-    v
-口播成片
-按字幕拆分镜，生成分镜页面和时间线预览，确认后导出 1080x1440 MP4
-    |
-    v
-高清化 / 自进化
-按需要做高清导出，或把你的偏好写回规则
+https://github.com/Agentchengfeng/chengfeng-videocut-skills
 ```
 
-当前最核心的是两条路径：
+## 最短使用方式
 
-1. `剪口播`：把一段口播原片剪成更干净的 A-roll。
-2. `口播成片`：把剪后视频、字幕和素材做成可发布的竖屏成片。
-
-## 典型用法
-
-### 1. 先剪口播
-
-把原始视频给 Agent，说：
+剪口播：
 
 ```text
 用 chengfeng-videocut-skills:剪口播，帮我处理这个口播视频。
 ```
 
-它会做这些事：
-
-- 提取音频
-- 调用火山引擎转录
-- 识别静音、口误、重复、卡顿
-- 生成审核网页
-- 用户确认后执行剪辑
-
-### 2. 再出字幕
-
-剪完后，说：
+生成字幕：
 
 ```text
 用 chengfeng-videocut-skills:导入字幕，给剪后视频生成字幕。
 ```
 
-它会重新基于剪后视频转录，不用原视频时间线反推，避免字幕和剪后视频错位。
+做口播成片：
 
-### 3. 做口播成片
+```text
+用 chengfeng-videocut-skills:口播成片，把这个文件夹里的视频和字幕做成 1080x1440 竖屏 MP4。
+先生成分镜页面给我确认，不要直接导出。
+```
 
-准备一个文件夹：
+## 推荐输入结构
+
+做成片时，把文件放在同一个项目目录：
 
 ```text
 project/
@@ -116,32 +101,41 @@ project/
     └── 结果页.png
 ```
 
-然后说：
+只要有 `source_cut.mp4` 和 `subtitles.srt` 就可以先跑。截图、产品页面、评论图、结果页可以放进 `assets/`，没有素材也可以先让 Agent 生成分镜页面，再补画面。
+
+## 工作流
 
 ```text
-用 chengfeng-videocut-skills:口播成片，把这个文件夹里的视频和字幕做成 1080x1440 竖屏 MP4。
-先生成分镜页面给我确认，不要直接导出。
-```
-
-这个 Skill 的默认顺序是：
-
-```text
-视频 + 字幕 + 素材
+原始口播视频
     |
     v
-分镜页面
-按字幕拆段，判断每段该用原视频、截图、页面、HTML 画面还是动画
+剪口播
+转录、识别口误/重复/静音，生成审核页，确认后导出剪后视频
+    |
+    v
+导入字幕
+基于剪后视频重新转录，校对字幕，输出 SRT 或剪映草稿
+    |
+    v
+口播成片
+按字幕拆分镜，判断每段画面来源，生成分镜页面
     |
     v
 时间线预览
-把所有画面按时间线放在一起，方便看节奏和错位
+把原视频、截图、HTML 画面、标注动画放到同一条时间线上检查
     |
     v
-合成导出
-确认后导出 1080x1440 竖屏 MP4
+最终导出
+确认后合成 1080x1440 竖屏 MP4
 ```
 
-这里的关键不是让用户手动剪时间线，而是把中间判断变成 Agent 能读写的页面。页面可以交给 Codex / Claude Code 检查，也可以由人直接看。
+这套流程的关键不是“让 AI 说自己会剪辑”，而是把中间判断做成页面：
+
+- 分镜页面：看每句口播该配什么画面。
+- 时间线预览：看整条片子的节奏和画面切换。
+- 最终播放器：把已确认的素材和动画合成导出。
+
+这些页面既方便人审核，也方便 Codex / Claude Code 继续检查和修改。
 
 ## Skill 清单
 
@@ -151,7 +145,6 @@ project/
 | `chengfeng-videocut-skills:剪口播` | 转录口播，识别口误、重复、静音，生成审核页 | 原始视频 | 剪后视频、审核页、删除清单 |
 | `chengfeng-videocut-skills:导入字幕` | 给剪后视频生成字幕，必要时推送剪映草稿 | 剪后视频、可选原稿 | SRT、剪映草稿 |
 | `chengfeng-videocut-skills:口播成片` | 生成分镜页面、时间线预览和最终竖屏 MP4 | 剪后视频、字幕、素材 | 分镜页、预览页、1080x1440 MP4 |
-| `chengfeng-videocut-skills:高清化` | 用 FFmpeg 做高清导出 | 视频文件 | 高清视频 |
 | `chengfeng-videocut-skills:自进化` | 把使用偏好沉淀回规则 | 用户反馈 | 更新后的规则 |
 
 ## 环境配置
@@ -178,7 +171,7 @@ cp .env.example .env
 VOLCENGINE_API_KEY=your_volcengine_api_key_here
 ```
 
-如果你只装到 Codex，对应目录是：
+如果只安装到 Codex，对应目录是：
 
 ```bash
 cd ~/.codex/skills/chengfeng-videocut-skills
@@ -210,9 +203,6 @@ chengfeng-videocut-skills/
 │   │   └── timeline-preview.html
 │   ├── references/
 │   └── scripts/
-├── 高清化/
-│   ├── SKILL.md
-│   └── scripts/
 └── 自进化/
     ├── SKILL.md
     └── README.md
@@ -227,43 +217,36 @@ memory/
 output/
 导入字幕/capcut-mate/
 口播成片/agents/
-*.mp4 / *.mov / *.wav / *.zip
+*.mp4 / *.mov / *.m4a / *.wav / *.zip
 ```
 
 这些是本地依赖、日志、视频素材或导出结果，不应该放进 GitHub。
 
+## 适合什么
+
+适合：
+
+- 中文口播视频
+- 教程、产品演示、知识讲解、结果展示
+- 已有口播视频和字幕，素材可以后补
+- 原视频、截图、网页画面、HTML 解释画面混合成片
+
+不优先解决：
+
+- 复杂真人多机位剪辑
+- 重度调色、混音和精细剪辑工程
+- 没有口播视频，只凭一句话生成完整大片
+- 把 Skill 包装成替代所有剪辑软件的通用工具
+
 ## npm 和 GitHub 的关系
 
-npm 包只负责提供这个命令：
+npm 包只负责提供安装命令：
 
 ```bash
 npx chengfeng-videocut-skills install
 ```
 
-执行后，它会从 GitHub 下载最新 Skills。也就是说：
-
-- GitHub 是源码和文档的真相源。
-- npm 是下载入口，方便在公众号、视频简介、聊天里只放一条命令。
-- 更新 Skill 内容时，通常只需要推 GitHub。
-- 只有安装器本身变了，才需要重新发布 npm。
-
-## 官方来源
-
-本项目由 **chengfeng / AI产品自由** 原创并维护。
-
-```text
-GitHub: Agentchengfeng
-X: chengfeng240928
-小红书 / 公众号 / B站 / 抖音 / 视频号: AI产品自由
-```
-
-原始仓库：
-
-```text
-https://github.com/Agentchengfeng/chengfeng-videocut-skills
-```
-
-如果你使用、转载、翻译、二次发布或改造成自己的 Skill，请保留原作者、原始仓库链接、`LICENSE` 和 `NOTICE.md`。
+GitHub 才是源码和文档的真相源。更新 Skill 内容时，通常只需要推 GitHub；只有安装器本身变了，才需要重新发布 npm。
 
 ## 协议
 
