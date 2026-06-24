@@ -17,10 +17,11 @@ if (!fs.existsSync(resultFile)) {
 }
 
 const result = JSON.parse(fs.readFileSync(resultFile, 'utf8'));
+const utterances = result.utterances || result.result?.utterances || [];
 
 // 提取所有字
 const allWords = [];
-for (const utterance of result.utterances) {
+for (const utterance of utterances) {
   if (utterance.words) {
     for (const word of utterance.words) {
       allWords.push({

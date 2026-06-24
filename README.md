@@ -159,6 +159,8 @@ cp .env.example .env
 
 ```text
 VOLCENGINE_API_KEY=your_volcengine_api_key_here
+# 可选，默认使用豆包录音文件识别模型2.0
+VOLCENGINE_RESOURCE_ID=volc.seedasr.auc
 ```
 
 如果只安装到 Codex，对应目录是：
