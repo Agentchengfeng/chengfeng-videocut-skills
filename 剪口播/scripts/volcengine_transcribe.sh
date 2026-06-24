@@ -1,29 +1,39 @@
 #!/bin/bash
-#
-# 火山引擎语音识别（异步模式）
+# 火山引擎语音识别（大模型录音文件识别 v3 异步模式）
 #
 # 用法: ./volcengine_transcribe.sh <audio_url>
 # 输出: volcengine_result.json
 #
 
-AUDIO_URL="$1"
+set -euo pipefail
+
+AUDIO_URL="${1:-}"
 
 if [ -z "$AUDIO_URL" ]; then
   echo "❌ 用法: ./volcengine_transcribe.sh <audio_url>"
   exit 1
 fi
 
-# 获取 API Key
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$(dirname "$(dirname "$SCRIPT_DIR")")/.env"
 
-if [ ! -f "$ENV_FILE" ]; then
-  echo "❌ 找不到 $ENV_FILE"
-  echo "请创建: cp .env.example .env 并填入 VOLCENGINE_API_KEY"
+get_env_value() {
+  local key="$1"
+  if [ ! -f "$ENV_FILE" ]; then
+    return 0
+  fi
+
+  grep -E "^${key}=" "$ENV_FILE" | tail -1 | cut -d'=' -f2- | sed 's/^["'\'']//; s/["'\'']$//'
+}
+
+API_KEY="${VOLCENGINE_API_KEY:-$(get_env_value VOLCENGINE_API_KEY || true)}"
+RESOURCE_ID="${VOLCENGINE_RESOURCE_ID:-$(get_env_value VOLCENGINE_RESOURCE_ID || true)}"
+RESOURCE_ID="${RESOURCE_ID:-volc.seedasr.auc}"
+
+if [ -z "$API_KEY" ] || [ "$API_KEY" = "your_volcengine_api_key_here" ]; then
+  echo "❌ 请设置 VOLCENGINE_API_KEY，或在 $ENV_FILE 填入有效的 VOLCENGINE_API_KEY"
   exit 1
 fi
-
-API_KEY=$(grep VOLCENGINE_API_KEY "$ENV_FILE" | cut -d'=' -f2)
 
 echo "🎤 提交火山引擎转录任务..."
 echo "音频 URL: $AUDIO_URL"
@@ -37,27 +47,82 @@ if [ -f "$DICT_FILE" ]; then
   echo "📖 加载热词: $(cat "$DICT_FILE" | grep -v '^$' | wc -l | tr -d ' ') 个"
 fi
 
-# 构建请求体
-if [ -n "$HOT_WORDS" ]; then
-  REQUEST_BODY="{\"url\": \"$AUDIO_URL\", \"hot_words\": [$HOT_WORDS]}"
-else
-  REQUEST_BODY="{\"url\": \"$AUDIO_URL\"}"
-fi
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+TASK_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
+SUBMIT_BODY="$TMP_DIR/submit_body.json"
+SUBMIT_HEADERS="$TMP_DIR/submit_headers.txt"
+SUBMIT_RESPONSE="$TMP_DIR/submit_response.json"
+QUERY_HEADERS="$TMP_DIR/query_headers.txt"
+QUERY_RESPONSE_FILE="$TMP_DIR/query_response.json"
+
+node - "$AUDIO_URL" "$HOT_WORDS" > "$SUBMIT_BODY" <<'NODE'
+const audioUrl = process.argv[2];
+const hotWordsRaw = process.argv[3] || "";
+
+const body = {
+  user: { uid: "codex-videocut" },
+  audio: {
+    format: "mp3",
+    url: audioUrl
+  },
+  request: {
+    model_name: "bigmodel",
+    enable_itn: true,
+    enable_punc: true,
+    show_utterances: true
+  }
+};
+
+if (hotWordsRaw.trim()) {
+  const hotwords = hotWordsRaw
+    .split(",")
+    .map((item) => item.trim().replace(/^"|"$/g, ""))
+    .filter(Boolean)
+    .map((word) => ({ word }));
+
+  if (hotwords.length) {
+    body.request.corpus = {
+      context: JSON.stringify({ hotwords })
+    };
+  }
+}
+
+process.stdout.write(JSON.stringify(body));
+NODE
 
 # 步骤1: 提交任务
-SUBMIT_RESPONSE=$(curl -s -L -X POST "https://openspeech.bytedance.com/api/v1/vc/submit?language=zh-CN&use_itn=True&use_capitalize=True&max_lines=1&words_per_line=15" \
-  -H "Accept: */*" \
-  -H "x-api-key: $API_KEY" \
-  -H "Connection: keep-alive" \
-  -H "content-type: application/json" \
-  -d "$REQUEST_BODY")
+curl -sS -L -D "$SUBMIT_HEADERS" -o "$SUBMIT_RESPONSE" -X POST "https://openspeech.bytedance.com/api/v3/auc/bigmodel/submit" \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: $API_KEY" \
+  -H "X-Api-Resource-Id: $RESOURCE_ID" \
+  -H "X-Api-Request-Id: $TASK_ID" \
+  -H "X-Api-Sequence: -1" \
+  --data-binary "@$SUBMIT_BODY"
 
-# 提取任务 ID
-TASK_ID=$(echo "$SUBMIT_RESPONSE" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+get_header_value() {
+  local file="$1"
+  local key="$2"
+  awk -v key="$(printf '%s' "$key" | tr '[:upper:]' '[:lower:]')" '{
+    line = $0
+    gsub("\r", "", line)
+    lower = tolower(line)
+    if (index(lower, key ":") == 1) {
+      sub("^[^:]+:[[:space:]]*", "", line)
+      print line
+      exit
+    }
+  }' "$file"
+}
 
-if [ -z "$TASK_ID" ]; then
+SUBMIT_STATUS="$(get_header_value "$SUBMIT_HEADERS" "X-Api-Status-Code")"
+SUBMIT_MESSAGE="$(get_header_value "$SUBMIT_HEADERS" "X-Api-Message")"
+
+if [ "$SUBMIT_STATUS" != "20000000" ]; then
   echo "❌ 提交失败，响应:"
-  echo "$SUBMIT_RESPONSE"
+  echo "status=$SUBMIT_STATUS message=$SUBMIT_MESSAGE"
+  cat "$SUBMIT_RESPONSE"
   exit 1
 fi
 
@@ -72,31 +137,43 @@ while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
   sleep 5
   ATTEMPT=$((ATTEMPT + 1))
 
-  QUERY_RESPONSE=$(curl -s -L -X GET "https://openspeech.bytedance.com/api/v1/vc/query?id=$TASK_ID" \
-    -H "Accept: */*" \
-    -H "x-api-key: $API_KEY" \
-    -H "Connection: keep-alive")
+  curl -sS -L -D "$QUERY_HEADERS" -o "$QUERY_RESPONSE_FILE" -X POST "https://openspeech.bytedance.com/api/v3/auc/bigmodel/query" \
+    -H "Content-Type: application/json" \
+    -H "X-Api-Key: $API_KEY" \
+    -H "X-Api-Resource-Id: $RESOURCE_ID" \
+    -H "X-Api-Request-Id: $TASK_ID" \
+    --data-binary '{}'
 
   # 检查状态
-  STATUS=$(echo "$QUERY_RESPONSE" | grep -o '"code":[0-9]*' | head -1 | cut -d':' -f2)
+  STATUS="$(get_header_value "$QUERY_HEADERS" "X-Api-Status-Code")"
+  MESSAGE="$(get_header_value "$QUERY_HEADERS" "X-Api-Message")"
 
-  if [ "$STATUS" = "0" ]; then
-    # 成功完成
-    echo "$QUERY_RESPONSE" > volcengine_result.json
+  if [ "$STATUS" = "20000000" ]; then
+    cp "$QUERY_RESPONSE_FILE" volcengine_result.json
     echo "✅ 转录完成，已保存 volcengine_result.json"
 
-    # 显示统计
-    UTTERANCES=$(echo "$QUERY_RESPONSE" | grep -o '"text"' | wc -l)
+    UTTERANCES=$(node - <<'NODE'
+const fs = require('fs');
+const result = JSON.parse(fs.readFileSync('volcengine_result.json', 'utf8'));
+const utterances = result.utterances || result.result?.utterances || [];
+console.log(utterances.length);
+NODE
+)
     echo "📝 识别到 $UTTERANCES 段语音"
     exit 0
-  elif [ "$STATUS" = "1000" ]; then
+  elif [ "$STATUS" = "20000003" ]; then
+    cp "$QUERY_RESPONSE_FILE" volcengine_result.json
+    echo "⚠️ 未检测到有效人声，已保存 volcengine_result.json"
+    exit 0
+  elif [ "$STATUS" = "20000001" ] || [ "$STATUS" = "20000002" ]; then
     # 处理中
     echo -n "."
   else
     # 其他错误
     echo ""
     echo "❌ 转录失败，响应:"
-    echo "$QUERY_RESPONSE"
+    echo "status=$STATUS message=$MESSAGE"
+    cat "$QUERY_RESPONSE_FILE"
     exit 1
   fi
 done
