@@ -49,25 +49,33 @@ node "$ENSURE" --install-if-missing --json
 [真实视频]
     |
     v
-[云端逐词转录 + 稳定 wordIds]
+[产品 Runtime 云端逐词转录]
     |
     v
 [Product project create]
 ```
 
-若 Runtime 尚未提供原视频转录命令，只能使用当前环境已经获准的**云端 ASR** 生成任务目录内的逐词候选；本流程禁止回退到本地 ASR。没有可用云端 ASR 时明确报告 `missing_cloud_transcription_adapter`，不要打开 Studio，也不要伪造 transcript。
+优先使用产品 Runtime 的原视频转录命令；若尚未提供，改用当前环境已经获准的**云端 ASR** 生成任务目录内的逐词候选。本流程禁止回退到本地 ASR。没有可用转录能力时明确报告 `missing_cloud_transcription_adapter`，不要打开 Studio，也不要伪造 transcript。
 
-新任务由 Product 原子创建并准备；Skill 不得先写 `project.json`：
+转录时固定传递 --language zh-CN；模型按产品 Runtime 默认，无需额外指定：
+
+```bash
+node "$VC" transcribe run "$taskLocalVideo" \
+  --language zh-CN \
+  --json
+```
+
+转录成功后，新任务由 Product 原子创建并准备；Skill 不得先写 `project.json`：
 
 ```bash
 node "$VC" project create "$jobDir" \
   --video "$taskLocalVideo" \
-  --transcript "$taskLocalTranscript" \
+  --transcript "$transcriptFile" \
   --aspect-ratio "$aspectRatio" \
   --json
 ```
 
-`--video` 与 `--transcript` 必须是任务目录内的真实文件；`aspectRatio` 只能是 `3:4 / 4:3 / 16:9`，未指定时按产品默认 `4:3`。已有规范项目先用 `inspect` 确认并复用；不要重复创建 `projectId`。只有恢复 `cut_prepare_running` 或明确刷新已有任务时才使用 `project prepare`。
+`--video` 与 `--transcript` 必须是任务目录内的真实文件；`--aspect-ratio` 只能是 `3:4 / 4:3 / 16:9`，未指定时不传该参数让产品使用默认 `4:3`。已有规范项目先用 `inspect` 确认并复用；不要重复创建 `projectId`。只有恢复 `cut_prepare_running` 或明确刷新已有任务时才使用 `project prepare`。
 
 `project create` 是本地真实视频和云端逐词稿进入 Product 的直接入口；不经过素材库、material-library、上传会话、导入 flow 或额外 Skill。创建成功后仍处于 preflight：在所有 state readback 和 Cuts API 前，让 Product 声明式确保常驻服务；脚本只调用 `service ensure --json`，不自行管理进程：
 
