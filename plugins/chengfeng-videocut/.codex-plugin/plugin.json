@@ -1,6 +1,6 @@
 {
   "name": "chengfeng-videocut",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Four task-facing chengfeng-videocut Skills: two talking-head workflows, safe bug reporting, and Marketplace update checks. Shared product boundaries are internal references, not a user-facing Skill.",
   "author": {
     "name": "Chengfeng",

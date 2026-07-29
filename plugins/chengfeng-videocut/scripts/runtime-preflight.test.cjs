@@ -24,6 +24,7 @@ const capabilities = {
   managedStudioService: true,
   serviceParentProcessIndependent: true,
   serviceCrashRestart: true,
+  transcriptOperations: ["playback", "retranscribe", "align", "dictionary", "regroup", "correct"],
 };
 
 function writeExecutable(file, body) {
@@ -31,7 +32,7 @@ function writeExecutable(file, body) {
   fs.writeFileSync(file, body, { mode: 0o755 });
 }
 
-function fakeRuntime(file, healthy = true, runtimeCapabilities = capabilities, version = "0.2.0") {
+function fakeRuntime(file, healthy = true, runtimeCapabilities = capabilities, version = "0.2.1") {
   writeExecutable(file, `#!/bin/sh
 if [ "$1" = "--version" ]; then echo "chengfeng-videocut ${version}"; exit 0; fi
 if [ "$1" = "doctor" ]; then echo '${JSON.stringify({ schemaVersion: 1, product: "chengfeng-videocut", command: "doctor", ok: true, data: { healthy, ...(runtimeCapabilities ? { capabilities: runtimeCapabilities } : {}) } })}'; exit 0; fi
@@ -91,6 +92,20 @@ try {
   assert.equal(incompatible.status, 14);
   assert.equal(JSON.parse(incompatible.stdout).error.code, "runtime_capability_missing");
 
+  const missingTranscriptOperationsBin = path.join(tmp, "missing-transcript-operations", "chengfeng-videocut");
+  fakeRuntime(missingTranscriptOperationsBin, true, {
+    ...capabilities,
+    transcriptOperations: undefined,
+  });
+  const missingTranscriptOperations = run(["--json"], {
+    CHENGFENG_VIDEOCUT_BIN: missingTranscriptOperationsBin,
+  });
+  assert.equal(missingTranscriptOperations.status, 14);
+  assert.equal(
+    JSON.parse(missingTranscriptOperations.stdout).error.code,
+    "runtime_capability_missing",
+  );
+
   const oldCapableBin = path.join(tmp, "old-capable", "chengfeng-videocut");
   fakeRuntime(oldCapableBin, true, capabilities, "0.1.1");
   const oldCapable = run(["--json"], { CHENGFENG_VIDEOCUT_BIN: oldCapableBin });
@@ -122,7 +137,7 @@ try {
   assert.equal(fs.existsSync(mustNotRun), false, "an existing incompatible Runtime must never be overwritten");
 
   const installHome = path.join(tmp, "installed-home");
-  const releaseDirectory = path.join(tmp, "release-v0.2.0");
+  const releaseDirectory = path.join(tmp, "release-v0.2.1");
   const observedReleaseBase = path.join(tmp, "observed-release-base");
   writeRelease(releaseDirectory, `#!/bin/sh
 set -eu
@@ -131,7 +146,7 @@ target="$CHENGFENG_VIDEOCUT_HOME/bin/chengfeng-videocut"
 mkdir -p "$(dirname "$target")"
 cat > "$target" <<'EOF'
 #!/bin/sh
-if [ "$1" = "--version" ]; then echo "chengfeng-videocut 0.2.0"; exit 0; fi
+if [ "$1" = "--version" ]; then echo "chengfeng-videocut 0.2.1"; exit 0; fi
 if [ "$1" = "doctor" ]; then echo '${JSON.stringify({ schemaVersion: 1, product: "chengfeng-videocut", command: "doctor", ok: true, data: { healthy: true, capabilities } })}'; exit 0; fi
 exit 2
 EOF
@@ -144,7 +159,7 @@ chmod +x "$target"
   });
   assert.equal(installed.status, 0, installed.stderr);
   assert.equal(JSON.parse(installed.stdout).installed, true);
-  assert.match(installed.stderr, /v0\.2\.0/);
+  assert.match(installed.stderr, /v0\.2\.1/);
   assert.equal(fs.readFileSync(observedReleaseBase, "utf8"), `file://${releaseDirectory}`);
 
   const unavailableHome = path.join(tmp, "unavailable-home");
@@ -194,6 +209,7 @@ chmod +x "$target"
     missing: 10,
     unhealthy: 11,
     incompatible: 14,
+    transcriptOperationsRequired: true,
     oldVersionRejected: true,
     foregroundOnlyRejected: true,
     incompatibleNotOverwritten: true,

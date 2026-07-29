@@ -1,11 +1,11 @@
 {
   "name": "chengfeng-videocut-codex-plugin",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "bun build server.mjs --target=node --format=esm --outfile=dist/server.mjs",
-    "test": "node scripts/runtime-preflight.test.cjs && node scripts/ensure-running.test.cjs && node scripts/studio-capability.test.cjs && node scripts/bug-report.test.cjs && node scripts/skill-paths.test.cjs && node scripts/business-workflow-contract.test.cjs && node scripts/check-plugin-update.test.cjs && node scripts/mcp-smoke-test.mjs"
+    "test": "node scripts/runtime-preflight.test.cjs && node scripts/ensure-running.test.cjs && node scripts/studio-capability.test.cjs && node scripts/bug-report.test.cjs && node scripts/skill-paths.test.cjs && node scripts/business-workflow-contract.test.cjs && node scripts/ai-term-dictionary.test.cjs && node scripts/check-plugin-update.test.cjs && node scripts/mcp-smoke-test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "1.0.1",

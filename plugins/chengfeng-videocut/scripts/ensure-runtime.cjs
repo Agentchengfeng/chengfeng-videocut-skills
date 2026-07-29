@@ -93,6 +93,10 @@ function loadRuntimeContract(contractPath = CONTRACT_PATH) {
     capabilities.serviceOperations.length > 0 &&
     capabilities.serviceOperations.every((operation) => typeof operation === "string") &&
     new Set(capabilities.serviceOperations).size === capabilities.serviceOperations.length &&
+    Array.isArray(capabilities.transcriptOperations) &&
+    capabilities.transcriptOperations.length > 0 &&
+    capabilities.transcriptOperations.every((operation) => typeof operation === "string") &&
+    new Set(capabilities.transcriptOperations).size === capabilities.transcriptOperations.length &&
     capabilities.managedStudioService === true &&
     capabilities.serviceParentProcessIndependent === true &&
     capabilities.serviceCrashRestart === true;
@@ -126,7 +130,10 @@ function supportsRequiredCapabilities(doctor, required = RUNTIME_CONTRACT.capabi
       capabilities.editListOperations.includes(operation)) &&
     Array.isArray(capabilities?.serviceOperations) &&
     required.serviceOperations.every((operation) =>
-      capabilities.serviceOperations.includes(operation));
+      capabilities.serviceOperations.includes(operation)) &&
+    Array.isArray(capabilities?.transcriptOperations) &&
+    required.transcriptOperations.every((operation) =>
+      capabilities.transcriptOperations.includes(operation));
 }
 
 function isExecutable(file) {
