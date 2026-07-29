@@ -41,13 +41,13 @@ $chengfeng-videocut:chengfeng-check-videocut-updates
 
 共同边界只存在于 `references/runtime-and-product-contract.md` 与 `references/business-workflow-contract.md`。普通 reference 没有 `SKILL.md`、公开 ID 或 UI 卡片，不占用用户入口。
 
-两个业务 Skill 共用 `scripts/ensure-runtime.cjs`、`scripts/ensure-running.cjs` 和 `runtime-requirements.json`。Plugin package `0.5.1` 消费 Runtime compatibility contract `0.2.0`：只接受 Runtime 0.2.0+ 与声明的 EDL、常驻 service 能力；缺失时从精确的 `v0.2.0` Release 获取安装器和校验清单，校验后安装并执行 doctor。随后由 Product `service ensure --json` 幂等安装或恢复 macOS 用户服务；Plugin 不直接使用 `launchctl`、`nohup` 或 foreground 后台进程。Release 不存在、资产不完整或服务身份不匹配时安全停止，不会安装或覆盖旧 Runtime。Studio 只在人工审核状态且通过 `ensure-studio.cjs` 顶层视图能力门禁后打开。
+两个业务 Skill 共用 `scripts/ensure-runtime.cjs`、`scripts/ensure-running.cjs` 和 `runtime-requirements.json`。Plugin package `0.5.2` 消费 Runtime compatibility contract `0.2.1`：只接受 Runtime 0.2.1+ 与声明的 EDL、常驻 service、逐词稿操作能力；缺失时从精确的 `v0.2.1` Release 获取安装器和校验清单，校验后安装并执行 doctor。随后由 Product `service ensure --json` 幂等安装或恢复 macOS 用户服务；Plugin 不直接使用 `launchctl`、`nohup` 或 foreground 后台进程。Release 不存在、资产不完整或服务身份不匹配时安全停止，不会安装或覆盖旧 Runtime。Studio 只在人工审核状态且通过 `ensure-studio.cjs` 顶层视图能力门禁后打开。
 
 `chengfeng-report-videocut-bug` 不安装 Runtime、不启动 Studio，也不改项目。它只生成脱敏 Issue 草稿，用户确认同一份正文后才调用 GitHub CLI；没有明确 Issue URL 就不宣称上报成功。
 
 `chengfeng-check-videocut-updates` 的 `--inspect` 不 refresh；用户明确说检查更新后，它只对 Git Marketplace 运行官方 `codex plugin marketplace upgrade` 并比较 installed/available。本地 Marketplace 返回 `marketplace_not_refreshable`。官方 CLI 没有独立 stage：refresh 后的 snapshot 是唯一检查来源。激活前必须有 40-hex immutable commit、发布者 SHA-256 与 snapshot 内可重算的同一包清单哈希；裸 semver/tag 一律不可信。当前公开基线缺这些证明时返回 `update_metadata_untrusted`，不下载、不调用 `plugin add`。用户明确确认且传回所见 version/ref/SHA-256 后才以官方 `codex plugin add` 激活；随后必须从 installed cache 复读 version/ref/checksum 并重算 bundle inventory digest，任一不可观察或不一致即 `plugin_activation_unsupported`。失败绝不删除 cache、复制目录或更新 Runtime/项目。
 
-Plugin 是独立的 `0.5.1` 版本；`runtime-requirements.json` 仍要求 Product Runtime `0.2.0`。两者不能互相替代。
+Plugin 是独立的 `0.5.2` 版本；`runtime-requirements.json` 仍要求 Product Runtime `0.2.1`。两者不能互相替代。
 
 ## 开发验证
 

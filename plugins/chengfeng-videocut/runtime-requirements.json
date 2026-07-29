@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "product": "chengfeng-videocut",
   "repository": "Agentchengfeng/chengfeng-videocut",
-  "releaseTag": "v0.2.0",
-  "releaseVersion": "0.2.0",
-  "minimumRuntimeVersion": "0.2.0",
+  "releaseTag": "v0.2.1",
+  "releaseVersion": "0.2.1",
+  "minimumRuntimeVersion": "0.2.1",
   "installerAsset": "install.sh",
   "checksumAsset": "SHA256SUMS.txt",
   "studioCapabilities": {
@@ -45,6 +45,14 @@
     ],
     "managedStudioService": true,
     "serviceParentProcessIndependent": true,
-    "serviceCrashRestart": true
+    "serviceCrashRestart": true,
+    "transcriptOperations": [
+      "playback",
+      "retranscribe",
+      "align",
+      "dictionary",
+      "regroup",
+      "correct"
+    ]
   }
 }

@@ -36,7 +36,7 @@ try {
   const readyBin = path.join(tmp, "ready", "chengfeng-videocut");
   writeExecutable(readyBin, `#!/bin/sh
 printf '%s\n' "$*" > "${argsFile}"
-printf '%s\n' '{"schemaVersion":1,"product":"chengfeng-videocut","command":"service.ensure","ok":true,"data":{"serviceApiVersion":1,"action":"ensure","state":"running","ready":true,"healthy":true,"configured":true,"runtimeMode":"launchd","productVersion":"0.2.0","studioBuildId":"build-123","pid":1234,"url":"http://127.0.0.1:5190/","identity":{"product":"chengfeng-videocut","productVersion":"0.2.0","pid":1234,"runtimeMode":"launchd","studioBuildId":"build-123"}}}'
+printf '%s\n' '{"schemaVersion":1,"product":"chengfeng-videocut","command":"service.ensure","ok":true,"data":{"serviceApiVersion":1,"action":"ensure","state":"running","ready":true,"healthy":true,"configured":true,"runtimeMode":"launchd","productVersion":"0.2.1","studioBuildId":"build-123","pid":1234,"url":"http://127.0.0.1:5190/","identity":{"product":"chengfeng-videocut","productVersion":"0.2.1","pid":1234,"runtimeMode":"launchd","studioBuildId":"build-123"}}}'
 `);
   const ready = run(readyBin);
   assert.equal(ready.status, 0, ready.stderr);
@@ -45,7 +45,7 @@ printf '%s\n' '{"schemaVersion":1,"product":"chengfeng-videocut","command":"serv
 
   const foregroundBin = path.join(tmp, "foreground", "chengfeng-videocut");
   writeExecutable(foregroundBin, `#!/bin/sh
-printf '%s\n' '{"schemaVersion":1,"product":"chengfeng-videocut","command":"service.ensure","ok":true,"data":{"serviceApiVersion":1,"action":"ensure","state":"running","ready":true,"healthy":true,"configured":true,"runtimeMode":"foreground","productVersion":"0.2.0","studioBuildId":"build-4321","pid":4321,"url":"http://127.0.0.1:5190/","identity":{"product":"chengfeng-videocut","productVersion":"0.2.0","pid":4321,"runtimeMode":"foreground","studioBuildId":"build-4321"}}}'
+printf '%s\n' '{"schemaVersion":1,"product":"chengfeng-videocut","command":"service.ensure","ok":true,"data":{"serviceApiVersion":1,"action":"ensure","state":"running","ready":true,"healthy":true,"configured":true,"runtimeMode":"foreground","productVersion":"0.2.1","studioBuildId":"build-4321","pid":4321,"url":"http://127.0.0.1:5190/","identity":{"product":"chengfeng-videocut","productVersion":"0.2.1","pid":4321,"runtimeMode":"foreground","studioBuildId":"build-4321"}}}'
 `);
   const foreground = run(foregroundBin);
   assert.equal(foreground.status, 21);
@@ -62,7 +62,7 @@ exit 6
 
   const forgedBin = path.join(tmp, "forged", "chengfeng-videocut");
   writeExecutable(forgedBin, `#!/bin/sh
-printf '%s\n' '{"schemaVersion":1,"product":"another-product","command":"service.ensure","ok":true,"data":{"serviceApiVersion":1,"action":"ensure","state":"running","ready":true,"healthy":true,"configured":true,"runtimeMode":"launchd","productVersion":"0.2.0","studioBuildId":"build-123","pid":1234,"url":"http://127.0.0.1:5190/","identity":{"product":"chengfeng-videocut","productVersion":"0.2.0","pid":1234,"runtimeMode":"launchd","studioBuildId":"build-123"}}}'
+printf '%s\n' '{"schemaVersion":1,"product":"another-product","command":"service.ensure","ok":true,"data":{"serviceApiVersion":1,"action":"ensure","state":"running","ready":true,"healthy":true,"configured":true,"runtimeMode":"launchd","productVersion":"0.2.1","studioBuildId":"build-123","pid":1234,"url":"http://127.0.0.1:5190/","identity":{"product":"chengfeng-videocut","productVersion":"0.2.1","pid":1234,"runtimeMode":"launchd","studioBuildId":"build-123"}}}'
 `);
   const forged = run(forgedBin);
   assert.equal(forged.status, 21);

@@ -49,7 +49,7 @@ async function run() {
   assert.equal(inspectManifest({
     schemaVersion: 1,
     product: "chengfeng-videocut",
-    studioVersion: "0.2.0",
+    studioVersion: "0.2.1",
     features: {
       topLevelViews: ["storyboard", "preview", "koubo"],
       legacyWorkbenchPanel: false,
@@ -61,7 +61,7 @@ async function run() {
   const unmanaged = inspectManifest({
     schemaVersion: 1,
     product: "chengfeng-videocut",
-    studioVersion: "0.2.0",
+    studioVersion: "0.2.1",
     features: {
       topLevelViews: ["storyboard", "preview", "koubo"],
       legacyWorkbenchPanel: false,
@@ -72,7 +72,7 @@ async function run() {
   const missingOperations = inspectManifest({
     schemaVersion: 1,
     product: "chengfeng-videocut",
-    studioVersion: "0.2.0",
+    studioVersion: "0.2.1",
     features: {
       topLevelViews: ["storyboard", "preview", "koubo"],
       legacyWorkbenchPanel: false,
@@ -84,7 +84,7 @@ async function run() {
   const incompleteViews = inspectManifest({
     schemaVersion: 1,
     product: "chengfeng-videocut",
-    studioVersion: "0.2.0",
+    studioVersion: "0.2.1",
     features: {
       topLevelViews: ["koubo"],
       legacyWorkbenchPanel: false,
@@ -128,7 +128,7 @@ async function run() {
       body: JSON.stringify({
         schemaVersion: 1,
         product: "chengfeng-videocut",
-        studioVersion: "0.2.0",
+        studioVersion: "0.2.1",
         features: {
           topLevelViews: ["storyboard", "preview", "koubo"],
           legacyWorkbenchPanel: false,
@@ -141,7 +141,7 @@ async function run() {
     const result = await inspectStudio(origin, "koubo");
     assert.equal(result.ok, true);
     assert.equal(result.mode, "manifest");
-    assert.equal(result.studioVersion, "0.2.0");
+    assert.equal(result.studioVersion, "0.2.1");
     assert.equal(result.managedTimelineEditing, true);
   });
 

@@ -33,33 +33,39 @@
 | 正确写法 | 常见误识别 |
 | --- | --- |
 | Grok | grok / Clock / Glock / Gokul / Croc / 格罗克 |
-| Codex | CodeX / codex / Code X / codecs |
+| Codex | CodeX / codex / Code X / codecs / Codax |
 | Claude | claude / Cloud / Clode / 克劳德 |
-| ChatGPT | chatgpt / Chat GPT / GPT / 聊天 GPT |
+| ChatGPT | chatgpt / Chat GPT |
 | GPT-4 | GPT4 / gpt 4 / GBT4 |
 | Gemini | gemini / Germany / 双子星 |
-| DeepSeek | deepseek / Deep Seek / 深度求索 |
-| Qwen | qwen / Q1 / 千问 / 通义千问 |
+| DeepSeek | deepseek / Deep Seek |
+| Qwen | qwen |
 | Kimi | kimi / KIMI |
 | Sora | sora / 索拉 |
 | Midjourney | midjourney / Mid Journey / MJ |
-| Cursor | cursor / 光标 |
-| Copilot | copilot / Co-pilot / 副驾驶 |
+| Cursor | cursor |
+| Copilot | copilot / Co-pilot |
 
 ### 术语
 
 | 正确写法 | 常见误识别 |
 | --- | --- |
-| Agent | agent / 代理 / 智能体（保留原文时不换） |
-| CLI | cli / C L I / 命令行 |
+| Agent | agent |
+| CLI | cli / C L I |
 | API | api / A P I |
 | MCP | mcp / M C P |
-| Prompt | prompt / 提示词（保留原文时不换） |
-| Token | token / 令牌 |
+| Prompt | prompt |
+| Token | token |
 | RAG | rag / R A G |
-| LLM | llm / L L M / 大模型 |
-| Skill | skill / 技能 |  <!-- 「Skills」是 Claude Skills 的复数专名，说话人真会这么说，不许换 -->
-| Workflow | workflow / 工作流 |
+| LLM | llm / L L M |
+| Skill | skill |  <!-- 「Skills」是 Claude Skills 的复数专名，说话人真会这么说，不许换 -->
+| Workflow | workflow |
+| TTS | tts / T T S |
+| ASR | asr / A S R |
+| Runtime | runtime / Run Time |
+| Artifact | artifact |
+| B-roll | B roll / Broll / b-roll |
+| Markdown | markdown / Mark Down |
 
 ### 公司与平台
 
@@ -69,8 +75,22 @@
 | Anthropic | anthropic / 安索匹克 |
 | xAI | XAI / x AI |
 | GitHub | github / Git Hub / 吉特哈布 |
-| Hugging Face | huggingface / Hugging face / 抱抱脸 |
-| X | 叉 / 推特 / Twitter（说话人说「叉」时按原文保留，不换） |
+| Hugging Face | huggingface / Hugging face |
+
+### 当前作者知识库高频专名
+
+这些词来自已授权的 Obsidian `Creator Studio` Markdown 统计，只收录能确认的正式写法及
+大小写、空格变体。词频只能证明“值得收录”，不能证明任意谐音就是它，因此没有证据的
+误识别不写进词典。
+
+| 正确写法 | 常见误识别 |
+| --- | --- |
+| Obsidian | obsidian |
+| HyperFrames | Hyperframes / hyperframes / Hyper Frames |
+| Chengfeng | chengfeng / Cheng Feng |
+| TikHub | Tikhub / tikhub / Tik Hub |
+| Creator Studio | CreatorStudio / creator studio |
+| Video Maker | VideoMaker / video maker |
 
 ## 中文口语按原文保留，不要「纠正」
 
