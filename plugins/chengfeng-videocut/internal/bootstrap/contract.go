@@ -112,6 +112,18 @@ func runtimeRoot(c Contract) (string, error) {
 }
 
 func BuildInstallPlan(c Contract) (InstallPlan, error) {
+	return buildInstallPlan(c, nil)
+}
+
+type installTestOptions struct {
+	InstallerSHA256       string
+	InstallManifestSHA256 string
+	InstallerFile         string
+	ChecksumFile          string
+	ManifestFile          string
+}
+
+func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan, error) {
 	key := platformKey()
 	assets, ok := c.Platforms[key]
 	if !ok {
@@ -125,19 +137,15 @@ func BuildInstallPlan(c Contract) (InstallPlan, error) {
 	if assets.InstallerSHA256 != nil {
 		digest = strings.ToLower(strings.TrimSpace(*assets.InstallerSHA256))
 	}
-	if os.Getenv("CHENGFENG_VIDEOCUT_ALLOW_TEST_OVERRIDES") == "1" {
-		if override := strings.ToLower(strings.TrimSpace(os.Getenv("CHENGFENG_VIDEOCUT_TEST_INSTALLER_SHA256"))); override != "" {
-			digest = override
-		}
+	if testOptions != nil && testOptions.InstallerSHA256 != "" {
+		digest = strings.ToLower(strings.TrimSpace(testOptions.InstallerSHA256))
 	}
 	manifestDigest := ""
 	if c.InstallManifestSHA256 != nil {
 		manifestDigest = strings.ToLower(strings.TrimSpace(*c.InstallManifestSHA256))
 	}
-	if os.Getenv("CHENGFENG_VIDEOCUT_ALLOW_TEST_OVERRIDES") == "1" {
-		if override := strings.ToLower(strings.TrimSpace(os.Getenv("CHENGFENG_VIDEOCUT_TEST_MANIFEST_SHA256"))); override != "" {
-			manifestDigest = override
-		}
+	if testOptions != nil && testOptions.InstallManifestSHA256 != "" {
+		manifestDigest = strings.ToLower(strings.TrimSpace(testOptions.InstallManifestSHA256))
 	}
 	plan := InstallPlan{
 		Product: c.Product, Action: "runtime_install", ReleaseTag: c.ReleaseTag,
@@ -219,6 +227,11 @@ func validateManagedLauncher(c Contract) (string, error) {
 		}
 		if i == len(parts) && (!info.Mode().IsRegular() || (runtime.GOOS != "windows" && info.Mode().Perm()&0o111 == 0)) {
 			return "", fmt.Errorf("managed runtime launcher is not an executable regular file")
+		}
+		if i == len(parts) {
+			if err := validateSingleLink(current, info); err != nil {
+				return "", err
+			}
 		}
 	}
 	return launcher, nil

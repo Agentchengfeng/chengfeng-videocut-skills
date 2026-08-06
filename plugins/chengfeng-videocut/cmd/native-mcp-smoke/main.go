@@ -54,6 +54,9 @@ func main() {
 	if byName["runtime_install"].Annotations == nil || byName["runtime_install"].Annotations.ReadOnlyHint {
 		fatal(fmt.Errorf("runtime_install annotations are not write-impacting"))
 	}
+	if byName["runtime_cli"].Annotations == nil || byName["runtime_cli"].Annotations.OpenWorldHint == nil || !*byName["runtime_cli"].Annotations.OpenWorldHint {
+		fatal(fmt.Errorf("runtime_cli must explicitly declare openWorldHint=true"))
+	}
 	if byName["show_workflow_confirmation"].Meta["openai/outputTemplate"] == nil {
 		fatal(fmt.Errorf("Apps outputTemplate is missing"))
 	}

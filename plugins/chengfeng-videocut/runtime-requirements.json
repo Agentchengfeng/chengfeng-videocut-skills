@@ -59,6 +59,8 @@
     ],
     "managedArollProjection": true,
     "expectedEditListRevision": true,
+    "durableJobsApiVersion": 1,
+    "durableJobKinds": ["export"],
     "serviceApiVersion": 1,
     "serviceOperations": [
       "install",

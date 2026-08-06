@@ -3,7 +3,8 @@
     "chengfeng-videocut": {
       "command": "./bin/chengfeng-videocut-mcp",
       "args": [],
-      "cwd": "."
+      "cwd": ".",
+      "tool_timeout_sec": 601
     }
   }
 }

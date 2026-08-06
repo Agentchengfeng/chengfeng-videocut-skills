@@ -8,6 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
+
+	"golang.org/x/sys/windows"
 )
 
 const relocatedMarker = "CHENGFENG_VIDEOCUT_MCP_RELOCATED"
@@ -36,20 +39,8 @@ func RelocateForCacheRelease() (bool, error) {
 		return false, err
 	}
 	destination := filepath.Join(directory, "chengfeng-videocut-mcp.exe")
-	if actual, verifyErr := fileSHA256(destination); verifyErr != nil || actual != digest {
-		temporary := destination + ".new"
-		_ = os.Remove(temporary)
-		if err := copyExecutable(source, temporary); err != nil {
-			return false, err
-		}
-		if actual, err := fileSHA256(temporary); err != nil || actual != digest {
-			_ = os.Remove(temporary)
-			return false, fmt.Errorf("relocated MCP digest mismatch")
-		}
-		_ = os.Remove(destination)
-		if err := os.Rename(temporary, destination); err != nil {
-			return false, err
-		}
+	if err := ensureRelocatedExecutable(source, destination, digest); err != nil {
+		return false, err
 	}
 	cmd := exec.Command(destination)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
@@ -61,6 +52,69 @@ func RelocateForCacheRelease() (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func ensureRelocatedExecutable(source, destination, digest string) error {
+	if actual, err := fileSHA256(destination); err == nil && actual == digest {
+		return nil
+	}
+	directory := filepath.Dir(destination)
+	unlock, err := acquireRelocationLock(filepath.Join(directory, ".relocate.lock"), 10*time.Second)
+	if err != nil {
+		return err
+	}
+	defer unlock()
+	// Another process may have completed the content-addressed copy while this
+	// process waited for the mutex.
+	if actual, err := fileSHA256(destination); err == nil && actual == digest {
+		return nil
+	}
+	staging, err := os.MkdirTemp(directory, ".relocate-stage-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(staging)
+	temporary := filepath.Join(staging, "chengfeng-videocut-mcp.exe")
+	if err := copyExecutable(source, temporary); err != nil {
+		return err
+	}
+	if actual, err := fileSHA256(temporary); err != nil || actual != digest {
+		return fmt.Errorf("relocated MCP digest mismatch")
+	}
+	if err := os.Remove(destination); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("replace invalid relocated MCP: %w", err)
+	}
+	if err := os.Rename(temporary, destination); err != nil {
+		return err
+	}
+	actual, err := fileSHA256(destination)
+	if err != nil || actual != digest {
+		return fmt.Errorf("published relocated MCP digest mismatch")
+	}
+	return nil
+}
+
+func acquireRelocationLock(path string, timeout time.Duration) (func(), error) {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return nil, err
+	}
+	overlapped := &windows.Overlapped{}
+	deadline := time.Now().Add(timeout)
+	for {
+		err = windows.LockFileEx(windows.Handle(file.Fd()), windows.LOCKFILE_EXCLUSIVE_LOCK|windows.LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, overlapped)
+		if err == nil {
+			return func() {
+				_ = windows.UnlockFileEx(windows.Handle(file.Fd()), 0, 1, 0, overlapped)
+				_ = file.Close()
+			}, nil
+		}
+		if err != windows.ERROR_LOCK_VIOLATION || time.Now().After(deadline) {
+			_ = file.Close()
+			return nil, fmt.Errorf("acquire relocation mutex: %w", err)
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
 }
 
 func copyExecutable(source, destination string) error {

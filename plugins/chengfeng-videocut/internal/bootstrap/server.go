@@ -58,7 +58,7 @@ func NewServer(c Contract) *mcp.Server {
 		}
 		return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: TemplateURI, MIMEType: "text/html;profile=mcp-app", Text: pluginassets.ReviewHTML, Meta: mcp.Meta{"ui": map[string]any{"prefersBorder": true}, "openai/widgetDescription": "确认 chengfeng-videocut 的人工审核阶段或 Runtime 安装计划。", "openai/widgetPrefersBorder": true}}}}, nil
 	})
-	readOnly := &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: boolPtr(false), DestructiveHint: boolPtr(false)}
+	readOnly := &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: boolPtr(false), DestructiveHint: boolPtr(false), IdempotentHint: false}
 	appsMeta := mcp.Meta{"ui": map[string]any{"resourceUri": TemplateURI}, "openai/outputTemplate": TemplateURI, "openai/toolInvocation/invoking": "正在打开确认卡片...", "openai/toolInvocation/invoked": "确认卡片已打开"}
 	mcp.AddTool(server, &mcp.Tool{Name: "show_workflow_confirmation", Title: "显示工作流或安装确认卡片", Description: "只显示并回传稳定 revision 或 approvalDigest；不直接剪切、导出或安装。安装确认摘要是 Agent/host 的确认门，不是用户身份的密码学认证。", Annotations: readOnly, Meta: appsMeta}, func(ctx context.Context, req *mcp.CallToolRequest, input ConfirmationInput) (*mcp.CallToolResult, map[string]any, error) {
 		output, err := confirmationOutput(c, input)
@@ -78,7 +78,7 @@ func NewServer(c Contract) *mcp.Server {
 		}
 		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: "Product Runtime 已通过摘要校验并安装完成。"}}}, output, nil
 	})
-	mcp.AddTool(server, &mcp.Tool{Name: "runtime_cli", Title: "调用 Product Runtime CLI", Description: "仅接收结构化 argv，并通过唯一受管启动器直接传参；不接受 shell 字符串、cwd、环境变量或 stdin。", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(false), IdempotentHint: false}}, func(ctx context.Context, req *mcp.CallToolRequest, input RuntimeCLIInput) (*mcp.CallToolResult, CommandResult, error) {
+	mcp.AddTool(server, &mcp.Tool{Name: "runtime_cli", Title: "调用 Product Runtime CLI", Description: "仅接收结构化 argv，并通过唯一受管启动器直接传参；不接受 shell 字符串、cwd、环境变量或 stdin。", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(true), IdempotentHint: false}}, func(ctx context.Context, req *mcp.CallToolRequest, input RuntimeCLIInput) (*mcp.CallToolResult, CommandResult, error) {
 		if err := validateArgv(input.Argv); err != nil {
 			return nil, CommandResult{}, err
 		}
@@ -86,7 +86,16 @@ func NewServer(c Contract) *mcp.Server {
 		if err != nil {
 			return nil, CommandResult{}, err
 		}
+		fingerprint, err := launcherFingerprint(launcher)
+		if err != nil {
+			return nil, CommandResult{}, fmt.Errorf("fingerprint managed runtime launcher: %w", err)
+		}
 		result := runRuntimeCommand(ctx, launcher, input.Argv)
+		if err := verifyLauncherFingerprint(c, fingerprint); err != nil {
+			result.OK = false
+			result.Failure = "launcher_integrity_changed"
+			result.Stderr = strings.TrimSpace(result.Stderr + "\n" + err.Error())
+		}
 		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Product Runtime CLI exit=%d", result.ExitCode)}}, IsError: !result.OK}, result, nil
 	})
 	return server

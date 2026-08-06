@@ -9,16 +9,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 )
 
 func TestProductionInstallPlanFailsClosedWithoutPinnedDigest(t *testing.T) {
-	t.Setenv("CHENGFENG_VIDEOCUT_ALLOW_TEST_OVERRIDES", "")
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", t.TempDir())
+	// Legacy environment variables must never unlock the production binary.
+	t.Setenv("CHENGFENG_VIDEOCUT_ALLOW_TEST_OVERRIDES", "1")
+	t.Setenv("CHENGFENG_VIDEOCUT_TEST_INSTALLER_SHA256", strings.Repeat("a", 64))
+	t.Setenv("CHENGFENG_VIDEOCUT_TEST_MANIFEST_SHA256", strings.Repeat("b", 64))
 	c, err := LoadContract()
 	if err != nil {
 		t.Fatal(err)
@@ -36,12 +37,10 @@ func TestProductionInstallPlanFailsClosedWithoutPinnedDigest(t *testing.T) {
 }
 
 func TestApprovalDigestBindsInstallerPlatformTargetAndImpact(t *testing.T) {
-	t.Setenv("CHENGFENG_VIDEOCUT_ALLOW_TEST_OVERRIDES", "1")
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_INSTALLER_SHA256", strings.Repeat("a", 64))
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_MANIFEST_SHA256", strings.Repeat("b", 64))
+	testOptions := &installTestOptions{InstallerSHA256: strings.Repeat("a", 64), InstallManifestSHA256: strings.Repeat("b", 64)}
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", filepath.Join(t.TempDir(), "home one"))
 	c, _ := LoadContract()
-	first, err := BuildInstallPlan(c)
+	first, err := buildInstallPlan(c, testOptions)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +53,7 @@ func TestApprovalDigestBindsInstallerPlatformTargetAndImpact(t *testing.T) {
 		t.Fatal("impact was not bound")
 	}
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", filepath.Join(t.TempDir(), "home two"))
-	second, _ := BuildInstallPlan(c)
+	second, _ := buildInstallPlan(c, testOptions)
 	if second.ApprovalDigest == first.ApprovalDigest {
 		t.Fatal("target was not bound")
 	}
@@ -86,10 +85,23 @@ func TestCommandOutputKeepsBoundedTail(t *testing.T) {
 	}
 }
 
+func TestCommandOutputOverflowFailsClosed(t *testing.T) {
+	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
+		t.Skip("Unix output fixture")
+	}
+	result := runProcessTree(context.Background(), exec.Command("/bin/sh", "-c", "yes x | head -c 40000"), 5*time.Second)
+	if result.OK || !result.Truncated || result.Failure != "output_limit_exceeded" {
+		t.Fatalf("overflow was not rejected: %#v", result)
+	}
+}
+
 func TestSemverAndCapabilities(t *testing.T) {
 	c, _ := LoadContract()
-	if !semverAtLeast("0.5.1", "0.5.0") || semverAtLeast("0.4.9", "0.5.0") || semverAtLeast("junk", "0.5.0") {
+	if !semverAtLeast("0.5.1", "0.5.0") || semverAtLeast("0.4.9", "0.5.0") || semverAtLeast("junk", "0.5.0") || semverAtLeast("0.5.0junk", "0.5.0") || semverAtLeast("00.5.0", "0.5.0") {
 		t.Fatal("semver comparison failed")
+	}
+	if !semverAtLeast("1.0.0", "1.0.0-rc.1") || semverAtLeast("1.0.0-rc.1", "1.0.0") || !semverAtLeast("1.0.0-rc.10", "1.0.0-rc.2") {
+		t.Fatal("semver prerelease comparison failed")
 	}
 	doctor := map[string]any{"data": map[string]any{"capabilities": c.Capabilities}}
 	data, _ := doctor["data"].(map[string]any)
@@ -125,6 +137,10 @@ func TestSemverAndCapabilities(t *testing.T) {
 	actualJobs["durableJobsApiVersion"] = float64(2)
 	if capabilitySubset(actualJobs, requiredJobs) {
 		t.Fatal("durable job API version must match exactly")
+	}
+	actualJobs["durableJobsApiVersion"] = "1"
+	if capabilitySubset(actualJobs, requiredJobs) {
+		t.Fatal("capability scalar types must match exactly")
 	}
 }
 
@@ -177,36 +193,47 @@ func TestManagedLauncherRejectsSymlink(t *testing.T) {
 	}
 }
 
-func TestRunProcessTreeKillsUnixDescendants(t *testing.T) {
+func TestManagedLauncherRejectsHardLink(t *testing.T) {
 	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
-		t.Skip("Unix process-group test")
+		t.Skip("hard-link fixture targets macOS")
 	}
-	dir := t.TempDir()
-	childPIDFile := filepath.Join(dir, "child.pid")
-	script := filepath.Join(dir, "spawn-tree.sh")
-	body := "#!/bin/sh\nsleep 300 &\necho $! > \"$1\"\nwait\n"
-	if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
+	root := t.TempDir()
+	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
+	c, _ := LoadContract()
+	launcher, _ := launcherPath(c)
+	if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	result := runProcessTree(context.Background(), exec.Command(script, childPIDFile), time.Second)
-	if result.OK || !strings.Contains(result.Stderr, "process group timed out") {
-		t.Fatalf("timeout was not reported: %#v", result)
-	}
-	data, err := os.ReadFile(childPIDFile)
-	if err != nil {
-		t.Fatalf("pid file missing: %v; result=%#v", err, result)
-	}
-	pid, err := strconv.Atoi(strings.TrimSpace(string(data)))
-	if err != nil {
+	if err := os.WriteFile(launcher, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); {
-		if err := syscall.Kill(pid, 0); err == syscall.ESRCH {
-			return
-		}
-		time.Sleep(25 * time.Millisecond)
+	if err := os.Link(launcher, filepath.Join(t.TempDir(), "alternate-launcher")); err != nil {
+		t.Fatal(err)
 	}
-	t.Fatalf("descendant pid %d survived process-group timeout", pid)
+	if _, err := validateManagedLauncher(c); err == nil || !strings.Contains(err.Error(), "hard link") {
+		t.Fatalf("expected hard-link rejection, got %v", err)
+	}
+}
+
+func TestRuntimeStatusRejectsLauncherTamper(t *testing.T) {
+	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
+		t.Skip("tamper fixture targets macOS")
+	}
+	root := t.TempDir()
+	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
+	c, _ := LoadContract()
+	launcher, _ := launcherPath(c)
+	if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.0'; exit 0; fi\nexit 2\n"
+	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	status := inspectRuntime(context.Background(), c)
+	if status.Ready || status.State != "unhealthy" || !strings.Contains(status.Reason, "changed during health check") {
+		t.Fatalf("launcher tamper was not unhealthy: %#v", status)
+	}
 }
 
 func jsonMarshal(value any) ([]byte, error) {
@@ -271,21 +298,16 @@ printf 'installed\n'
 	if err := os.WriteFile(checksum, []byte(strings.Join(lines, "\n")+"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("CHENGFENG_VIDEOCUT_ALLOW_TEST_OVERRIDES", "1")
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_INSTALLER_FILE", installer)
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_CHECKSUM_FILE", checksum)
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_MANIFEST_FILE", manifest)
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_INSTALLER_SHA256", installerDigest)
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_MANIFEST_SHA256", manifestDigest)
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
-	plan, err := BuildInstallPlan(c)
+	testOptions := &installTestOptions{InstallerSHA256: installerDigest, InstallManifestSHA256: manifestDigest, InstallerFile: installer, ChecksumFile: checksum, ManifestFile: manifest}
+	plan, err := buildInstallPlan(c, testOptions)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := installRuntime(context.Background(), c, strings.Repeat("0", 64)); err == nil || !strings.Contains(err.Error(), "does not match") {
+	if _, err := installRuntimeWithOptions(context.Background(), c, strings.Repeat("0", 64), testOptions); err == nil || !strings.Contains(err.Error(), "does not match") {
 		t.Fatalf("wrong approval was accepted: %v", err)
 	}
-	result, err := installRuntime(context.Background(), c, plan.ApprovalDigest)
+	result, err := installRuntimeWithOptions(context.Background(), c, plan.ApprovalDigest, testOptions)
 	if err != nil {
 		t.Fatal(err)
 	}

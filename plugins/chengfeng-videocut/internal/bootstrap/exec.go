@@ -3,9 +3,14 @@ package bootstrap
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"os"
+	"os/exec"
 	"path/filepath"
-	"regexp"
+	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -13,8 +18,8 @@ import (
 // stdout and stderr each retain only their last 32 KiB, so no call can inject
 // more than roughly 64 KiB of command diagnostics into the MCP response.
 const maxCommandOutput = 32 << 10
-
-var versionPattern = regexp.MustCompile(`(?:^|[^0-9])v?([0-9]+\.[0-9]+\.[0-9]+)(?:$|[^0-9])`)
+const processSettleTimeout = 2 * time.Second
+const outputSettleTimeout = 500 * time.Millisecond
 
 type CommandResult struct {
 	OK        bool   `json:"ok"`
@@ -22,6 +27,7 @@ type CommandResult struct {
 	Stdout    string `json:"stdout"`
 	Stderr    string `json:"stderr"`
 	Truncated bool   `json:"truncated"`
+	Failure   string `json:"failure,omitempty"`
 }
 
 type cappedBuffer struct {
@@ -44,6 +50,103 @@ func (w *cappedBuffer) Write(p []byte) (int, error) {
 	}
 	w.data = append(w.data, p...)
 	return n, nil
+}
+
+// processCapture owns the parent side of stdout/stderr pipes. Using explicit
+// pipes keeps exec.Cmd.Wait independent from inherited descriptors, so a
+// detached descendant cannot hold the MCP call open forever.
+type processCapture struct {
+	stdout, stderr           *cappedBuffer
+	stdoutRead, stderrRead   *os.File
+	stdoutWrite, stderrWrite *os.File
+	stdoutDone, stderrDone   chan struct{}
+}
+
+func attachProcessCapture(cmd *exec.Cmd) (*processCapture, error) {
+	stdoutRead, stdoutWrite, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+	stderrRead, stderrWrite, err := os.Pipe()
+	if err != nil {
+		_ = stdoutRead.Close()
+		_ = stdoutWrite.Close()
+		return nil, err
+	}
+	capture := &processCapture{
+		stdout: &cappedBuffer{}, stderr: &cappedBuffer{},
+		stdoutRead: stdoutRead, stdoutWrite: stdoutWrite,
+		stderrRead: stderrRead, stderrWrite: stderrWrite,
+		stdoutDone: make(chan struct{}), stderrDone: make(chan struct{}),
+	}
+	cmd.Stdout, cmd.Stderr = stdoutWrite, stderrWrite
+	go func() {
+		_, _ = io.Copy(capture.stdout, stdoutRead)
+		close(capture.stdoutDone)
+	}()
+	go func() {
+		_, _ = io.Copy(capture.stderr, stderrRead)
+		close(capture.stderrDone)
+	}()
+	return capture, nil
+}
+
+func (c *processCapture) closeChildEnds() {
+	_ = c.stdoutWrite.Close()
+	_ = c.stderrWrite.Close()
+}
+
+func (c *processCapture) closeAll() {
+	c.closeChildEnds()
+	_ = c.stdoutRead.Close()
+	_ = c.stderrRead.Close()
+}
+
+func (c *processCapture) awaitEOF(timeout time.Duration) bool {
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	stdoutDone, stderrDone := c.stdoutDone, c.stderrDone
+	for stdoutDone != nil || stderrDone != nil {
+		select {
+		case <-stdoutDone:
+			stdoutDone = nil
+		case <-stderrDone:
+			stderrDone = nil
+		case <-timer.C:
+			return false
+		}
+	}
+	_ = c.stdoutRead.Close()
+	_ = c.stderrRead.Close()
+	return true
+}
+
+func (c *processCapture) forceCloseAndJoin() {
+	c.closeAll()
+	// Closing the read descriptors releases the local copy goroutines. This is
+	// bounded defensively; returning must never depend on a descendant process.
+	_ = c.awaitEOF(250 * time.Millisecond)
+}
+
+func finalizeCommandResult(err error, capture *processCapture, failure, diagnostic string) CommandResult {
+	if diagnostic != "" {
+		_, _ = capture.stderr.Write([]byte("\n" + diagnostic))
+	}
+	if capture.stdout.truncated || capture.stderr.truncated {
+		if failure == "" {
+			failure = "output_limit_exceeded"
+		}
+		_, _ = capture.stderr.Write([]byte("\ncommand output exceeded the 32 KiB per-stream limit; result rejected"))
+	}
+	truncated := capture.stdout.truncated || capture.stderr.truncated
+	return CommandResult{
+		OK:        err == nil && failure == "" && !truncated,
+		ExitCode:  exitCode(err),
+		Stdout:    string(capture.stdout.data),
+		Stderr:    string(capture.stderr.data),
+		Truncated: truncated,
+		Failure:   failure,
+	}
 }
 
 func runRuntimeCommand(ctx context.Context, launcher string, args []string) CommandResult {
@@ -98,16 +201,29 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 	}
 	validated, err := validateManagedLauncher(c)
 	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			status.State = "unhealthy"
+		}
 		status.Reason = err.Error()
 		return status
 	}
 	launcher = validated
-	version := runRuntimeCommand(ctx, launcher, []string{"--version"})
-	doctor := runRuntimeCommand(ctx, launcher, []string{"doctor", "--json"})
-	match := versionPattern.FindStringSubmatch(strings.TrimSpace(version.Stdout + " " + version.Stderr))
-	if len(match) > 1 {
-		status.RuntimeVersion = match[1]
+	fingerprint, err := launcherFingerprint(launcher)
+	if err != nil {
+		status.State, status.Reason = "unhealthy", fmt.Sprintf("fingerprint managed runtime launcher: %v", err)
+		return status
 	}
+	version := runRuntimeCommand(ctx, launcher, []string{"--version"})
+	if err := verifyLauncherFingerprint(c, fingerprint); err != nil {
+		status.State, status.Reason = "unhealthy", err.Error()
+		return status
+	}
+	doctor := runRuntimeCommand(ctx, launcher, []string{"doctor", "--json"})
+	if err := verifyLauncherFingerprint(c, fingerprint); err != nil {
+		status.State, status.Reason = "unhealthy", err.Error()
+		return status
+	}
+	status.RuntimeVersion = extractStrictSemver(version.Stdout + " " + version.Stderr)
 	if parsed := lastJSONObject(doctor.Stdout); parsed != nil {
 		status.Doctor = parsed
 	}
@@ -138,24 +254,134 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 }
 
 func semverAtLeast(actual, minimum string) bool {
-	parse := func(value string) ([3]int, bool) {
-		var out [3]int
-		if _, err := fmt.Sscanf(strings.SplitN(value, "-", 2)[0], "%d.%d.%d", &out[0], &out[1], &out[2]); err != nil {
-			return out, false
-		}
-		return out, true
-	}
-	a, okA := parse(actual)
-	m, okM := parse(minimum)
+	a, okA := parseSemver(actual)
+	m, okM := parseSemver(minimum)
 	if !okA || !okM {
 		return false
 	}
-	for i := range a {
-		if a[i] != m[i] {
-			return a[i] > m[i]
+	for i := range a.core {
+		if a.core[i] != m.core[i] {
+			return a.core[i] > m.core[i]
 		}
 	}
-	return !strings.Contains(actual, "-") || strings.Contains(minimum, "-")
+	return comparePrerelease(a.prerelease, m.prerelease) >= 0
+}
+
+type semanticVersion struct {
+	core       [3]uint64
+	prerelease []string
+}
+
+func parseSemver(value string) (semanticVersion, bool) {
+	var parsed semanticVersion
+	if value == "" || strings.TrimSpace(value) != value {
+		return parsed, false
+	}
+	withoutBuild := value
+	if index := strings.IndexByte(withoutBuild, '+'); index >= 0 {
+		build := withoutBuild[index+1:]
+		if !validSemverIdentifiers(build, false) {
+			return parsed, false
+		}
+		withoutBuild = withoutBuild[:index]
+	}
+	coreText := withoutBuild
+	if index := strings.IndexByte(coreText, '-'); index >= 0 {
+		prerelease := coreText[index+1:]
+		if !validSemverIdentifiers(prerelease, true) {
+			return parsed, false
+		}
+		parsed.prerelease = strings.Split(prerelease, ".")
+		coreText = coreText[:index]
+	}
+	parts := strings.Split(coreText, ".")
+	if len(parts) != 3 {
+		return parsed, false
+	}
+	for i, part := range parts {
+		if part == "" || (len(part) > 1 && part[0] == '0') {
+			return parsed, false
+		}
+		value, err := strconv.ParseUint(part, 10, 64)
+		if err != nil {
+			return parsed, false
+		}
+		parsed.core[i] = value
+	}
+	return parsed, true
+}
+
+func validSemverIdentifiers(value string, rejectNumericLeadingZero bool) bool {
+	if value == "" {
+		return false
+	}
+	for _, identifier := range strings.Split(value, ".") {
+		if identifier == "" {
+			return false
+		}
+		numeric := true
+		for _, character := range identifier {
+			if !((character >= '0' && character <= '9') || (character >= 'A' && character <= 'Z') || (character >= 'a' && character <= 'z') || character == '-') {
+				return false
+			}
+			if character < '0' || character > '9' {
+				numeric = false
+			}
+		}
+		if rejectNumericLeadingZero && numeric && len(identifier) > 1 && identifier[0] == '0' {
+			return false
+		}
+	}
+	return true
+}
+
+func comparePrerelease(actual, minimum []string) int {
+	if len(actual) == 0 && len(minimum) == 0 {
+		return 0
+	}
+	if len(actual) == 0 {
+		return 1
+	}
+	if len(minimum) == 0 {
+		return -1
+	}
+	for i := 0; i < len(actual) && i < len(minimum); i++ {
+		aNumber, aErr := strconv.ParseUint(actual[i], 10, 64)
+		mNumber, mErr := strconv.ParseUint(minimum[i], 10, 64)
+		switch {
+		case aErr == nil && mErr == nil && aNumber != mNumber:
+			if aNumber > mNumber {
+				return 1
+			}
+			return -1
+		case aErr == nil && mErr != nil:
+			return -1
+		case aErr != nil && mErr == nil:
+			return 1
+		case actual[i] > minimum[i]:
+			return 1
+		case actual[i] < minimum[i]:
+			return -1
+		}
+	}
+	if len(actual) > len(minimum) {
+		return 1
+	}
+	if len(actual) < len(minimum) {
+		return -1
+	}
+	return 0
+}
+
+func extractStrictSemver(output string) string {
+	for _, field := range strings.Fields(output) {
+		candidate := strings.TrimPrefix(field, "v")
+		candidate = strings.Trim(candidate, "()[]{}:,;")
+		if _, ok := parseSemver(candidate); ok {
+			return candidate
+		}
+	}
+	return ""
 }
 
 func supportsCapabilities(doctor map[string]any, required map[string]any) bool {
@@ -182,7 +408,8 @@ func capabilitySubset(actual, required any) bool {
 			return false
 		}
 		for key, value := range wanted {
-			if !capabilitySubset(have[key], value) {
+			haveValue, exists := have[key]
+			if !exists || !capabilitySubset(haveValue, value) {
 				return false
 			}
 		}
@@ -206,8 +433,44 @@ func capabilitySubset(actual, required any) bool {
 		}
 		return true
 	default:
-		return fmt.Sprint(actual) == fmt.Sprint(required)
+		if actual == nil || required == nil || reflect.TypeOf(actual) != reflect.TypeOf(required) {
+			return actual == nil && required == nil
+		}
+		return reflect.DeepEqual(actual, required)
 	}
+}
+
+type managedLauncherFingerprint struct {
+	Path   string
+	SHA256 string
+	Size   int64
+}
+
+func launcherFingerprint(path string) (managedLauncherFingerprint, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return managedLauncherFingerprint{}, err
+	}
+	digest, err := fileSHA256(path)
+	if err != nil {
+		return managedLauncherFingerprint{}, err
+	}
+	return managedLauncherFingerprint{Path: filepath.Clean(path), SHA256: digest, Size: info.Size()}, nil
+}
+
+func verifyLauncherFingerprint(c Contract, expected managedLauncherFingerprint) error {
+	path, err := validateManagedLauncher(c)
+	if err != nil {
+		return fmt.Errorf("managed runtime launcher became invalid: %w", err)
+	}
+	actual, err := launcherFingerprint(path)
+	if err != nil {
+		return fmt.Errorf("managed runtime launcher fingerprint failed: %w", err)
+	}
+	if actual != expected {
+		return fmt.Errorf("managed runtime launcher changed during health check; runtime is unhealthy")
+	}
+	return nil
 }
 
 func lastJSONObject(text string) map[string]any {

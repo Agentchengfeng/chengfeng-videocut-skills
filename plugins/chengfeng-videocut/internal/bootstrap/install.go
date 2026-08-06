@@ -14,7 +14,11 @@ import (
 )
 
 func installRuntime(ctx context.Context, c Contract, approval string) (map[string]any, error) {
-	plan, err := BuildInstallPlan(c)
+	return installRuntimeWithOptions(ctx, c, approval, nil)
+}
+
+func installRuntimeWithOptions(ctx context.Context, c Contract, approval string, testOptions *installTestOptions) (map[string]any, error) {
+	plan, err := buildInstallPlan(c, testOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -32,19 +36,19 @@ func installRuntime(ctx context.Context, c Contract, approval string) (map[strin
 	installerPath := filepath.Join(temp, filepath.Base(plan.InstallerAsset))
 	checksumPath := filepath.Join(temp, filepath.Base(plan.ChecksumAsset))
 	manifestPath := filepath.Join(temp, filepath.Base(plan.InstallManifestAsset))
-	if testOverridesEnabled() {
-		if source := os.Getenv("CHENGFENG_VIDEOCUT_TEST_INSTALLER_FILE"); source != "" {
-			if err := copyFile(source, installerPath, 0o700); err != nil {
+	if testOptions != nil {
+		if testOptions.InstallerFile != "" {
+			if err := copyFile(testOptions.InstallerFile, installerPath, 0o700); err != nil {
 				return nil, err
 			}
 		}
-		if source := os.Getenv("CHENGFENG_VIDEOCUT_TEST_CHECKSUM_FILE"); source != "" {
-			if err := copyFile(source, checksumPath, 0o600); err != nil {
+		if testOptions.ChecksumFile != "" {
+			if err := copyFile(testOptions.ChecksumFile, checksumPath, 0o600); err != nil {
 				return nil, err
 			}
 		}
-		if source := os.Getenv("CHENGFENG_VIDEOCUT_TEST_MANIFEST_FILE"); source != "" {
-			if err := copyFile(source, manifestPath, 0o600); err != nil {
+		if testOptions.ManifestFile != "" {
+			if err := copyFile(testOptions.ManifestFile, manifestPath, 0o600); err != nil {
 				return nil, err
 			}
 		}
@@ -116,8 +120,6 @@ func installRuntime(ctx context.Context, c Contract, approval string) (map[strin
 	}
 	return map[string]any{"ok": true, "plan": plan, "installer": result, "runtime": status}, nil
 }
-
-func testOverridesEnabled() bool { return os.Getenv("CHENGFENG_VIDEOCUT_ALLOW_TEST_OVERRIDES") == "1" }
 
 func releaseURL(c Contract, asset string) string {
 	return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", c.Repository, c.ReleaseTag, asset)
