@@ -1,15 +1,11 @@
 {
   "name": "chengfeng-videocut-codex-plugin",
-  "version": "0.10.8",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun build server.mjs --target=node --format=esm --outfile=dist/server.mjs",
-    "test": "node scripts/runtime-preflight.test.cjs && node scripts/ensure-running.test.cjs && node scripts/studio-capability.test.cjs && node scripts/bug-report.test.cjs && node scripts/skill-paths.test.cjs && node scripts/business-workflow-contract.test.cjs && node scripts/update-provenance.test.cjs && node scripts/check-plugin-update.test.cjs && node scripts/check-plugin-update-windows-shim.test.cjs && node scripts/mcp-cache-release-windows.test.cjs && node scripts/mcp-smoke-test.mjs"
+    "build": "./scripts/build-native-mcp.sh",
+    "test": "go test ./... && node scripts/native-skill-contract.test.cjs && node scripts/bug-report.test.cjs && node scripts/skill-paths.test.cjs && node scripts/business-workflow-contract.test.cjs && node scripts/update-provenance.test.cjs && node scripts/check-plugin-update.test.cjs && node scripts/check-plugin-update-windows-shim.test.cjs"
   },
-  "dependencies": {
-    "@modelcontextprotocol/ext-apps": "1.0.1",
-    "@modelcontextprotocol/sdk": "1.30.0",
-    "zod": "3.25.76"
-  }
+  "dependencies": {}
 }

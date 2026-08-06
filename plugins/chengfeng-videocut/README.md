@@ -40,14 +40,23 @@ $chengfeng-videocut:chengfeng-check-updates
 
 共同边界只存在于 `references/runtime-and-product-contract.md` 与 `references/business-workflow-contract.md`。普通 reference 没有 `SKILL.md`、公开 ID 或 UI 卡片，不占用用户入口。
 
-业务 Skill 共用 `scripts/ensure-runtime.cjs`、`scripts/ensure-running.cjs` 和 `runtime-requirements.json`。Plugin package `0.10.8` 消费 Runtime compatibility contract `0.4.8`：只接受 Runtime 0.4.8+ 与声明的 EDL、常驻 service 能力；缺失时从精确的 `v0.4.8` Release 获取 `install.cjs` 和校验清单。安装器只消费 stable Runtime portable `chengfeng-videocut-portable.tar.gz`；清单必须同时声明该资产和版本化 `chengfeng-videocut-0.4.8-portable.tar.gz`，不下载 Desktop DMG/EXE。校验后安装并执行 doctor。已有低版本 Runtime 只有在用户明确确认升级时才原子替换程序目录，项目数据不动。随后由 Product `service ensure --json` 幂等安装或恢复 macOS launchd / Windows Task Scheduler 用户服务；Plugin 不直接使用操作系统进程管理命令或 foreground 后台进程。Release 不存在、资产不完整或服务身份不匹配时安全停止。Studio 只在人工审核状态且通过 `ensure-studio.cjs` 顶层视图能力门禁后打开。
+业务 Skill 共用原生 MCP 的四个工具：`runtime_status`、`runtime_cli`、
+`show_workflow_confirmation`、`runtime_install`。Plugin package `0.11.0` 消费 Runtime
+compatibility contract `0.5.0`；MCP 以提交在包内的 macOS Universal 2 / Windows x64
+二进制离线启动，不需要系统 Node.js 或 Bun。`runtime_cli` 只接受结构化 `argv`，并且
+只调用 Product 受管目录中的唯一稳定 launcher。Runtime 缺失时先显示安装卡片；用户
+确认的 `approvalDigest` 同时绑定版本、平台 installer、install manifest、目标目录与
+写入影响，`runtime_install` 会重新计算并精确比较，再校验 pinned SHA-256 和同 Release
+清单，最后才执行编译安装器。0.5.0 发布摘要尚未填入 requirements 时安装明确
+fail-closed。Studio 只在人工审核状态、浏览器真实读取同一服务的 capability manifest
+并通过门禁后打开。
 
-桌面 App 与纯 CLI 不是两套 Runtime。App 首次启动把随包 Runtime、Bun、FFmpeg 和
-FFprobe 安装到 `~/.chengfeng-videocut` 的版本化目录，并由同一个稳定 launcher
-执行 `service ensure`；所有业务 Skill 只认这个稳定入口。桌面来源在只读检查中标为
-`desktop-managed`，不需要系统 PATH 里的 Bun/FFmpeg。Plugin 不搜索 Electron
-资源目录，也不接受 foreground 进程冒充正式服务。`chengfeng-report-bug` 即使看到
-桌面来源也仍保持只读。
+正式新装机唯一入口是 Plugin 的 `runtime_install`：编译安装器把 Runtime、平台受管
+工具（含 managed Headless Shell）装入 `~/.chengfeng-videocut` 的版本化目录，并由
+同一个稳定 launcher 执行 `service ensure`。历史 Desktop / 既有安装若已经写入同一
+Product 受管根，可以被兼容复用，但 Desktop 不再是正式新装入口。Plugin 不搜索
+Electron 资源目录，也不接受 foreground 进程冒充正式服务；
+`chengfeng-report-bug` 对任何既有安装都保持只读。
 
 `chengfeng-report-bug` 不安装 Runtime、不启动 Studio，也不改项目。它只生成脱敏 Issue 草稿，用户确认同一份正文后才调用 GitHub CLI；没有明确 Issue URL 就不宣称上报成功。
 
@@ -97,16 +106,20 @@ Marketplace/Plugin 后，先以 manifest 的 exact 40-hex ref 执行 Marketplace
 Plugin add；后续失败则按本次实际创建的状态执行 Plugin remove → Marketplace
 remove，并再次复读确认。
 
-Plugin 是独立的 `0.10.8` 版本；`runtime-requirements.json` 要求 Product Runtime `0.4.8`。两者不能互相替代。
+Plugin 是独立的 `0.11.0` 版本；`runtime-requirements.json` 要求 Product Runtime `0.5.0`。两者不能互相替代。
 
 ## 开发验证
 
-Plugin 脚本与 MCP server 的依赖基线是 Node.js ≥ 20。
+原生 MCP 开发基线是 Go 1.24；发布包必须提交预构建二进制，因为 Marketplace 安装不
+保证运行构建生命周期，用户机器也不应需要 Go。构建产物必须复现出 macOS Universal 2
+与 Windows x64：
 
 ```bash
-npm install
-npm run build
-npm test
+go test ./...
+./scripts/build-native-mcp.sh
+go run ./cmd/native-mcp-smoke ./bin/chengfeng-videocut-mcp
 ```
 
-发布目录需要 `dist/server.mjs` 与 `public/`，不包含 `node_modules/`。
+核心剪辑、Runtime 状态/安装/调用都不依赖系统 Node/Bun。当前残余 Node-only 范围只有
+Plugin Marketplace 更新脚本，以及 Bug draft/submit 安全事务；它们不是核心剪辑链，
+但调用时仍要求 Node.js ≥ 20。不得把 0.11.0 宣称为所有辅助能力都零系统依赖。

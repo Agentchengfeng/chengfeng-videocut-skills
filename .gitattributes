@@ -1,2 +1,4 @@
 * text=auto eol=lf
 *.png binary
+plugins/chengfeng-videocut/bin/chengfeng-videocut-mcp binary
+plugins/chengfeng-videocut/bin/chengfeng-videocut-mcp.exe binary

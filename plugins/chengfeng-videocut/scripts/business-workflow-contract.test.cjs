@@ -48,8 +48,8 @@ assert.match(contract, /不产生一次性 Product receipt/, "one-time receipt m
 assert.match(contract, /素材库、material-library、上传会话/, "contract must explicitly prohibit asset/upload workflows");
 assert.match(
   checkUpdates,
-  /桌面版（推荐）[\s\S]*不要求用户把这些工具加入系统 PATH/,
-  "environment manager must document the dependency-bundled Desktop route",
+  /Plugin runtime_install[\s\S]*Headless Shell[\s\S]*不要求用户把 Bun、Node、FFmpeg 加入系统 PATH/,
+  "environment manager must document the managed installer route",
 );
 assert.match(
   reportBug,

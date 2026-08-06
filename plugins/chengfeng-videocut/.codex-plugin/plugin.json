@@ -1,7 +1,7 @@
 {
   "name": "chengfeng-videocut",
-  "version": "0.10.8",
-  "description": "Six task-facing chengfeng-videocut Skills: cut, subtitle, visual, export, safe bug reporting, and Marketplace update checks. Shared product boundaries are internal references, not a user-facing Skill.",
+  "version": "0.11.0",
+  "description": "Six task-facing chengfeng-videocut Skills plus a native offline MCP bootstrap for review confirmation and the managed Product Runtime.",
   "author": {
     "name": "Chengfeng",
     "url": "https://github.com/Agentchengfeng"
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "chengfeng-videocut",
     "shortDescription": "剪口播、成片、安全 Bug 与更新检查",
-    "longDescription": "提供两个口播业务入口，以及先脱敏确认的 Bug 上报和只经官方 Codex Marketplace 机制执行的 Skills 更新检查。共同产品边界以内置 reference 复用，不占用用户 Skill 入口；更新不覆盖本地 cache 或 Product Runtime，并要求可信来源和用户确认。",
+    "longDescription": "提供两个口播业务入口、原生离线 MCP 审核卡片与 Product Runtime 桥接，以及先脱敏确认的 Bug 上报和只经官方 Codex Marketplace 机制执行的 Skills 更新检查。MCP 启动不依赖系统 Node/Bun；Runtime 安装要求计划摘要精确确认并 fail-closed 校验资产。",
     "developerName": "Chengfeng",
     "category": "Design",
     "capabilities": [

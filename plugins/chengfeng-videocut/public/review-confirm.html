@@ -102,6 +102,17 @@
         ];
         if (data.expectedCutsRevision) lines.push(`expectedCutsRevision=${data.expectedCutsRevision}`);
         if (data.expectedEditListRevision) lines.push(`expectedEditListRevision=${data.expectedEditListRevision}`);
+        if (data.approvalDigest) lines.push(`approvalDigest=${data.approvalDigest}`);
+        if (data.installPlan) {
+          lines.push(`releaseTag=${data.installPlan.releaseTag}`);
+          lines.push(`platform=${data.installPlan.platform}`);
+          lines.push(`installerAsset=${data.installPlan.installerAsset}`);
+          lines.push(`installerSHA256=${data.installPlan.installerSHA256}`);
+          lines.push(`installManifestAsset=${data.installPlan.installManifestAsset}`);
+          lines.push(`installManifestSHA256=${data.installPlan.installManifestSHA256}`);
+          lines.push(`targetRoot=${data.installPlan.targetRoot}`);
+          lines.push(`impact=${data.installPlan.impact.replaceAll("\n", " ")}`);
+        }
         if (note.value.trim()) lines.push(`note=${note.value.trim().replaceAll("\n", " ")}`);
         if (!window.openai?.sendFollowUpMessage) { status.textContent = "预览模式：安装插件后会提交到当前对话。"; return; }
         submit.disabled = true; status.textContent = "正在提交...";

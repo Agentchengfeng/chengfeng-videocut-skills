@@ -13,8 +13,6 @@ node_modules/
 **/output/
 **/dist/
 **/build/
-!plugins/chengfeng-videocut/dist/
-!plugins/chengfeng-videocut/dist/server.mjs
 *.mp4
 *.mov
 *.m4a

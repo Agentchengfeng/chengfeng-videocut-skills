@@ -34,15 +34,17 @@ Runtime。
 
 ## 命令
 
-```bash
-node "<插件根>/scripts/ensure-running.cjs" --json
-node "<插件根>/scripts/videocut-cli.cjs" visual get   <project> --json
-node "<插件根>/scripts/videocut-cli.cjs" visual frame <project> --cues sub-0004,sub-0005 --count 12 --out <dir> --json
-node "<插件根>/scripts/videocut-cli.cjs" visual add   <project> --module modules/01-xx/index.html --cues sub-0004,sub-0005 [--zoom x,y,w,h] [--id vis-0001] --json
-node "<插件根>/scripts/videocut-cli.cjs" visual remove <project> --id vis-0001 --json
+依次调用 MCP `runtime_cli`；`argv` 是结构化数组，按需保留可选参数：
+
+```json
+{"argv":["service","ensure","--json"]}
+{"argv":["visual","get","<project>","--json"]}
+{"argv":["visual","frame","<project>","--cues","sub-0004,sub-0005","--count","12","--out","<dir>","--json"]}
+{"argv":["visual","add","<project>","--module","modules/01-xx/index.html","--cues","sub-0004,sub-0005","--zoom","x,y,w,h","--id","vis-0001","--json"]}
+{"argv":["visual","remove","<project>","--id","vis-0001","--json"]}
 ```
 
-`ensure-running` 必须先证明 canonical 5190 属于当前平台的托管服务；失败就透传并
+`service ensure` 必须先证明 canonical 5190 属于当前平台的托管服务；失败就透传并
 停止，不回退 foreground 或自选端口。
 
 层绑**字幕屏**（`--cues`），产品自己换算成词 id——层永远不可能绑上没人说的词，

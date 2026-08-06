@@ -46,14 +46,13 @@ FFmpeg，或启动第二个 Runtime。
 
 **干什么**：把用户的本地真实视频和云端逐词稿交给产品，原子建档，起服务，读回状态。
 
-```bash
-# 云端逐词转录（生成任务目录内的 transcript 候选）之后：
-node "<插件根>/scripts/videocut-cli.cjs" project create "<项目目录>" --video "<任务目录内的视频文件>" --transcript "<任务目录内的逐词稿>" --json
+下列均调用 MCP `runtime_cli`；`argv` 是结构化数组，不拼 shell 字符串：
 
-node "<插件根>/scripts/ensure-running.cjs" --json          # 产品声明式确保常驻服务（5190）
-
-node "<插件根>/scripts/videocut-cli.cjs" workflow get "<项目目录>" --json    # Product state readback
-node "<插件根>/scripts/videocut-cli.cjs" cuts get "<项目目录>" --json
+```json
+{"argv":["project","create","<项目目录>","--video","<任务目录内的视频文件>","--transcript","<任务目录内的逐词稿>","--json"]}
+{"argv":["service","ensure","--json"]}
+{"argv":["workflow","get","<项目目录>","--json"]}
+{"argv":["cuts","get","<项目目录>","--json"]}
 ```
 
 规矩：
@@ -82,16 +81,16 @@ node "<插件根>/scripts/videocut-cli.cjs" cuts get "<项目目录>" --json
 **干什么**：在一切删词判断**之前**用词典修正转录听错的字——字不对，后面的判断必错；
 听错的字不是多余的话，删词修不掉它。
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" transcript dictionary "<项目目录>" --dictionary "<插件根>/references/ai-term-dictionary.md" --json
+```json
+{"argv":["transcript","dictionary","<项目目录>","--dictionary","<插件根>/references/ai-term-dictionary.md","--json"]}
 ```
 
 用你的文件工具检查 `$HOME/.chengfeng-videocut/dictionary.md` 是否存在；存在就再过一遍
 （过渡做法：CLI 暂只收单文件，分两次跑；它只能补充、不能撤销上一遍——完整的
 用户优先合并等多词典 CLI 发布）：
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" transcript dictionary "<项目目录>" --dictionary "$HOME/.chengfeng-videocut/dictionary.md" --json
+```json
+{"argv":["transcript","dictionary","<项目目录>","--dictionary","<用户主目录>/.chengfeng-videocut/dictionary.md","--json"]}
 ```
 
 **产出物：修字表**——把两次调用返回的 `applied` 清单合并成一张小表（原词 → 改成 →
@@ -100,9 +99,9 @@ node "<插件根>/scripts/videocut-cli.cjs" transcript dictionary "<项目目录
 
 只有词典解决不了、且作者手上有稿子时，才追加一次上下文对齐：
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" transcript align "<项目目录>" --script "<口播稿文件>" --json   # 只报不改
-node "<插件根>/scripts/videocut-cli.cjs" transcript correct "<项目目录>" --file "<修正文件>" --json
+```json
+{"argv":["transcript","align","<项目目录>","--script","<口播稿文件>","--json"]}
+{"argv":["transcript","correct","<项目目录>","--file","<修正文件>","--json"]}
 ```
 
 规矩：
@@ -116,7 +115,7 @@ node "<插件根>/scripts/videocut-cli.cjs" transcript correct "<项目目录>" 
 
 **文稿按标点分段**：转录里每个词带标点，文稿一个逗号一段、一句一行；字幕吃同一份
 标点，两边断句一致。2026-07-28 之前的老项目没有标点，跑
-`node "<插件根>/scripts/videocut-cli.cjs" transcript regroup "<项目目录>" --json` 重切段落即可（逐词校验 id/时间/文字
+调用 `runtime_cli`，参数 `{"argv":["transcript","regroup","<项目目录>","--json"]}` 重切段落即可（逐词校验 id/时间/文字
 不变，对剪过的项目安全）；真要标点得重转——标点在旧转录里根本不存在。
 
 ## 3. 删词：五轮扫描，每轮只找一类
@@ -126,8 +125,8 @@ node "<插件根>/scripts/videocut-cli.cjs" transcript correct "<项目目录>" 
 
 先读材料：
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" transcript playback "<项目目录>" --json
+```json
+{"argv":["transcript","playback","<项目目录>","--json"]}
 ```
 
 再用你的读文件工具读 `$HOME/.chengfeng-videocut/cut-preferences.md`（用户偏好，
@@ -185,9 +184,9 @@ node "<插件根>/scripts/videocut-cli.cjs" transcript playback "<项目目录>"
 
 **干什么**：全量提交候选，把两张表呈给用户，然后打开产品审核页让用户亲自复核。
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" cuts get "<项目目录>" --json              # 取 Cuts 自己的 revision
-node "<插件根>/scripts/videocut-cli.cjs" cuts set "<项目目录>" --file "<提案文件>" --expected-revision "<Cuts当前revision>" --json
+```json
+{"argv":["cuts","get","<项目目录>","--json"]}
+{"argv":["cuts","set","<项目目录>","--file","<提案文件>","--expected-revision","<Cuts当前revision>","--json"]}
 ```
 
 候选只引用稳定 `wordIds`：
@@ -220,12 +219,14 @@ node "<插件根>/scripts/videocut-cli.cjs" cuts set "<项目目录>" --file "<�
 
 然后**先呈表、再开页**：把两张表发给用户，让他拿着表进 Studio 复核。
 
-```bash
-node "<插件根>/scripts/ensure-running.cjs" --json                    # 打开前再次幂等 ensure
-node "<插件根>/scripts/videocut-cli.cjs" open "<项目目录>" --json          # 取产品返回的项目 URL
-
-node "<插件根>/scripts/ensure-studio.cjs" --url "<产品项目URL>" --view koubo --json                                  # 能力门禁：确认 5190 注册了 koubo 视图
+```json
+{"argv":["service","ensure","--json"]}
+{"argv":["open","<项目目录>","--json"]}
 ```
+
+随后用 Codex 内置浏览器读取同一 canonical origin 的
+`/chengfeng-videocut-capabilities.json`，验证其中声明 `koubo` 顶层视图；不要再调用
+Plugin 的 Node `ensure-studio.cjs`。
 
 规矩：
 
@@ -243,9 +244,9 @@ node "<插件根>/scripts/ensure-studio.cjs" --url "<产品项目URL>" --view ko
 
 用户复核完成后，先读回：
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" workflow get "<项目目录>" --json
-node "<插件根>/scripts/videocut-cli.cjs" cuts get "<项目目录>" --json
+```json
+{"argv":["workflow","get","<项目目录>","--json"]}
+{"argv":["cuts","get","<项目目录>","--json"]}
 ```
 
 **复盘**（过渡做法，产品的 `cuts diff` 命令发布后替换）：拿第 5 步留存的
@@ -273,7 +274,7 @@ node "<插件根>/scripts/videocut-cli.cjs" cuts get "<项目目录>" --json
 **不弹确认卡，不执行剪切**——物理剪切的确认卡属于导出 Skill，那张卡冻结的必须是
 用户按下确认那一刻的 revision。
 
-`return_cut_review`：先再次 `node "<插件根>/scripts/ensure-running.cjs" --json`，再返回同一 Studio 继续复核；
+`return_cut_review`：先再次调用 `runtime_cli`：`{"argv":["service","ensure","--json"]}`，再返回同一 Studio 继续复核；
 不触发复盘，复盘只在最终交棒做一次。
 
 报告分级：Product 结构化 revision 为 **API/readback PASS**；真实浏览器帧审核才是

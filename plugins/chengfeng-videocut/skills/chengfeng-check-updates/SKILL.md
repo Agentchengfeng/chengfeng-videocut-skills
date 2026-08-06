@@ -67,15 +67,16 @@ semver 优先级视为 active。若最高位置存在同优先级目录，返回
 
 ### 三、Runtime 配套吗
 
-```bash
-node "<插件根>/scripts/ensure-runtime.cjs" --install-if-missing --json
-```
+先调用 MCP `runtime_status`。若 `state=missing`，调用
+`show_workflow_confirmation`：`{"kind":"runtime_install"}` 展示固定 release、平台资产、
+目标目录、影响与 `approvalDigest`；只有用户明确确认同一张卡片后，才把该
+`approvalDigest` 原样交给 `runtime_install`。不得传 `confirmed=true` 代替摘要。
 
 - `ready` → **就绪**，业务 Skill 继续
-  - `runtime.kind=desktop-managed` 表示桌面 App 已把随包 Runtime、Bun、FFmpeg 和
-    FFprobe 安装到 Product 的统一受管目录；Skills 直接复用，不再另装依赖、另起服务
-  - `runtime.kind=managed/path/source` 仍是兼容的 CLI 安装来源；后续业务合同相同
-- missing：脚本只提示一次「正在从 GitHub Release 安装」，SHA-256 校验完成后自动续跑
+  - 正式来源是 Plugin installer 建立的 Product 统一受管目录；历史
+    `desktop-managed` / 既有安装若指向同一受管根可兼容复用，后续业务合同相同
+- missing：先走上述安装确认卡；Release 的 installer 与 install manifest 摘要未锁定时
+  卡片只允许暂停，`runtime_install` 必须 fail-closed，不得只信同源 checksum
 - `runtime_unhealthy`、安装失败或安装后 doctor 失败 → **停**，报告结构化诊断。
   **停止就是停止：禁止用自制的审核页、播放器、时间线或任何替代界面继续流程。**
   产品不可用时做出的任何产出都不可信（真实案例：Runtime 缺失时 Agent 手搓了一个
@@ -88,30 +89,32 @@ node "<插件根>/scripts/ensure-runtime.cjs" --install-if-missing --json
 
 ### 机器前置依赖
 
-支持 **macOS** 与 **Windows 10/11**，分两条安装路径：
+支持 **macOS** 与 **Windows 10/11**；正式新装路径只有一条：
 
 ```text
-桌面版（推荐）
-  安装并至少启动一次 Chengfeng VideoCut
-  -> App 随包安装 Bun、FFmpeg、FFprobe 和 Runtime
-  -> 不要求用户把这些工具加入系统 PATH
-  -> Skills 通过 ~/.chengfeng-videocut/bin 的稳定入口复用同一服务
+Plugin runtime_install
+  -> 编译 installer 按已验证 manifest 安装 Runtime 与平台 managed tools
+  -> managed tools 包含 Headless Shell 及产品所需媒体工具
+  -> 不要求用户把 Bun、Node、FFmpeg 加入系统 PATH
+  -> Skills 只通过 ~/.chengfeng-videocut/bin 的稳定入口复用同一服务
 
-纯 CLI 安装
-  macOS     brew install bun ffmpeg
-  Windows   winget install Oven-sh.Bun Gyan.FFmpeg
-            装完新开一个终端/会话，PATH 才生效
+历史 Desktop / 既有安装
+  -> 仅当已经指向同一 Product 受管根时兼容复用
+  -> 不再作为正式新装机入口
 ```
 
-两条路径都仍需要 Node.js ≥ 20 来执行 Plugin 脚本；导出字幕/动画仍需要 Google
-Chrome。纯 CLI 用户自行安装，Windows 可用
-`winget install OpenJS.NodeJS.LTS Google.Chrome`。缺项时必须明确停止，不静默跳过。
+四个核心业务 Skill 与 Runtime 安装/调用不要求系统 Node.js 或 Bun；原生 MCP 直接
+调用 Product 的受管启动器。导出字幕/动画仍需要 Google Chrome。当前仅“检查 Plugin
+更新”以及 Bug 草稿/提交两个辅助事务仍是 Node.js ≥ 20 的兼容脚本；调用这些辅助
+功能时缺 Node 必须明确停止，不能把本版宣称为所有辅助功能都零系统依赖。Windows
+可用 `winget install OpenJS.NodeJS.LTS Google.Chrome`。
 
 Skills 更新身份自证还需要 Git；Windows 可用 `winget install Git.Git`。Git 不可执行或
 无法读取官方 snapshot 的 origin/HEAD/提交关系时，更新检查 fail-closed，但仍按上面
 规则继续 Runtime 检查。
 
-云端转录另需火山引擎凭证：`node "<插件根>/scripts/videocut-cli.cjs" config set transcription.apiKey <key>`。
+云端转录另需火山引擎凭证：调用 MCP `runtime_cli`，参数
+`{"argv":["config","set","transcription.apiKey","<key>"]}`。
 
 详细协议见 [Runtime 与产品契约](../../references/runtime-and-product-contract.md)。
 
@@ -217,14 +220,12 @@ Runtime、项目、媒体、EDL 或 Studio 状态。
 
 直接跑完整就绪检查；拿到「就绪」后再跑完整自检并原样报告：
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" doctor --json
-```
+调用 MCP `runtime_cli`：`{"argv":["doctor","--json"]}`。
 
 报告：Runtime 版本与位置、doctor 每项检查结果、缺失项的修法（机器依赖指引安装；
-转录凭证指引 `node "<插件根>/scripts/videocut-cli.cjs" config set transcription.apiKey <key>`）。
-若 `runtime.kind=desktop-managed`，明确说明 Bun/FFmpeg/FFprobe 来自桌面包且无需
-修改系统 PATH。装好后告诉用户：直接说「剪口播」就能开始。
+转录凭证指引 `runtime_cli {"argv":["config","set","transcription.apiKey","<key>"]}`）。
+若复用了历史 `desktop-managed` 安装，明确说明这是兼容路径而非当前新装入口。
+装好后告诉用户：直接说「剪口播」就能开始。
 
 ## 边界
 
@@ -237,4 +238,4 @@ node "<插件根>/scripts/videocut-cli.cjs" doctor --json
 - 不发布、不改项目数据或媒体；用户确认后的官方 Codex activation 与 Runtime
   安装是仅有的写入例外
 - 不搜索 Electron `.app`、NSIS 安装目录或把 Electron 资源路径交给业务 Skill；
-  桌面 App 负责写入稳定 Product 入口，Skills 只认该入口
+  新的稳定 Product 入口只由已确认并校验的 Runtime installer 写入

@@ -20,45 +20,38 @@ Plugin 根名  -> 安装与 UI 群组名，不是同名 Skill
 ## 安装
 
 一行命令装插件（挂市场 + materialize 精确快照 + 安装，`&&` 串联，前一步成功才继续）。
-播放器 / Studio 不需要单独装：第一次让 Agent 真正干活（剪口播、导出等）时，
-「检查更新」的就绪检查会自动从固定版本的 GitHub Release 下载、SHA-256 校验并安装，
-只是那一次任务要先等几分钟安装。
+Product Runtime / Studio 不需要单独寻找安装包：第一次让 Agent 真正干活时，原生 MCP
+先显示固定版本、平台资产、目标与影响；用户确认同一 `approvalDigest` 后才下载、校验并
+执行编译 installer。
 
 **系统要求：macOS**（Apple Silicon / Intel）**或 Windows 10/11**。
 Windows 支持自 Runtime v0.4.2 起正式可用（真机验收：安装、常驻服务、崩溃自愈、
 重启自启、建档、导出成片全链通过）。虚拟机里试用 Windows 11 24H2+ 需先关 VBS：
 `bcdedit /set {default} hypervisorlaunchtype off`（物理机不受影响）。
 
-推荐安装桌面预览包：它自带 Runtime、Bun、FFmpeg 与 FFprobe，并把它们安装到
-`~/.chengfeng-videocut` 的统一受管目录；Plugin 与桌面 App 复用同一个稳定 CLI 和
-后台服务，不需要把这些可执行文件加入系统 PATH。
-
-桌面路径仍需要 Node.js 运行 Skill 脚本 / MCP Server，需要 Chrome 导出字幕和动画。
-只使用 Plugin + CLI 便携包时，还需自行准备 Bun 与 FFmpeg：
+正式新装机唯一入口是 Plugin `runtime_install`。Runtime installer 把 Runtime、媒体工具
+与 managed Headless Shell 装到 `~/.chengfeng-videocut`，核心剪辑链不要求系统安装
+Node、Bun 或 FFmpeg。历史 Desktop / 既有安装仅在已经指向同一 Product 受管根时兼容复用。
 
 | 依赖 | 用途 | 要求 |
 | --- | --- | --- |
-| Bun | 运行产品 Runtime；桌面包已内置 | ≥ 1.2 |
-| Node.js | Skill 脚本、MCP Server 与 Runtime 安装器 | ≥ 20 |
-| ffmpeg | 剪辑与导出；桌面包已内置 | ≥ 6（含 ffprobe） |
-| Google Chrome | 导出成片时渲染字幕和动画 | 桌面版 |
+| Product managed tools | Runtime、媒体工具、Headless Shell | Runtime installer 随 manifest 安装 |
+| Google Chrome | 导出成片时渲染字幕和动画 | 当前合同仍要求 |
+| Node.js | 仅 Plugin 更新与 Bug draft/submit 辅助事务 | ≥ 20（核心剪辑不需要） |
 
 ```bash
-# 仅 Plugin + CLI 路径需要手工补齐这些依赖
-# macOS
-brew install oven-sh/bun/bun node ffmpeg      # Chrome 从官网装
-# Windows（装完新开一个终端，PATH 才生效）
-winget install Oven-sh.Bun OpenJS.NodeJS.LTS Gyan.FFmpeg Google.Chrome
+# 仅在使用残余辅助事务时需要 Node；Chrome 仍用于导出
+# Windows
+winget install OpenJS.NodeJS.LTS Google.Chrome
 ```
 
 **Runtime 装不上时，Agent 应停在安装指引上**——用自制审核页/播放器替代产品属于违反
 Skill 合同的行为（真实发生过：Runtime 缺失时 Agent 手搓了一个"审片台"，产出与产品
 完全不兼容）。遇到这种情况，把 Agent 的报错原文发 Issue。
 
-本次待发布 Plugin 是 `0.10.8`。内容提交 A 为
-`a513462f65b6f50083a20ac8da6ec3c32d2ddcde`，带 provenance 的 Marketplace
-快照 B 为 `1487e02b1c0c39ea74d079e8ce45da56bf59bc32`；Bootstrap manifest 永久固定
-到 B。候选验证环境可使用 Codex Marketplace 安装：
+本分支候选 Plugin 是 `0.11.0`。它尚未生成内容提交 A / Marketplace 快照 B，也没有
+写入 bootstrap；Runtime 0.5.0 的 installer 与 install manifest 两个 pinned SHA-256
+回填之前不得发布或把候选说成可安装。当前公开的 0.10.8 快照仅是历史稳定入口：
 
 ```bash
 codex plugin marketplace add Agentchengfeng/chengfeng-videocut-skills --ref 1487e02b1c0c39ea74d079e8ce45da56bf59bc32 && codex plugin marketplace upgrade chengfeng-videocut --json && codex plugin add chengfeng-videocut@chengfeng-videocut
@@ -92,13 +85,13 @@ codex plugin list --json
 安装插件后，第一次使用任一业务 Skill 时会先检测产品 Runtime：
 
 ```text
-doctor
+runtime_status
   |
-  +-- desktop-managed / ready --> 复用桌面安装与同一个用户服务
+  +-- ready --> 复用 Product 受管根与同一个用户服务
   |
   +-- missing
   |      |
-  |      +--> 提示一句安装状态
+  |      +--> 安装确认卡 + approvalDigest
   |      +--> GitHub Release
   |      +--> SHA-256 校验
   |      +--> 安装后 doctor
@@ -113,9 +106,12 @@ Runtime 默认安装到：
 ~/.chengfeng-videocut
 ```
 
-Plugin 0.10.8 的产品合同固定为 `v0.4.8` Release、Runtime 0.4.8+ EDL 与跨平台用户级常驻 service 能力，以及 Studio 的三个顶层视图与 `managedTimelineEditing=true`。桌面路径优先识别受管安装；纯 CLI 首次安装只从这个精确 Release 下载 `install.cjs`、`SHA256SUMS.txt` 与 Runtime portable contract；安装器只消费 `chengfeng-videocut-portable.tar.gz`，并要求清单同时覆盖它和版本化的 `chengfeng-videocut-0.4.8-portable.tar.gz`，绝不下载桌面 DMG/EXE。不使用会漂移的 `latest`。Release 不存在、portable 资产或哈希不全、哈希不匹配或已有 Runtime 不兼容时均停止，不覆盖现有安装，也不回退旧版。
+Plugin 0.11.0 的合同固定为 Runtime `v0.5.0`。requirements 明确列出平台 installer、
+install manifest、Runtime tarball 与平台 tools tarball；代码不硬编码这些名字。installer
+和 install manifest 的 pinned SHA-256 任一未发布时，确认卡不生成可执行摘要，安装
+fail-closed。Runtime 健康还不够：semver 必须达到最低版本并覆盖完整 capability 集。
 
-每个业务流程在第一次产品 API 前、每次人工审核恢复前都会执行共享 `ensure-running`：
+每个业务流程在第一次产品 API 前、每次人工审核恢复前都经 MCP `runtime_cli` 执行：
 
 ```text
 Skill -> Product service ensure -> managed user service ready -> 继续当前流程
@@ -219,16 +215,18 @@ chengfeng-videocut-skills/
 └── CITATION.cff
 ```
 
-发布插件包含约 1.1MB 的预打包 MCP Server，不包含 `node_modules`。
+发布插件提交预构建的 macOS Universal 2 与 Windows x64 原生 MCP，不包含
+`node_modules`。Marketplace 不保证构建生命周期，用户机器也不应需要 Go，因此二进制
+必须作为发布内容提交；构建要用 `-trimpath`、空 build id 并做双次 SHA-256 复现检查。
 
 ## 发布边界
 
-Plugin 0.10.8 依赖 Runtime 0.4.8 的 portable 安装、用户服务与当前 EDL / Studio 合同。稳定发布顺序是：
+Plugin 0.11.0 依赖 Runtime 0.5.0 的编译 installer、managed tools、用户服务与当前 EDL / Studio 合同。稳定发布顺序是：
 
 ```text
-Runtime v0.4.8 Release
-  -> install.sh、install.cjs、版本化/稳定名 portable 与 tgz 进入 SHA256SUMS
-  -> Skills 路径只下载 stable portable tarball，不下载 Desktop DMG/EXE
+Runtime v0.5.0 Release
+  -> 平台 installers、install manifest、Runtime 与 tools tarballs 进入 SHA256SUMS
+  -> 把 installer + install manifest 两个 pinned SHA-256 回填 requirements
   -> 从公开附件在 Windows / macOS 隔离环境安装并执行 doctor
   -> Plugin 内容提交 A
   -> 只增加 provenance 的 Marketplace 快照 B

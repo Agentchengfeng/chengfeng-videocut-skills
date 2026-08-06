@@ -53,9 +53,11 @@ Runtime。
 
 ## 1. 入口断言
 
-```bash
-node "<插件根>/scripts/ensure-running.cjs" --json
-node "<插件根>/scripts/videocut-cli.cjs" inspect "<项目目录>" --json
+依次调用 MCP `runtime_cli`；`argv` 是结构化数组：
+
+```json
+{"argv":["service","ensure","--json"]}
+{"argv":["inspect","<项目目录>","--json"]}
 ```
 
 | 断言 | 不成立时 |
@@ -82,12 +84,12 @@ node "<插件根>/scripts/videocut-cli.cjs" inspect "<项目目录>" --json
 
 两件不同的工具，都要用。
 
-```bash
+```json
 # 词典：这个说话人的固定写法，不需要证据
-node "<插件根>/scripts/videocut-cli.cjs" transcript dictionary "<项目目录>" --dictionary "<插件根>/references/ai-term-dictionary.md" --json
+{"argv":["transcript","dictionary","<项目目录>","--dictionary","<插件根>/references/ai-term-dictionary.md","--json"]}
 
 # 文稿：作者手上有稿子时才做，逐处要证据
-node "<插件根>/scripts/videocut-cli.cjs" transcript align "<项目目录>" --script "<口播稿文件>" --json
+{"argv":["transcript","align","<项目目录>","--script","<口播稿文件>","--json"]}
 ```
 
 ```text
@@ -109,8 +111,8 @@ node "<插件根>/scripts/videocut-cli.cjs" transcript align "<项目目录>" --
 
 `transcript align` 只报不改。要应用它的提案，把 `corrections` 转成 `[{wordId, text}]` 再跑：
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" transcript correct "<项目目录>" --file "<修正文件>" --json
+```json
+{"argv":["transcript","correct","<项目目录>","--file","<修正文件>","--json"]}
 ```
 
 改完转录，**引用了这些词的字幕屏会在同一步里跟着改写**，回报 `subtitles.updated`。
@@ -121,8 +123,8 @@ node "<插件根>/scripts/videocut-cli.cjs" transcript correct "<项目目录>" 
 
 ## 3. 分屏
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" subtitle build "<项目目录>" --json
+```json
+{"argv":["subtitle","build","<项目目录>","--json"]}
 ```
 
 四条规则，按顺序：
@@ -171,8 +173,8 @@ transcriptMoved    转录已经不是当初那一份了
 
 ## 4. 复核：在 Studio 里逐屏看
 
-```bash
-node "<插件根>/scripts/videocut-cli.cjs" open "<项目目录>" --json
+```json
+{"argv":["open","<项目目录>","--json"]}
 ```
 
 打开后切到左栏的**「字幕」标签页**。一行一屏：左边序号和时间，右边就是字，点进去直接改。

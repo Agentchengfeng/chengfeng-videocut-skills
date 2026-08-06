@@ -31,7 +31,7 @@ user-invocable: true
 - 功能建议：产品从未承诺该能力；不要伪装成 Bug。
 - 使用疑问：先回答或诊断，不自动上报。
 
-只收集复现所需的最小事实。不得安装 Runtime、启动 Studio、改项目、重新剪片或上传媒体来“补证据”。Runtime 存在时，可从插件根目录执行 `node scripts/ensure-runtime.cjs --json` 做只读探测，只保留 `state / kind / version / healthy / error.code`；不要附完整 doctor 输出。`kind=desktop-managed` 只表示安装来源是桌面 App，不授权本 Skill 启动 App、服务或重新安装。不存在就写“未检测到”。
+只收集复现所需的最小事实。不得安装 Runtime、启动 Studio、改项目、重新剪片或上传媒体来“补证据”。调用 MCP `runtime_status` 做只读探测，只保留 `state / runtimeVersion / ready / reason`；不要附完整 doctor 输出。状态只描述 Product 受管入口；即使历史诊断中出现 `kind=desktop-managed`，也不授权本 Skill 启动服务或重新安装。不存在就写“未检测到”。
 
 ## 2. 选择固定仓库
 

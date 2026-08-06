@@ -19,7 +19,7 @@
 **必须用 Product 提供的视图，不许自己拼：**
 
 ```bash
-node "<插件根>/scripts/videocut-cli.cjs" transcript playback "<项目目录>" --json
+调用 MCP `runtime_cli`：`{"argv":["transcript","playback","<项目目录>","--json"]}`
 ```
 
 它按播放顺序铺平成一条流，`removedSpeech` 标出此处原本说过话、已删除、不会播出。

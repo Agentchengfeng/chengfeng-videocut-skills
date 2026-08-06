@@ -15,46 +15,24 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-go@v5
         with:
-          node-version: 20
+          go-version: '1.24.x'
 
-      - name: 全部插件脚本语法必须在 Windows Node 下可解析
-        shell: bash
-        run: |
-          set -e
-          for f in plugins/chengfeng-videocut/scripts/*.cjs; do
-            node --check "$f"
-          done
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: 装 ffmpeg（doctor 的必需依赖）
+      - name: 原生 MCP 单测、Windows x64 构建与真实 STDIO smoke
         shell: pwsh
         run: |
-          $url = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip'
-          $ok = $false
-          foreach ($i in 1..3) {
-            try { Invoke-WebRequest $url -OutFile ff.zip -TimeoutSec 120; $ok = $true; break }
-            catch { Start-Sleep -Seconds (10 * $i) }
-          }
-          if (-not $ok) { throw 'ffmpeg download failed' }
-          Expand-Archive ff.zip -DestinationPath $env:RUNNER_TEMP\ff
-          $bin = Get-ChildItem -Directory $env:RUNNER_TEMP\ff | Select-Object -First 1
-          Add-Content $env:GITHUB_PATH (Join-Path $bin.FullName 'bin')
-
-      - name: ensure-runtime 在 Windows 必须真的装得上
-        shell: bash
-        run: |
-          set -e
-          set +e
-          node plugins/chengfeng-videocut/scripts/ensure-runtime.cjs --install-if-missing --json > out.json
-          echo "exit=$?"
-          cat out.json
-          set -e
-          node -e 'const j=require("./out.json"); if(j.ok!==true||j.runtime?.state!=="ready") process.exit(1); console.log("runtime ready:", j.runtime.runtimeVersion)'
+          Set-Location plugins/chengfeng-videocut
+          go test ./...
+          go build -trimpath -buildvcs=false -o bin/chengfeng-videocut-mcp.exe ./cmd/chengfeng-videocut-mcp
+          go build -trimpath -buildvcs=false -o "$env:RUNNER_TEMP/native-mcp-smoke.exe" ./cmd/native-mcp-smoke
+          $cache = "$env:RUNNER_TEMP/plugin cache"
+          New-Item -ItemType Directory -Force "$cache/bin" | Out-Null
+          Copy-Item bin/chengfeng-videocut-mcp.exe "$cache/bin/chengfeng-videocut-mcp.exe"
+          $env:CHENGFENG_VIDEOCUT_HOME = "$env:RUNNER_TEMP/native-empty"
+          $env:CHENGFENG_VIDEOCUT_SMOKE_RENAME_CACHE = $cache
+          $env:PATH = "$env:SystemRoot\System32"
+          & "$env:RUNNER_TEMP/native-mcp-smoke.exe" "$cache/bin/chengfeng-videocut-mcp.exe"
 
   plugin-update:
     runs-on: windows-latest

@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "chengfeng-videocut": {
-      "command": "node",
-      "args": ["dist/server.mjs"],
+      "command": "./bin/chengfeng-videocut-mcp",
+      "args": [],
       "cwd": "."
     }
   }

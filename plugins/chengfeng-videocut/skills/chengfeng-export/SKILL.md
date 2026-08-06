@@ -37,16 +37,23 @@ FFmpeg/Bun 或起第二个 Runtime。
 
 ## 命令
 
-```bash
-node "<插件根>/scripts/ensure-running.cjs" --json
-node "<插件根>/scripts/videocut-cli.cjs" export <project> --dry-run --json          # 先看计划，不编码
-node "<插件根>/scripts/videocut-cli.cjs" export <project> --json                    # 出成片（默认 2 倍、源帧率）
-node "<插件根>/scripts/videocut-cli.cjs" export <project> --out /path/成片.mp4 --json
-node "<插件根>/scripts/videocut-cli.cjs" export <project> --scale 1 --json          # 只要源尺寸
-node "<插件根>/scripts/videocut-cli.cjs" export <project> --keep-work --json        # 留下中间片和逐帧 PNG，供排查
+依次调用 MCP `runtime_cli`；`argv` 是结构化数组，按用户选择调用对应导出形式：
+
+```json
+{"argv":["service","ensure","--json"]}
+{"argv":["export","<project>","--dry-run","--json"]}
+{"argv":["job","start","export","<project>","--json"]}
+{"argv":["job","start","export","<project>","--out","/path/成片.mp4","--json"]}
+{"argv":["job","start","export","<project>","--scale","1","--json"]}
+{"argv":["job","start","export","<project>","--keep-work","--json"]}
 ```
 
-`ensure-running` 身份不匹配、端口冲突或服务不健康时立即停止；不允许用 foreground
+`job start` 返回持久 `jobId` 后，用 `runtime_cli` 的结构化 argv 调用
+`["job","get","<jobId>","--json"]` 或 `["job","list","--json"]` 追踪；只有用户明确
+取消才调用 `["job","cancel","<jobId>","--json"]`。Codex、MCP 或页面退出不等于取消，
+不得回退同步 `export` 旁路。
+
+`service ensure` 身份不匹配、端口冲突或服务不健康时立即停止；不允许用 foreground
 临时顶替后继续导出。
 
 ## 两步，别只跑第二步
@@ -54,7 +61,7 @@ node "<插件根>/scripts/videocut-cli.cjs" export <project> --keep-work --json 
 ```text
 ① --dry-run 先报计划    片长、帧数、字幕屏数、画面层数、推近段数、输出尺寸
                        念给用户听。数字不对就是上游不对，编码十分钟不会修好它
-② 真跑                 assemble → overlay → compose → verify 四段进度
+② job start 真跑       assemble → overlay → compose → verify 四段持久任务进度
 ```
 
 `--dry-run` 里的 `warnings` 必须原样转述。它只报一类事：**某些字幕屏或画面层的词
