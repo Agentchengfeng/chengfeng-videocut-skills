@@ -48,4 +48,20 @@ assert.equal(mcp.command, "./bin/chengfeng-videocut-mcp");
 assert.equal(mcp.cwd, ".");
 assert.equal(mcp.tool_timeout_sec, 1201);
 
-console.log(JSON.stringify({ coreSkillsUseNativeMCP: true, persistentExportJobs: true, userSystemDependenciesRemoved: true }));
+const runtimeRequirements = JSON.parse(read("runtime-requirements.json"));
+assert.equal(runtimeRequirements.schemaVersion, 3, "Runtime contract must use the single-package schema");
+for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) {
+  assert.deepEqual(
+    Object.keys(assets).sort(),
+    ["runtimeLauncher", "runtimePackageAsset", "runtimePackageSHA256"],
+    `${platform} must expose exactly one Runtime package and its launcher`,
+  );
+  assert.equal(assets.runtimePackageSHA256, null, `${platform} must fail closed before the formal digest is published`);
+}
+
+const confirmationCard = read("public/review-confirm.html");
+assert.match(confirmationCard, /runtimePackageAsset/);
+assert.match(confirmationCard, /runtimePackageSHA256/);
+assert.doesNotMatch(confirmationCard, /installerAsset|installManifestAsset|installManifestSHA256/);
+
+console.log(JSON.stringify({ coreSkillsUseNativeMCP: true, persistentExportJobs: true, userSystemDependenciesRemoved: true, singleRuntimePackageContract: true }));

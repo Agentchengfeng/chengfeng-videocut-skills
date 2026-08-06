@@ -45,13 +45,14 @@ $chengfeng-videocut:chengfeng-check-updates
 compatibility contract `0.5.0`；MCP 以提交在包内的 macOS Universal 2 / Windows x64
 二进制离线启动，不需要系统 Node.js 或 Bun。`runtime_cli` 只接受结构化 `argv`，并且
 只调用 Product 受管目录中的唯一稳定 launcher。Runtime 缺失时先显示安装卡片；用户
-确认的 `approvalDigest` 同时绑定版本、平台 installer、install manifest、目标目录与
-写入影响，`runtime_install` 会重新计算并精确比较，再校验 pinned SHA-256 和同 Release
-清单，最后才执行编译安装器。0.5.0 发布摘要尚未填入 requirements 时安装明确
+确认的 `approvalDigest` 同时绑定版本、平台单个 Runtime 安装包、该包 SHA-256、目标目录与
+写入影响，`runtime_install` 会重新计算并精确比较，再下载和校验这一个包，最后在本地执行。
+包内包含 Runtime、受管 Bun、FFmpeg、FFprobe 和 Headless Shell，不再下载 Release 的其他依赖。
+0.5.0 发布摘要尚未填入 requirements 时安装明确
 fail-closed。Studio 只在人工审核状态、浏览器真实读取同一服务的 capability manifest
 并通过门禁后打开。
 
-正式新装机唯一入口是 Plugin 的 `runtime_install`：编译安装器把 Runtime、平台受管
+正式新装机唯一入口是 Plugin 的 `runtime_install`：单个 Runtime 安装包把 Runtime、平台受管
 工具（含 managed Headless Shell）装入 `~/.chengfeng-videocut` 的版本化目录，并由
 同一个稳定 launcher 执行 `service ensure`。历史 Desktop / 既有安装若已经写入同一
 Product 受管根，可以被兼容复用，但 Desktop 不再是正式新装入口。Plugin 不搜索

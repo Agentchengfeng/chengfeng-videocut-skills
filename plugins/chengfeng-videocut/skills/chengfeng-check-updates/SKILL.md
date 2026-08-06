@@ -100,7 +100,8 @@ Runtime 安装后再调用一次 `runtime_status`，必须读回 `ready=true`。
 
 ```text
 Plugin runtime_install
-  -> 编译 installer 按已验证 manifest 安装 Runtime
+  -> 下载并校验一个内嵌依赖的 Runtime 安装包
+  -> 安装包只在本地安装 Runtime、Headless Shell 与全部媒体工具
   -> Runtime 统一管理服务、Headless Shell 与全部媒体工具
   -> Skill 只通过受管稳定启动器调用
 ```
@@ -122,8 +123,8 @@ FFprobe，也不要求它们进入 `PATH`。缺少媒体或渲染能力时，将
   兼容验证工具，不属于用户更新流程。
 - Plugin 与 Runtime 版本相互独立；最低 Runtime 和 capability 合同只由
   `runtime-requirements.json` 控制。
-- requirements 中 installer 或 install manifest 摘要为 `null` 时，安装卡只能
-  暂停，`runtime_install` 必须 fail-closed。
+- requirements 中平台 Runtime 安装包摘要为 `null` 时，安装卡只能暂停，
+  `runtime_install` 必须 fail-closed。
 - 更新 Plugin 只改 Codex 的 Marketplace/Plugin 状态；Runtime 安装只改受管
   Runtime 根。两者都不得改项目、媒体、EDL 或 Studio 状态。
 

@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -18,8 +19,7 @@ func TestProductionInstallPlanFailsClosedWithoutPinnedDigest(t *testing.T) {
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", t.TempDir())
 	// Legacy environment variables must never unlock the production binary.
 	t.Setenv("CHENGFENG_VIDEOCUT_ALLOW_TEST_OVERRIDES", "1")
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_INSTALLER_SHA256", strings.Repeat("a", 64))
-	t.Setenv("CHENGFENG_VIDEOCUT_TEST_MANIFEST_SHA256", strings.Repeat("b", 64))
+	t.Setenv("CHENGFENG_VIDEOCUT_TEST_RUNTIME_PACKAGE_SHA256", strings.Repeat("a", 64))
 	c, err := LoadContract()
 	if err != nil {
 		t.Fatal(err)
@@ -28,7 +28,7 @@ func TestProductionInstallPlanFailsClosedWithoutPinnedDigest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if plan.InstallerSHA256 != "" || plan.ApprovalDigest != "" {
+	if plan.RuntimePackageSHA256 != "" || plan.ApprovalDigest != "" {
 		t.Fatalf("unlocked plan became approvable: %#v", plan)
 	}
 	if _, err := installRuntime(context.Background(), c, strings.Repeat("a", 64)); err == nil || !strings.Contains(err.Error(), "not locked") {
@@ -36,8 +36,26 @@ func TestProductionInstallPlanFailsClosedWithoutPinnedDigest(t *testing.T) {
 	}
 }
 
-func TestApprovalDigestBindsInstallerPlatformTargetAndImpact(t *testing.T) {
-	testOptions := &installTestOptions{InstallerSHA256: strings.Repeat("a", 64), InstallManifestSHA256: strings.Repeat("b", 64)}
+func TestRuntimePackageContractOnlyAllowsOnePackagePerPlatform(t *testing.T) {
+	c, err := LoadContract()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.SchemaVersion != 3 {
+		t.Fatalf("schema version=%d, want 3", c.SchemaVersion)
+	}
+	for platform, assets := range c.Platforms {
+		if assets.RuntimePackageAsset == "" || assets.RuntimeLauncher == "" {
+			t.Fatalf("platform %s is missing the single-package contract: %#v", platform, assets)
+		}
+		if assets.RuntimePackageSHA256 != nil {
+			t.Fatalf("formal package digest must remain unpublished in this candidate: %#v", assets.RuntimePackageSHA256)
+		}
+	}
+}
+
+func TestApprovalDigestBindsRuntimePackagePlatformTargetAndImpact(t *testing.T) {
+	testOptions := &installTestOptions{RuntimePackageSHA256: strings.Repeat("a", 64)}
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", filepath.Join(t.TempDir(), "home one"))
 	c, _ := LoadContract()
 	first, err := buildInstallPlan(c, testOptions)
@@ -275,9 +293,8 @@ func TestRuntimeInstallVerifiesFixtureAndCallsCompiledInstaller(t *testing.T) {
 	fixture := t.TempDir()
 	root := filepath.Join(t.TempDir(), "managed root")
 	c, _ := LoadContract()
-	assets := c.Platforms[platformKey()]
 	capabilities, _ := json.Marshal(c.Capabilities)
-	installer := filepath.Join(fixture, "installer")
+	runtimePackage := filepath.Join(fixture, "runtime-package")
 	script := fmt.Sprintf(`#!/bin/sh
 set -eu
 target=""
@@ -296,35 +313,24 @@ EOF
 chmod 0755 "$target/bin/chengfeng-videocut"
 printf 'installed\n'
 `, string(capabilities))
-	if err := os.WriteFile(installer, []byte(script), 0o755); err != nil {
+	if err := os.WriteFile(runtimePackage, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	manifest := filepath.Join(fixture, "manifest.json")
-	if err := os.WriteFile(manifest, []byte(`{"schemaVersion":1}`), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	installerDigest, _ := fileSHA256(installer)
-	manifestDigest, _ := fileSHA256(manifest)
-	checksum := filepath.Join(fixture, "SHA256SUMS.txt")
-	lines := []string{installerDigest + "  " + assets.InstallerAsset, manifestDigest + "  " + c.InstallManifestAsset}
-	for _, name := range append(append([]string{}, assets.RuntimeAssets...), assets.ManagedToolAssets...) {
-		lines = append(lines, strings.Repeat("c", 64)+"  "+name)
-	}
-	if err := os.WriteFile(checksum, []byte(strings.Join(lines, "\n")+"\n"), 0o600); err != nil {
+	runtimePackageDigest, err := fileSHA256(runtimePackage)
+	if err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
 	installerCalls := 0
 	installerTimeoutSeen := time.Duration(0)
+	var installerArgs []string
 	testOptions := &installTestOptions{
-		InstallerSHA256:       installerDigest,
-		InstallManifestSHA256: manifestDigest,
-		InstallerFile:         installer,
-		ChecksumFile:          checksum,
-		ManifestFile:          manifest,
+		RuntimePackageSHA256: runtimePackageDigest,
+		RuntimePackageFile:   runtimePackage,
 		RunInstaller: func(ctx context.Context, executable string, args []string, directory string, timeout time.Duration) CommandResult {
 			installerCalls++
 			installerTimeoutSeen = timeout
+			installerArgs = append([]string(nil), args...)
 			return runInstallerCommand(ctx, executable, args, directory, timeout)
 		},
 	}
@@ -342,8 +348,42 @@ printf 'installed\n'
 	if installerCalls != 1 || installerTimeoutSeen != runtimeInstallerTimeout {
 		t.Fatalf("installer runner received calls=%d timeout=%s, want one call with %s", installerCalls, installerTimeoutSeen, runtimeInstallerTimeout)
 	}
+	if want := []string{"--target-root", root, "--ensure-service", "--json"}; !reflect.DeepEqual(installerArgs, want) {
+		t.Fatalf("runtime package arguments=%q, want %q", installerArgs, want)
+	}
 	status := result["runtime"].(RuntimeStatus)
 	if !status.Ready {
 		t.Fatalf("installed fixture not ready: %#v", status)
+	}
+}
+
+func TestRuntimeInstallRejectsPackageDigestBeforeExecution(t *testing.T) {
+	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
+		t.Skip("Unix fixture targets supported macOS contract")
+	}
+	root := t.TempDir()
+	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
+	c, err := LoadContract()
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtimePackage := filepath.Join(t.TempDir(), "runtime-package")
+	if err := os.WriteFile(runtimePackage, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	testOptions := &installTestOptions{
+		RuntimePackageSHA256: strings.Repeat("a", 64),
+		RuntimePackageFile:   runtimePackage,
+		RunInstaller: func(context.Context, string, []string, string, time.Duration) CommandResult {
+			t.Fatal("installer must not run when the Runtime package digest mismatches")
+			return CommandResult{}
+		},
+	}
+	plan, err := buildInstallPlan(c, testOptions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := installRuntimeWithOptions(context.Background(), c, plan.ApprovalDigest, testOptions); err == nil || !strings.Contains(err.Error(), "Runtime package SHA-256 mismatch") {
+		t.Fatalf("expected package digest failure, got %v", err)
 	}
 }

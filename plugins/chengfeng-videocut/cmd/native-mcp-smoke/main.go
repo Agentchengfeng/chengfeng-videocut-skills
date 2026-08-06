@@ -81,7 +81,7 @@ func main() {
 		fatal(err)
 	}
 	installJSON, _ := json.Marshal(install.StructuredContent)
-	if strings.Contains(string(installJSON), `"approvalDigest":"`) || !strings.Contains(string(installJSON), "release asset 尚未锁定") {
+	if strings.Contains(string(installJSON), `"approvalDigest":"`) || !strings.Contains(string(installJSON), "单个安装包摘要尚未发布") {
 		fatal(fmt.Errorf("unpublished install plan did not fail closed: %s", installJSON))
 	}
 	status, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "runtime_status", Arguments: map[string]any{}})

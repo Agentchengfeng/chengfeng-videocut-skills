@@ -71,7 +71,7 @@ func NewServer(c Contract) *mcp.Server {
 		status := inspectRuntime(ctx, c)
 		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Runtime 状态：%s", status.State)}}}, status, nil
 	})
-	mcp.AddTool(server, &mcp.Tool{Name: "runtime_install", Title: "安装 Product Runtime", Description: "仅接受确认卡片返回的 approvalDigest；重新计算 release、平台资产、目标与影响摘要，精确匹配后校验 SHA-256 并执行编译安装器。此门防误操作，不构成身份认证。", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(true), IdempotentHint: false}}, func(ctx context.Context, req *mcp.CallToolRequest, input RuntimeInstallInput) (*mcp.CallToolResult, map[string]any, error) {
+	mcp.AddTool(server, &mcp.Tool{Name: "runtime_install", Title: "安装 Product Runtime", Description: "仅接受确认卡片返回的 approvalDigest；重新计算 release、平台单个 Runtime 安装包、目标与影响摘要，精确匹配后校验 SHA-256 并在本地执行安装包。安装包内含受管依赖，安装过程不再下载依赖。此门防误操作，不构成身份认证。", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(true), IdempotentHint: false}}, func(ctx context.Context, req *mcp.CallToolRequest, input RuntimeInstallInput) (*mcp.CallToolResult, map[string]any, error) {
 		output, err := installRuntime(ctx, c, strings.ToLower(strings.TrimSpace(input.ApprovalDigest)))
 		if err != nil {
 			return nil, nil, err
@@ -108,11 +108,11 @@ func confirmationOutput(c Contract, input ConfirmationInput) (map[string]any, er
 			return nil, err
 		}
 		availability := "安装资产与影响已固定"
-		options := []map[string]any{{"id": "confirm", "action": "install_runtime", "label": "确认安装", "badge": "会写入", "description": plan.Impact, "nextStep": "下载、校验并执行编译安装器"}, {"id": "pause", "action": "pause_workflow", "label": "暂不安装", "badge": "不写入", "description": "保留当前环境，本次不下载或执行任何内容。", "nextStep": "暂停任务"}}
+		options := []map[string]any{{"id": "confirm", "action": "install_runtime", "label": "确认安装", "badge": "会写入", "description": plan.Impact, "nextStep": "下载一个 Runtime 安装包、校验摘要并本地安装（不下载依赖）"}, {"id": "pause", "action": "pause_workflow", "label": "暂不安装", "badge": "不写入", "description": "保留当前环境，本次不下载或执行任何内容。", "nextStep": "暂停任务"}}
 		selected := "confirm"
 		prompt := "确认后 Agent 可把 approvalDigest 原样交给 runtime_install。此确认门防误操作，不是身份认证。"
-		if !validSHA256(plan.InstallerSHA256) || !validSHA256(plan.InstallManifestSHA256) {
-			availability = "Runtime 0.5.0 release asset 尚未锁定；安装器或安装清单摘要未发布，执行会 fail-closed"
+		if !validSHA256(plan.RuntimePackageSHA256) {
+			availability = "Runtime 0.5.0 单个安装包摘要尚未发布；执行会 fail-closed"
 			options = options[1:]
 			selected = "pause"
 			prompt = "Release 摘要尚未锁定，本卡片只展示计划并允许暂停；不会生成可执行 approvalDigest。"

@@ -30,18 +30,15 @@ runtime_status
 ```
 
 - Plugin package `0.11.0` 消费 `runtime-requirements.json` 的 `v0.5.0` 合同；最低 Runtime 为 `0.5.0`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。
-- 缺失时只从精确 `v0.5.0` Release 下载平台编译 installer、`chengfeng-videocut-install-manifest.json` 与 `SHA256SUMS.txt`。requirements 必须预先锁定 installer 和 install manifest 两个 SHA-256；任一为 null 就不生成可执行 `approvalDigest`。同 Release 清单还必须覆盖 `chengfeng-videocut-runtime-0.5.0.tar.gz` 与对应平台 tools tarball。
-- 正式新装机只经 Plugin 的 `runtime_install`；编译安装器依据已验证 install manifest
-  安装 Runtime 和平台 managed tools（含 Headless Shell），并执行同一个
-  `service ensure`。历史 Desktop / 既有安装若已在同一受管根可兼容复用，但不再是
-  正式新装入口。
-- `v0.5.0` Release 尚不存在、摘要未锁定、资产清单不全或哈希不符时，以 `install_failed` 停止；不得转装公开旧版、源码 clone、npm 或 bunx。
-- Runtime 冷安装的下载、编译 installer 执行与最终 readback 共用 19 分钟
+- 缺失时只从精确 `v0.5.0` Release 下载**一个**平台对应的 Runtime 安装包。requirements 必须预先锁定该包的 `runtimePackageSHA256`；它为 `null` 或哈希不符时，不生成可执行 `approvalDigest`。
+- 正式新装机只经 Plugin 的 `runtime_install`；该 Runtime 安装包内嵌 Runtime、受管 Bun、FFmpeg、FFprobe 和 Headless Shell。Plugin 只下载并校验这一包，安装器只在本地解包、安装并执行同一个 `service ensure`，不再从上游下载任何依赖。历史 Desktop / 既有安装若已在同一受管根可兼容复用，但不再是正式新装入口。
+- `v0.5.0` Release 尚不存在、单包摘要未锁定或哈希不符时，以 `install_failed` 停止；不得转装公开旧版、源码 clone、npm 或 bunx。
+- Runtime 冷安装的单包下载、安装器执行与最终 readback 共用 19 分钟
   内部 context；MCP host `tool_timeout_sec=1201` 留出有界终止和响应收尾窗口。
 - 安装位置是 `CHENGFENG_VIDEOCUT_HOME` 或 `~/.chengfeng-videocut`。
 - CLI 已存在但 doctor 失败时不自动覆盖或循环重装；已有 Runtime 低于 0.5.0 时也不静默覆盖。
 - CLI doctor 健康但 semver 低于 0.5.0，或缺少合同 capability 时，以 `runtime_capability_missing` 停止；不把“健康”误当“兼容”。
-- MCP 只认 `CHENGFENG_VIDEOCUT_HOME` 或默认受管根内 manifest 指定的 stable launcher；逐级 `Lstat` 拒绝 symlink、目录与越界路径，启动器必须是单硬链普通文件。健康检查和 CLI 调用前后的指纹发生改变时以 `unhealthy / launcher_integrity_changed` 停止；不回退 PATH、源码或显式任意 binary。
+- MCP 只认 `CHENGFENG_VIDEOCUT_HOME` 或默认受管根内的 stable launcher；逐级 `Lstat` 拒绝 symlink、目录与越界路径，启动器必须是单硬链普通文件。健康检查和 CLI 调用前后的指纹发生改变时以 `unhealthy / launcher_integrity_changed` 停止；不回退 PATH、源码或显式任意 binary。
 - Plugin 不搜索 Electron `.app`、NSIS 目录或 resources；只有经过摘要确认的 Runtime
   installer 能建立新的 Product 稳定入口。
 
@@ -115,7 +112,7 @@ Product open 返回项目 URL
 ## 当前 Runtime 兼容门禁
 
 - 低于 0.5.0 的 Runtime 不具备本 Plugin 发布所绑定的完整受管工具与当前 EDL / Studio compatibility contract，必须被版本门禁拒绝。
-- Runtime `v0.5.0` Release 必须先于 Plugin package `0.11.0` 正式激活，并包含三个平台编译 installer、install manifest、Runtime tarball、平台 tools tarball，以及覆盖全部资产的 `SHA256SUMS.txt`；installer 与 install manifest 的摘要还必须预先写入 Plugin requirements。
+- Runtime `v0.5.0` Release 必须先于 Plugin package `0.11.0` 正式激活，并为每个平台提供一个已签名、内嵌 Runtime 和全部受管依赖的可执行安装包；每个包的 SHA-256 必须预先写入 Plugin requirements。
 - `v0.5.0` 必须提供正式原视频云端转录命令；缺少时以 `missing_cloud_transcription_adapter` 停止，禁止回退本地 ASR。
 - `v0.5.0` 必须内置可用 renderer 与 managed Headless Shell；新版 Skill 不得把旧 renderer 重新打包。
 - 没有 HyperFrames 顶层 `koubo` 视图或 capability manifest 的历史 Studio 必须被能力门禁拒绝，不能再作为审核界面回退。
@@ -167,7 +164,7 @@ Bug 草稿由 Agent 直接生成，确认后只使用 Agent 已有 GitHub Issue 
 Product 0.5.0 tag
       |
       v
-Release assets + install manifest + SHA256SUMS（含编译 installers）
+每个平台一个已签名、内嵌依赖的 Runtime 安装包 + SHA-256
       |
       v
 隔离环境首次安装 + doctor + Studio capability 验收
@@ -192,4 +189,4 @@ Codex 原生 marketplace upgrade 发现候选
 用户确认后 plugin add 并复读版本
 ```
 
-Plugin package 0.11.0 可以先形成候选，但在 Product Runtime v0.5.0 Release 的 installer、install manifest、Runtime 与 tools 资产通过公开下载、安装和 Skills 共用服务验收，并把两个 pinned 摘要回填 requirements 之前不得推进 `stable`；这段空窗期的预期行为是安装卡只允许暂停、`runtime_install` 安全失败。
+Plugin package 0.11.0 可以先形成候选，但在 Product Runtime v0.5.0 Release 的三个单文件 Runtime 安装包通过公开下载、安装和 Skills 共用服务验收，并把各平台 pinned SHA-256 回填 requirements 之前不得推进 `stable`；这段空窗期的预期行为是安装卡只允许暂停、`runtime_install` 安全失败。

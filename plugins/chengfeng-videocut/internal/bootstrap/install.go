@@ -15,12 +15,14 @@ import (
 
 type installerCommandFunc func(context.Context, string, []string, string, time.Duration) CommandResult
 
+const runtimePackageDownloadLimit int64 = 2 << 30
+
 func installRuntime(ctx context.Context, c Contract, approval string) (map[string]any, error) {
 	return installRuntimeWithOptions(ctx, c, approval, nil)
 }
 
 func installRuntimeWithOptions(ctx context.Context, c Contract, approval string, testOptions *installTestOptions) (map[string]any, error) {
-	// One bounded context covers all three downloads, the compiled installer,
+	// One bounded context covers the single Runtime package download, its local installer,
 	// and the final Runtime readback. It remains below the MCP host's 1201s
 	// boundary while allowing a real cold install to exceed the CLI's 9m budget.
 	callCtx, cancel := context.WithTimeout(ctx, runtimeInstallCallTimeout)
@@ -29,8 +31,8 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if err != nil {
 		return nil, err
 	}
-	if !validSHA256(plan.InstallerSHA256) || !validSHA256(plan.InstallManifestSHA256) || plan.ApprovalDigest == "" {
-		return nil, fmt.Errorf("Runtime %s release asset is not locked: installer or install manifest digest is unpublished; installation is unavailable", plan.ReleaseVersion)
+	if !validSHA256(plan.RuntimePackageSHA256) || plan.ApprovalDigest == "" {
+		return nil, fmt.Errorf("Runtime %s release package is not locked: package digest is unpublished; installation is unavailable", plan.ReleaseVersion)
 	}
 	if !validSHA256(approval) || approval != plan.ApprovalDigest {
 		return nil, fmt.Errorf("approvalDigest does not match the current release, platform, target, assets, and impact")
@@ -40,90 +42,40 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 		return nil, err
 	}
 	defer os.RemoveAll(temp)
-	installerPath := filepath.Join(temp, filepath.Base(plan.InstallerAsset))
-	checksumPath := filepath.Join(temp, filepath.Base(plan.ChecksumAsset))
-	manifestPath := filepath.Join(temp, filepath.Base(plan.InstallManifestAsset))
+	runtimePackagePath := filepath.Join(temp, filepath.Base(plan.RuntimePackageAsset))
 	if testOptions != nil {
-		if testOptions.InstallerFile != "" {
-			if err := copyFile(testOptions.InstallerFile, installerPath, 0o700); err != nil {
-				return nil, err
-			}
-		}
-		if testOptions.ChecksumFile != "" {
-			if err := copyFile(testOptions.ChecksumFile, checksumPath, 0o600); err != nil {
-				return nil, err
-			}
-		}
-		if testOptions.ManifestFile != "" {
-			if err := copyFile(testOptions.ManifestFile, manifestPath, 0o600); err != nil {
+		if testOptions.RuntimePackageFile != "" {
+			if err := copyFile(testOptions.RuntimePackageFile, runtimePackagePath, 0o700); err != nil {
 				return nil, err
 			}
 		}
 	}
-	if _, err := os.Stat(installerPath); err != nil {
-		url := releaseURL(c, plan.InstallerAsset)
-		if err := download(callCtx, url, installerPath, 256<<20); err != nil {
-			return nil, fmt.Errorf("download installer: %w", err)
+	if _, err := os.Stat(runtimePackagePath); err != nil {
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("inspect Runtime package: %w", err)
+		}
+		if err := download(callCtx, releaseURL(c, plan.RuntimePackageAsset), runtimePackagePath, runtimePackageDownloadLimit); err != nil {
+			return nil, fmt.Errorf("download Runtime package: %w", err)
 		}
 	}
-	if _, err := os.Stat(checksumPath); err != nil {
-		url := releaseURL(c, plan.ChecksumAsset)
-		if err := download(callCtx, url, checksumPath, 8<<20); err != nil {
-			return nil, fmt.Errorf("download checksum manifest: %w", err)
-		}
-	}
-	if _, err := os.Stat(manifestPath); err != nil {
-		if err := download(callCtx, releaseURL(c, plan.InstallManifestAsset), manifestPath, 8<<20); err != nil {
-			return nil, fmt.Errorf("download install manifest: %w", err)
-		}
-	}
-	manifest, err := os.ReadFile(checksumPath)
+	actual, err := fileSHA256(runtimePackagePath)
 	if err != nil {
 		return nil, err
 	}
-	checksums, err := parseChecksums(string(manifest))
-	if err != nil {
+	if actual != plan.RuntimePackageSHA256 {
+		return nil, fmt.Errorf("Runtime package SHA-256 mismatch")
+	}
+	if err := os.Chmod(runtimePackagePath, 0o700); err != nil {
 		return nil, err
 	}
-	if checksums[plan.InstallerAsset] != plan.InstallerSHA256 {
-		return nil, fmt.Errorf("checksum manifest does not match the pinned installer digest")
-	}
-	if checksums[plan.InstallManifestAsset] != plan.InstallManifestSHA256 {
-		return nil, fmt.Errorf("checksum manifest does not match the pinned install manifest digest")
-	}
-	for _, name := range append(append([]string{}, plan.RuntimeAssets...), plan.ManagedToolAssets...) {
-		if !validSHA256(checksums[name]) {
-			return nil, fmt.Errorf("checksum manifest does not cover required asset %q", name)
-		}
-	}
-	actual, err := fileSHA256(installerPath)
-	if err != nil {
-		return nil, err
-	}
-	if actual != plan.InstallerSHA256 {
-		return nil, fmt.Errorf("installer SHA-256 mismatch")
-	}
-	actualManifest, err := fileSHA256(manifestPath)
-	if err != nil {
-		return nil, err
-	}
-	if actualManifest != plan.InstallManifestSHA256 {
-		return nil, fmt.Errorf("install manifest SHA-256 mismatch")
-	}
-	if err := os.Chmod(installerPath, 0o700); err != nil {
-		return nil, err
-	}
-	args, err := expandInstallerArgs(plan, checksumPath, manifestPath)
-	if err != nil {
-		return nil, err
-	}
+	args := []string{"--target-root", plan.TargetRoot, "--ensure-service", "--json"}
 	runInstaller := installerCommandFunc(runInstallerCommand)
 	if testOptions != nil && testOptions.RunInstaller != nil {
 		runInstaller = testOptions.RunInstaller
 	}
-	result := runInstaller(callCtx, installerPath, args, temp, runtimeInstallerTimeout)
+	result := runInstaller(callCtx, runtimePackagePath, args, temp, runtimeInstallerTimeout)
 	if !result.OK {
-		return nil, fmt.Errorf("compiled installer failed with exit %d: %s", result.ExitCode, strings.TrimSpace(result.Stderr))
+		return nil, fmt.Errorf("Runtime package installer failed with exit %d: %s", result.ExitCode, strings.TrimSpace(result.Stderr))
 	}
 	if err := callCtx.Err(); err != nil {
 		return nil, fmt.Errorf("runtime install call exceeded its bounded deadline before final readback: %w", err)
@@ -144,7 +96,7 @@ func download(ctx context.Context, url, destination string, maxBytes int64) erro
 	if err != nil {
 		return err
 	}
-	client := &http.Client{Timeout: 5 * time.Minute}
+	client := &http.Client{}
 	response, err := client.Do(req)
 	if err != nil {
 		return err
@@ -166,29 +118,6 @@ func download(ctx context.Context, url, destination string, maxBytes int64) erro
 		return fmt.Errorf("download exceeds size limit")
 	}
 	return file.Sync()
-}
-
-func parseChecksums(text string) (map[string]string, error) {
-	result := map[string]string{}
-	for lineNumber, line := range strings.Split(text, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		fields := strings.Fields(line)
-		if len(fields) != 2 || !validSHA256(strings.ToLower(fields[0])) {
-			return nil, fmt.Errorf("invalid SHA256SUMS line %d", lineNumber+1)
-		}
-		name := strings.TrimPrefix(fields[1], "*")
-		if filepath.Base(name) != name || name == "." {
-			return nil, fmt.Errorf("unsafe SHA256SUMS asset name")
-		}
-		if _, exists := result[name]; exists {
-			return nil, fmt.Errorf("duplicate SHA256SUMS asset %q", name)
-		}
-		result[name] = strings.ToLower(fields[0])
-	}
-	return result, nil
 }
 
 func fileSHA256(path string) (string, error) {
@@ -219,19 +148,4 @@ func copyFile(source, destination string, mode os.FileMode) error {
 		return err
 	}
 	return out.Close()
-}
-
-func expandInstallerArgs(plan InstallPlan, checksumPath, manifestPath string) ([]string, error) {
-	replacements := map[string]string{"{targetRoot}": plan.TargetRoot, "{checksumFile}": checksumPath, "{manifestFile}": manifestPath, "{releaseTag}": plan.ReleaseTag, "{releaseVersion}": plan.ReleaseVersion}
-	args := make([]string, len(plan.InstallerArguments))
-	for i, arg := range plan.InstallerArguments {
-		for token, value := range replacements {
-			arg = strings.ReplaceAll(arg, token, value)
-		}
-		if strings.Contains(arg, "{") || strings.ContainsAny(arg, "\x00\r\n") {
-			return nil, fmt.Errorf("unsupported installer argument template")
-		}
-		args[i] = arg
-	}
-	return args, nil
 }

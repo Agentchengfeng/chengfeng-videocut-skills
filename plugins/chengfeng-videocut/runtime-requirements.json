@@ -1,36 +1,26 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "chengfeng-videocut",
   "repository": "Agentchengfeng/chengfeng-videocut",
   "releaseTag": "v0.5.0",
   "releaseVersion": "0.5.0",
   "minimumRuntimeVersion": "0.5.0",
-  "checksumAsset": "SHA256SUMS.txt",
-  "installManifestAsset": "chengfeng-videocut-install-manifest.json",
-  "installManifestSHA256": null,
   "defaultTargetRoot": "~/.chengfeng-videocut",
-  "installerArguments": ["--manifest", "{manifestFile}", "--checksum-file", "{checksumFile}", "--target-root", "{targetRoot}", "--ensure-service", "--json"],
   "platforms": {
     "darwin-arm64": {
-      "installerAsset": "chengfeng-videocut-installer-macos-arm64",
-      "installerSHA256": null,
-      "runtimeLauncher": "bin/chengfeng-videocut",
-      "runtimeAssets": ["chengfeng-videocut-runtime-0.5.0.tar.gz"],
-      "managedToolAssets": ["chengfeng-videocut-tools-0.5.0-darwin-arm64.tar.gz"]
+      "runtimePackageAsset": "chengfeng-videocut-installer-macos-arm64",
+      "runtimePackageSHA256": null,
+      "runtimeLauncher": "bin/chengfeng-videocut"
     },
     "darwin-amd64": {
-      "installerAsset": "chengfeng-videocut-installer-macos-x64",
-      "installerSHA256": null,
-      "runtimeLauncher": "bin/chengfeng-videocut",
-      "runtimeAssets": ["chengfeng-videocut-runtime-0.5.0.tar.gz"],
-      "managedToolAssets": ["chengfeng-videocut-tools-0.5.0-darwin-x64.tar.gz"]
+      "runtimePackageAsset": "chengfeng-videocut-installer-macos-x64",
+      "runtimePackageSHA256": null,
+      "runtimeLauncher": "bin/chengfeng-videocut"
     },
     "windows-amd64": {
-      "installerAsset": "chengfeng-videocut-installer-windows-x64.exe",
-      "installerSHA256": null,
-      "runtimeLauncher": "bin\\chengfeng-videocut.cmd",
-      "runtimeAssets": ["chengfeng-videocut-runtime-0.5.0.tar.gz"],
-      "managedToolAssets": ["chengfeng-videocut-tools-0.5.0-win32-x64.tar.gz"]
+      "runtimePackageAsset": "chengfeng-videocut-installer-windows-x64.exe",
+      "runtimePackageSHA256": null,
+      "runtimeLauncher": "bin\\chengfeng-videocut.cmd"
     }
   },
   "studioCapabilities": {
