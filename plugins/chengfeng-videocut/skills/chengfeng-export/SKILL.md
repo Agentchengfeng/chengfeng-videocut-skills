@@ -22,7 +22,9 @@ user-invocable: true
 
 先读取并执行 [业务 Skill 的阶段合同](../../references/business-workflow-contract.md)
 里的「结论等级」一节。**导出不进剪辑状态机**：它不改任何项目文件、不做 CAS 写入、
-不推进 stage，产出是一个新文件，重跑一次就覆盖。所以它不需要确认卡。
+不推进 stage，产出是一个新文件，所以它不需要确认卡。Product **绝不覆盖已有成片**；
+默认 `成片.mp4` 已存在时，`job start` 会在编码前返回 `job_output_exists`。先向用户说明，
+再用新的绝对 `--out` 路径重跑，不得删除、改名或覆盖原文件。
 
 ## 0. Runtime 门禁
 
@@ -48,6 +50,9 @@ user-invocable: true
 `["job","get","<jobId>","--json"]` 或 `["job","list","--json"]` 追踪；只有用户明确
 取消才调用 `["job","cancel","<jobId>","--json"]`。Codex、MCP 或页面退出不等于取消，
 不得回退同步 `export` 旁路。
+
+若返回 `job_output_exists`，它是编码前的安全拒绝，不是失败后可覆盖重试。向用户展示
+已有路径，取得新文件名后改用 `--out <新的绝对路径>`；不得自行删除或替换已有成片。
 
 `service ensure` 身份不匹配、端口冲突或服务不健康时立即停止；不允许用 foreground
 临时顶替后继续导出。

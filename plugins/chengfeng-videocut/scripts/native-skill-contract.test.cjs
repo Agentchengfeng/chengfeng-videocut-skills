@@ -20,6 +20,8 @@ const exportSkill = read("skills/chengfeng-export/SKILL.md");
 assert.match(exportSkill, /"job","start","export"/, "real export must use a Product persistent job");
 assert.match(exportSkill, /"job","get"/, "export must describe persistent job readback");
 assert.match(exportSkill, /actualDuration[\s\S]*hasAudio[\s\S]*renderedFrames[\s\S]*problems/, "export must use Product structural verification fields");
+assert.match(exportSkill, /job_output_exists[\s\S]*新的绝对 `--out`/, "existing output must fail before encoding and require a new absolute path");
+assert.doesNotMatch(exportSkill, /重跑一次就覆盖/, "export must never promise to replace an existing output");
 assert.doesNotMatch(exportSkill, /^ff(?:mpeg|probe)\s/m, "export must not call system media tools");
 assert.doesNotMatch(exportSkill, /\{"argv":\["export","<project>","--json"/, "synchronous export bypass must not be documented");
 
