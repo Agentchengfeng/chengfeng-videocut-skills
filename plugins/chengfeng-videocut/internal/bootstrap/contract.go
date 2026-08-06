@@ -121,6 +121,7 @@ type installTestOptions struct {
 	InstallerFile         string
 	ChecksumFile          string
 	ManifestFile          string
+	RunInstaller          installerCommandFunc
 }
 
 func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan, error) {

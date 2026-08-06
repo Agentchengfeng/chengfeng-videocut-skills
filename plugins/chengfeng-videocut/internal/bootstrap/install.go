@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+type installerCommandFunc func(context.Context, string, []string, string, time.Duration) CommandResult
+
 func installRuntime(ctx context.Context, c Contract, approval string) (map[string]any, error) {
 	return installRuntimeWithOptions(ctx, c, approval, nil)
 }
@@ -115,7 +117,11 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if err != nil {
 		return nil, err
 	}
-	result := runInstallerCommand(callCtx, installerPath, args, temp, runtimeCLITimeout)
+	runInstaller := installerCommandFunc(runInstallerCommand)
+	if testOptions != nil && testOptions.RunInstaller != nil {
+		runInstaller = testOptions.RunInstaller
+	}
+	result := runInstaller(callCtx, installerPath, args, temp, runtimeInstallerTimeout)
 	if !result.OK {
 		return nil, fmt.Errorf("compiled installer failed with exit %d: %s", result.ExitCode, strings.TrimSpace(result.Stderr))
 	}

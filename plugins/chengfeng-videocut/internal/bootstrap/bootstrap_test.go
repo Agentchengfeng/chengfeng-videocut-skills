@@ -102,6 +102,9 @@ func TestRuntimeTimeoutsStayBelowHostBoundary(t *testing.T) {
 	if runtimeCLITimeout != 9*time.Minute || runtimeCLITimeout >= 1201*time.Second {
 		t.Fatalf("runtime CLI timeout=%s must preserve long synchronous operations below the 1201s host boundary", runtimeCLITimeout)
 	}
+	if runtimeInstallerTimeout != 18*time.Minute || runtimeInstallerTimeout <= runtimeCLITimeout || runtimeInstallCallTimeout-runtimeInstallerTimeout < time.Minute {
+		t.Fatalf("installer timeout=%s must exceed the runtime CLI budget and reserve at least one minute for final readback", runtimeInstallerTimeout)
+	}
 	if runtimeInstallCallTimeout != 19*time.Minute || runtimeInstallCallTimeout >= 1201*time.Second {
 		t.Fatalf("runtime install call timeout=%s must stay below the 1201s host boundary", runtimeInstallCallTimeout)
 	}
@@ -311,7 +314,20 @@ printf 'installed\n'
 		t.Fatal(err)
 	}
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
-	testOptions := &installTestOptions{InstallerSHA256: installerDigest, InstallManifestSHA256: manifestDigest, InstallerFile: installer, ChecksumFile: checksum, ManifestFile: manifest}
+	installerCalls := 0
+	installerTimeoutSeen := time.Duration(0)
+	testOptions := &installTestOptions{
+		InstallerSHA256:       installerDigest,
+		InstallManifestSHA256: manifestDigest,
+		InstallerFile:         installer,
+		ChecksumFile:          checksum,
+		ManifestFile:          manifest,
+		RunInstaller: func(ctx context.Context, executable string, args []string, directory string, timeout time.Duration) CommandResult {
+			installerCalls++
+			installerTimeoutSeen = timeout
+			return runInstallerCommand(ctx, executable, args, directory, timeout)
+		},
+	}
 	plan, err := buildInstallPlan(c, testOptions)
 	if err != nil {
 		t.Fatal(err)
@@ -322,6 +338,9 @@ printf 'installed\n'
 	result, err := installRuntimeWithOptions(context.Background(), c, plan.ApprovalDigest, testOptions)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if installerCalls != 1 || installerTimeoutSeen != runtimeInstallerTimeout {
+		t.Fatalf("installer runner received calls=%d timeout=%s, want one call with %s", installerCalls, installerTimeoutSeen, runtimeInstallerTimeout)
 	}
 	status := result["runtime"].(RuntimeStatus)
 	if !status.Ready {

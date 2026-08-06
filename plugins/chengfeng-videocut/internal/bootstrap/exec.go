@@ -22,6 +22,7 @@ const processSettleTimeout = 2 * time.Second
 const outputSettleTimeout = 500 * time.Millisecond
 const runtimeCLITimeout = 9 * time.Minute
 const runtimeProbeTimeout = 90 * time.Second
+const runtimeInstallerTimeout = 18 * time.Minute
 const runtimeInstallCallTimeout = 19 * time.Minute
 
 type CommandResult struct {
