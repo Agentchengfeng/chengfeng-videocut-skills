@@ -6,33 +6,96 @@ name: windows-smoke
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 jobs:
+  native-macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 安装固定 Codex 0.146 开发验收器
+        run: npm install --global @openai/codex@0.146.0
+
+      - name: 单测、原始 JSON 协议、最小 PATH 与二进制复现
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd plugins/chengfeng-videocut
+          cp bin/chengfeng-videocut-mcp "$RUNNER_TEMP/committed-mcp-macos"
+          cp bin/chengfeng-videocut-mcp.exe "$RUNNER_TEMP/committed-mcp-windows.exe"
+          go test ./...
+          go build -trimpath -buildvcs=false -o "$RUNNER_TEMP/native-mcp-smoke" ./cmd/native-mcp-smoke
+          go build -trimpath -buildvcs=false -o "$RUNNER_TEMP/native-mcp-raw-smoke" ./cmd/native-mcp-raw-smoke
+          go build -trimpath -buildvcs=false -o "$RUNNER_TEMP/codex-plugin-discovery-smoke" ./cmd/codex-plugin-discovery-smoke
+          ./scripts/build-native-mcp.sh
+          cmp "$RUNNER_TEMP/committed-mcp-macos" bin/chengfeng-videocut-mcp
+          cmp "$RUNNER_TEMP/committed-mcp-windows.exe" bin/chengfeng-videocut-mcp.exe
+          env -i HOME="$HOME" PATH=/usr/bin:/bin CHENGFENG_VIDEOCUT_HOME="$RUNNER_TEMP/native-empty" "$RUNNER_TEMP/native-mcp-raw-smoke" "$PWD/bin/chengfeng-videocut-mcp"
+          env -i HOME="$HOME" PATH=/usr/bin:/bin CHENGFENG_VIDEOCUT_HOME="$RUNNER_TEMP/native-empty" "$RUNNER_TEMP/native-mcp-smoke" "$PWD/bin/chengfeng-videocut-mcp"
+          "$RUNNER_TEMP/codex-plugin-discovery-smoke" "$(command -v codex)" "$(cd ../.. && pwd)"
+
+      - name: Developer ID 发布签名门禁
+        env:
+          CHENGFENG_RELEASE_GATE: ${{ startsWith(github.ref, 'refs/tags/') && '1' || '0' }}
+        run: plugins/chengfeng-videocut/scripts/verify-native-release-signing.sh plugins/chengfeng-videocut/bin/chengfeng-videocut-mcp
+
   smoke:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24.x'
+          go-version: '1.25.12'
 
-      - name: 原生 MCP 单测、Windows x64 构建与真实 STDIO smoke
+      - name: 原生 MCP 单测、Windows x64 复现构建与真实 STDIO smoke
         shell: pwsh
         run: |
           Set-Location plugins/chengfeng-videocut
+          Copy-Item bin/chengfeng-videocut-mcp.exe "$env:RUNNER_TEMP/committed-mcp.exe"
           go test ./...
-          go build -trimpath -buildvcs=false -o bin/chengfeng-videocut-mcp.exe ./cmd/chengfeng-videocut-mcp
+          $ldflags = '-s -w -buildid= -X github.com/Agentchengfeng/chengfeng-videocut-skills/plugins/chengfeng-videocut/internal/bootstrap.Version=0.11.0'
+          $env:CGO_ENABLED = '0'
+          $env:GOOS = 'windows'
+          $env:GOARCH = 'amd64'
+          go build -trimpath -buildvcs=false -ldflags $ldflags -o "$env:RUNNER_TEMP/rebuilt-mcp.exe" ./cmd/chengfeng-videocut-mcp
+          $committedHash = (Get-FileHash "$env:RUNNER_TEMP/committed-mcp.exe" -Algorithm SHA256).Hash
+          $rebuiltHash = (Get-FileHash "$env:RUNNER_TEMP/rebuilt-mcp.exe" -Algorithm SHA256).Hash
+          if ($committedHash -ne $rebuiltHash) { throw "committed Windows MCP is not byte-for-byte reproducible: $committedHash != $rebuiltHash" }
           go build -trimpath -buildvcs=false -o "$env:RUNNER_TEMP/native-mcp-smoke.exe" ./cmd/native-mcp-smoke
+          go build -trimpath -buildvcs=false -o "$env:RUNNER_TEMP/native-mcp-raw-smoke.exe" ./cmd/native-mcp-raw-smoke
           $cache = "$env:RUNNER_TEMP/plugin cache"
           New-Item -ItemType Directory -Force "$cache/bin" | Out-Null
-          Copy-Item bin/chengfeng-videocut-mcp.exe "$cache/bin/chengfeng-videocut-mcp.exe"
+          Copy-Item "$env:RUNNER_TEMP/committed-mcp.exe" "$cache/bin/chengfeng-videocut-mcp.exe"
           $env:CHENGFENG_VIDEOCUT_HOME = "$env:RUNNER_TEMP/native-empty"
-          $env:CHENGFENG_VIDEOCUT_SMOKE_RENAME_CACHE = $cache
           $env:PATH = "$env:SystemRoot\System32"
+          & "$env:RUNNER_TEMP/native-mcp-raw-smoke.exe" "$env:RUNNER_TEMP/rebuilt-mcp.exe"
+          & "$env:RUNNER_TEMP/native-mcp-smoke.exe" "$env:RUNNER_TEMP/rebuilt-mcp.exe"
+          & "$env:RUNNER_TEMP/native-mcp-raw-smoke.exe" "$cache/bin/chengfeng-videocut-mcp.exe"
+          $env:CHENGFENG_VIDEOCUT_SMOKE_RENAME_CACHE = $cache
           & "$env:RUNNER_TEMP/native-mcp-smoke.exe" "$cache/bin/chengfeng-videocut-mcp.exe"
+
+      - name: Authenticode 发布签名门禁
+        shell: pwsh
+        env:
+          CHENGFENG_RELEASE_GATE: ${{ startsWith(github.ref, 'refs/tags/') && '1' || '0' }}
+        run: |
+          $signature = Get-AuthenticodeSignature plugins/chengfeng-videocut/bin/chengfeng-videocut-mcp.exe
+          if ($signature.Status -eq 'Valid' -and $null -ne $signature.SignerCertificate) {
+            Write-Output '{"ok":true,"releaseSigning":"authenticode"}'
+          } else {
+            Write-Output (ConvertTo-Json @{ ok = $false; releaseSigning = 'blocked'; reason = "missing valid Authenticode signature: $($signature.Status)" } -Compress)
+            if ($env:CHENGFENG_RELEASE_GATE -eq '1') { throw 'Windows release blocked: valid Authenticode signature is required' }
+          }
 
   plugin-update:
     runs-on: windows-latest
@@ -44,6 +107,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.12'
       - name: 安装 Plugin 测试依赖
         shell: pwsh
         run: npm --prefix plugins/chengfeng-videocut ci

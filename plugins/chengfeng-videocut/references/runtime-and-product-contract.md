@@ -36,6 +36,8 @@ runtime_status
   `service ensure`。历史 Desktop / 既有安装若已在同一受管根可兼容复用，但不再是
   正式新装入口。
 - `v0.5.0` Release 尚不存在、摘要未锁定、资产清单不全或哈希不符时，以 `install_failed` 停止；不得转装公开旧版、源码 clone、npm 或 bunx。
+- Runtime 冷安装的下载、编译 installer 执行与最终 readback 共用 19 分钟
+  内部 context；MCP host `tool_timeout_sec=1201` 留出有界终止和响应收尾窗口。
 - 安装位置是 `CHENGFENG_VIDEOCUT_HOME` 或 `~/.chengfeng-videocut`。
 - CLI 已存在但 doctor 失败时不自动覆盖或循环重装；已有 Runtime 低于 0.5.0 时也不静默覆盖。
 - CLI doctor 健康但 semver 低于 0.5.0，或缺少合同 capability 时，以 `runtime_capability_missing` 停止；不把“健康”误当“兼容”。

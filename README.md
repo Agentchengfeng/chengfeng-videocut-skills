@@ -11,7 +11,7 @@ Plugin 根名  -> 安装与 UI 群组名，不是同名 Skill
 画面        -> visuals.json + HTML 模块
 导出        -> 成片.mp4
 上报 Bug    -> 脱敏草稿 -> 用户确认 -> GitHub Issue URL
-检查更新    -> Marketplace 快照 -> 来源证明 -> 用户确认 -> 复读版本
+检查更新    -> Codex 原生 Marketplace 刷新 -> 用户确认 -> Plugin add -> 复读版本
 共同规则    -> references/，不注册为 Skill
 ```
 
@@ -30,29 +30,23 @@ Windows 支持自 Runtime v0.4.2 起正式可用（真机验收：安装、常�
 `bcdedit /set {default} hypervisorlaunchtype off`（物理机不受影响）。
 
 正式新装机唯一入口是 Plugin `runtime_install`。Runtime installer 把 Runtime、媒体工具
-与 managed Headless Shell 装到 `~/.chengfeng-videocut`，核心剪辑链不要求系统安装
-Node、Bun 或 FFmpeg。历史 Desktop / 既有安装仅在已经指向同一 Product 受管根时兼容复用。
+与 managed Headless Shell 装到 `~/.chengfeng-videocut`。六个用户 Skill 都不要求系统
+Node、Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入 `PATH`。
+历史 Desktop / 既有安装仅在已经指向同一 Product 受管根时兼容复用。
 
 | 依赖 | 用途 | 要求 |
 | --- | --- | --- |
 | Product managed tools | Runtime、媒体工具、Headless Shell | Runtime installer 随 manifest 安装 |
-| Google Chrome | 导出成片时渲染字幕和动画 | 当前合同仍要求 |
-| Node.js | 仅 Plugin 更新与 Bug draft/submit 辅助事务 | ≥ 20（核心剪辑不需要） |
-
-```bash
-# 仅在使用残余辅助事务时需要 Node；Chrome 仍用于导出
-# Windows
-winget install OpenJS.NodeJS.LTS Google.Chrome
-```
+| Codex Plugin 管理 | Marketplace 刷新、Plugin 安装/启用 | Codex 0.146+ 原生能力 |
 
 **Runtime 装不上时，Agent 应停在安装指引上**——用自制审核页/播放器替代产品属于违反
 Skill 合同的行为（真实发生过：Runtime 缺失时 Agent 手搓了一个"审片台"，产出与产品
 完全不兼容）。遇到这种情况，把 Agent 的报错原文发 Issue。
 
-本分支候选 Plugin 是 `0.11.0`：内容提交 A 为
-`fb97bd8c1e17cfafa5de4335698126d8f6e5afae`，只增加 provenance 的快照 B 为
-`78f44b508e738e15816e39a0363d2bbbcba4d7fb`。bootstrap 尚未改指针；Runtime 0.5.0 的
-installer 与 install manifest 两个 pinned SHA-256 回填之前不得发布或把候选说成可安装。
+本分支候选 Plugin 是 `0.11.0`。原始候选曾产生内容 A 和 provenance B；
+本轮追加修复已改变 Plugin 字节，因此集成后必须重新产生最终内容提交与
+provenance 快照，不得沿用旧 A/B 宣称可发布。Runtime 0.5.0 的 installer 与
+install manifest 两个 pinned SHA-256 回填之前，同样不得发布或把候选说成可安装。
 当前公开的 0.10.8 快照仅是历史稳定入口：
 
 ```bash
@@ -64,15 +58,15 @@ codex plugin marketplace add Agentchengfeng/chengfeng-videocut-skills --ref 1487
 已验证的市场快照安装；没有「直接从 Git 一步装」的形式。
 想装完立即拿到播放器（不等首次任务），装完插件后对 Codex 说「**安装剪辑环境**」即可。
 
-Bootstrap 仍只调用官方 `plugin marketplace add --ref <40hex>`、`plugin marketplace upgrade` 与 `plugin add`，随后做只读回查；Marketplace upgrade 只 materialize manifest 固定的精确插件快照，不安装、升级、启动或修改 Product Runtime。由于 Codex 0.146 会在 Marketplace 缺失时从 `plugin list` 隐藏同市场孤儿插件，Bootstrap 会紧接 `marketplace add`、在 `marketplace upgrade` 之前执行 `plugin list --marketplace <name> --available --json`；只有目标条目明确为 `installed=false`、`enabled=false` 才继续。若此时发现已安装或已启用的既有插件，只撤回本次新增的 Marketplace，明确保留孤儿插件状态并拒绝继续，避免 upgrade 先覆盖其 cache。其他失败若发生在插件激活已经开始之后，则先执行官方 `plugin remove`，再移除本次 `alreadyAdded=false` 的目标市场，并通过 `marketplace list` 与 `plugin list` 双重回查确认本次新增状态已消失；它不碰安装前已存在的 Marketplace 或插件，主错误与回滚结果会同时报告。Bootstrap 不复制 Skill 文件。manifest 固定不可变快照 B，B 内的 provenance 再绑定内容提交 A 与完整 bundle 摘要。npm 的 GitHub git-spec 在已验证环境中不能稳定启动，因此不把 `npx github:...` 作为对外稳定安装承诺。
-
-发布完成后的远端分层为：`stable` 指向 B，仅供更新检查在隔离 `CODEX_HOME` 中发现
-候选；用户 Marketplace 和 Bootstrap 都必须固定 B，不能跟踪 `stable`。`main` 指向只改
-根 Bootstrap manifest 与 README 的提交 C，Plugin 子树与 B 完全相同。公开 Runtime
-与双平台验收完成前，不得移动 `stable` 或把本候选表述为可下载版本。已经安装 0.10.5 /
-0.10.6 的测试用户应让 Codex 执行“检查更新”，
-核对 version + B + A + SHA-256 后确认激活，并在成功后新开任务；若 Windows 报 cache
-被占用，先完整退出旧 Codex Desktop/任务再重试，不要手工删除 cache。
+用户更新路径只使用 Codex 0.146+ 原生能力：`plugin marketplace upgrade
+chengfeng-videocut --json` 刷新 Git Marketplace，`plugin list --available --json`
+展示候选；用户确认后执行 `plugin add
+chengfeng-videocut@chengfeng-videocut --json`，再以 `plugin list --json` 读回实际
+`version / installed / enabled`。Codex 0.146 没有 `plugin update` 子命令。
+仓库根 Node bootstrap 和 Plugin 内 provenance/update 脚本只保留为开发/兼容回归，
+不是用户更新流程。公开 Runtime 与双平台验收完成前，不得移动
+`stable` 或把本候选表述为可下载版本。激活新 Plugin 后必须新开任务；
+不要手工删除 cache。
 
 装完插件后也可以直接对 Codex 说「**安装剪辑环境**」——「检查更新」Skill 的环境入口会
 下载校验 Runtime、跑 doctor 自检并报告缺什么，不必先发起剪辑任务。
@@ -151,7 +145,9 @@ Plugin 首页 starter prompt 最多三条；它不是 Skill 数量表。`SKILL.m
 使用“上报 Bug”整理刚才的问题。先给我看脱敏后的 GitHub Issue 草稿，确认后再提交。
 ```
 
-技术 ID：`chengfeng-videocut:chengfeng-report-bug`。它会固定路由到产品或 Skills 仓库、清理常见密钥与本地路径、用脱敏内容指纹查重，并且只在用户确认同一份草稿后提交。
+技术 ID：`chengfeng-videocut:chengfeng-report-bug`。它会固定路由到产品或 Skills 仓库、
+清理常见密钥与本地路径，并且只在用户确认同一份草稿后使用 Agent
+已有 GitHub Issue 能力提交。该能力不可用时只返回草稿和「未提交」原因。
 
 检查更新：
 
@@ -177,11 +173,9 @@ Codex
   +-- show_workflow_confirmation (MCP App)
   |
   v
-shared ensure-runtime
+Product Runtime
   |
-  +-- Desktop managed root -> bundled Runtime / Bun / FFmpeg / FFprobe
-  |
-  +-- GitHub Release Runtime (CLI path)
+  +-- runtime_install -> 受管 Runtime / Headless Shell / 媒体工具
   |
   +-- service ensure -> macOS LaunchAgent / Windows 计划任务
   +-- CLI / API
@@ -201,7 +195,9 @@ chengfeng-videocut-skills/
 │   ├── .codex-plugin/plugin.json
 │   ├── .mcp.json
 │   ├── runtime-requirements.json
-│   ├── dist/server.mjs
+│   ├── bin/chengfeng-videocut-mcp     # macOS Universal 2
+│   ├── bin/chengfeng-videocut-mcp.exe # Windows x64
+│   ├── cmd/ + internal/              # Go 原生 MCP 源码
 │   ├── public/review-confirm.html
 │   ├── scripts/
 │   ├── references/

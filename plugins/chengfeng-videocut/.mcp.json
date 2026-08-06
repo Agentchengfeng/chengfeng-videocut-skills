@@ -4,7 +4,7 @@
       "command": "./bin/chengfeng-videocut-mcp",
       "args": [],
       "cwd": ".",
-      "tool_timeout_sec": 601
+      "tool_timeout_sec": 1201
     }
   }
 }

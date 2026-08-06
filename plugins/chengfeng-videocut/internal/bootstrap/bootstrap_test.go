@@ -99,8 +99,11 @@ func TestRuntimeTimeoutsStayBelowHostBoundary(t *testing.T) {
 	if runtimeProbeTimeout != 90*time.Second {
 		t.Fatalf("probe timeout=%s", runtimeProbeTimeout)
 	}
-	if runtimeCLITimeout != 9*time.Minute || runtimeCLITimeout >= 601*time.Second {
-		t.Fatalf("runtime CLI timeout=%s must preserve long synchronous operations below the 601s host boundary", runtimeCLITimeout)
+	if runtimeCLITimeout != 9*time.Minute || runtimeCLITimeout >= 1201*time.Second {
+		t.Fatalf("runtime CLI timeout=%s must preserve long synchronous operations below the 1201s host boundary", runtimeCLITimeout)
+	}
+	if runtimeInstallCallTimeout != 19*time.Minute || runtimeInstallCallTimeout >= 1201*time.Second {
+		t.Fatalf("runtime install call timeout=%s must stay below the 1201s host boundary", runtimeInstallCallTimeout)
 	}
 }
 

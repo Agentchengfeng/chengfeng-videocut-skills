@@ -92,4 +92,5 @@ go run ./cmd/native-mcp-smoke ./bin/chengfeng-videocut-mcp
 六个用户 Skill 都不要求系统 Node/Bun/Git/`gh`/Chrome/FFmpeg/FFprobe。
 媒体和渲染依赖只由 Product Runtime 管理。仓库中的 Node 脚本仍可用于开发回归，
 但不是用户流程。`runtime_cli` 为既有同步命令保留有界 9 分钟窗口；持久
-job 契约当前只声明 `export`，不宣称 transcribe 已经 durable。
+job 契约当前只声明 `export`，不宣称 transcribe 已经 durable。Runtime 冷安装
+从下载到最终读回共用 19 分钟内部上界，低于 MCP host 的 1201 秒边界。

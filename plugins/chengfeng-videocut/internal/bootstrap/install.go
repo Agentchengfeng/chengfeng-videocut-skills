@@ -18,6 +18,11 @@ func installRuntime(ctx context.Context, c Contract, approval string) (map[strin
 }
 
 func installRuntimeWithOptions(ctx context.Context, c Contract, approval string, testOptions *installTestOptions) (map[string]any, error) {
+	// One bounded context covers all three downloads, the compiled installer,
+	// and the final Runtime readback. It remains below the MCP host's 1201s
+	// boundary while allowing a real cold install to exceed the CLI's 9m budget.
+	callCtx, cancel := context.WithTimeout(ctx, runtimeInstallCallTimeout)
+	defer cancel()
 	plan, err := buildInstallPlan(c, testOptions)
 	if err != nil {
 		return nil, err
@@ -55,18 +60,18 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	}
 	if _, err := os.Stat(installerPath); err != nil {
 		url := releaseURL(c, plan.InstallerAsset)
-		if err := download(ctx, url, installerPath, 256<<20); err != nil {
+		if err := download(callCtx, url, installerPath, 256<<20); err != nil {
 			return nil, fmt.Errorf("download installer: %w", err)
 		}
 	}
 	if _, err := os.Stat(checksumPath); err != nil {
 		url := releaseURL(c, plan.ChecksumAsset)
-		if err := download(ctx, url, checksumPath, 8<<20); err != nil {
+		if err := download(callCtx, url, checksumPath, 8<<20); err != nil {
 			return nil, fmt.Errorf("download checksum manifest: %w", err)
 		}
 	}
 	if _, err := os.Stat(manifestPath); err != nil {
-		if err := download(ctx, releaseURL(c, plan.InstallManifestAsset), manifestPath, 8<<20); err != nil {
+		if err := download(callCtx, releaseURL(c, plan.InstallManifestAsset), manifestPath, 8<<20); err != nil {
 			return nil, fmt.Errorf("download install manifest: %w", err)
 		}
 	}
@@ -110,11 +115,14 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if err != nil {
 		return nil, err
 	}
-	result := runInstallerCommand(ctx, installerPath, args, temp, runtimeCLITimeout)
+	result := runInstallerCommand(callCtx, installerPath, args, temp, runtimeCLITimeout)
 	if !result.OK {
 		return nil, fmt.Errorf("compiled installer failed with exit %d: %s", result.ExitCode, strings.TrimSpace(result.Stderr))
 	}
-	status := inspectRuntime(ctx, c)
+	if err := callCtx.Err(); err != nil {
+		return nil, fmt.Errorf("runtime install call exceeded its bounded deadline before final readback: %w", err)
+	}
+	status := inspectRuntime(callCtx, c)
 	if !status.Ready {
 		return nil, fmt.Errorf("installer exited successfully but runtime is not ready: %s", status.Reason)
 	}

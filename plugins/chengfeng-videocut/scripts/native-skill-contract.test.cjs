@@ -44,6 +44,6 @@ assert.match(readme, /持久[\s\S]*只声明 `export`/);
 const mcp = JSON.parse(read(".mcp.json")).mcpServers["chengfeng-videocut"];
 assert.equal(mcp.command, "./bin/chengfeng-videocut-mcp");
 assert.equal(mcp.cwd, ".");
-assert.equal(mcp.tool_timeout_sec, 601);
+assert.equal(mcp.tool_timeout_sec, 1201);
 
 console.log(JSON.stringify({ coreSkillsUseNativeMCP: true, persistentExportJobs: true, userSystemDependenciesRemoved: true }));

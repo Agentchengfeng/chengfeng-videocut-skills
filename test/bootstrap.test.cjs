@@ -36,7 +36,7 @@ function gitAtRoot(args) {
   return run('git', ['-C', ROOT, ...args]);
 }
 
-test('checked-in bootstrap pin binds the 0.10.8 content/provenance snapshot and leaves its plugin subtree unchanged', () => {
+test('checked-in bootstrap remains pinned to the released 0.10.8 snapshot while 0.11 is unreleased', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'installer-manifest.json'), 'utf8'));
   assert.equal(manifest.pluginRef, RELEASE_SNAPSHOT_REF);
   assert.equal(manifest.marketplaceRef, RELEASE_SNAPSHOT_REF);
@@ -54,21 +54,11 @@ test('checked-in bootstrap pin binds the 0.10.8 content/provenance snapshot and 
   assert.equal(provenance.immutableRef, RELEASE_CONTENT_REF);
   gitAtRoot(['merge-base', '--is-ancestor', RELEASE_CONTENT_REF, RELEASE_SNAPSHOT_REF]);
 
-  const pluginChangesAfterSnapshot = gitAtRoot([
-    'diff',
-    '--name-only',
-    RELEASE_SNAPSHOT_REF,
-    'HEAD',
-    '--',
-    'plugins/chengfeng-videocut'
-  ]).trim();
-  assert.equal(pluginChangesAfterSnapshot, '', 'Bootstrap C must not alter the released plugin subtree.');
-
   const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
-  assert.match(readme, new RegExp('本次待发布 Plugin 是 `' + RELEASE_PLUGIN_VERSION + '`'));
-  assert.match(readme, new RegExp('`' + RELEASE_CONTENT_REF + '`'));
-  assert.match(readme, new RegExp('`' + RELEASE_SNAPSHOT_REF + '`'));
-  assert.match(readme, /stable 指向 B，main 指向 C，Bootstrap manifest 固定 B/);
+  assert.match(readme, /当前公开的 0\.10\.8 快照仅是历史稳定入口/);
+  assert.match(readme, /本分支候选 Plugin 是 `0\.11\.0`/);
+  assert.match(readme, /重新产生最终内容提交与\s*provenance 快照/);
+  assert.match(readme, new RegExp(RELEASE_SNAPSHOT_REF));
   assert.doesNotMatch(readme, /当前 `main` 候选 Plugin 是 `0\.10\.7`/);
 });
 

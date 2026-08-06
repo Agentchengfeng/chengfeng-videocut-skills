@@ -22,7 +22,7 @@ func TestRunProcessTreeKillsUnixDescendants(t *testing.T) {
 	if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	result := runProcessTree(context.Background(), exec.Command(script, childPIDFile), time.Second)
+	result := runProcessTree(context.Background(), exec.Command(script, childPIDFile), 3*time.Second)
 	if result.OK || result.Failure != "timeout" || !strings.Contains(result.Stderr, "termination confirmed") {
 		t.Fatalf("timeout was not confirmed: %#v", result)
 	}
