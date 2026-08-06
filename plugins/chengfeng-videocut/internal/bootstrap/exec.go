@@ -20,6 +20,8 @@ import (
 const maxCommandOutput = 32 << 10
 const processSettleTimeout = 2 * time.Second
 const outputSettleTimeout = 500 * time.Millisecond
+const runtimeCLITimeout = 9 * time.Minute
+const runtimeProbeTimeout = 90 * time.Second
 
 type CommandResult struct {
 	OK        bool   `json:"ok"`
@@ -150,12 +152,20 @@ func finalizeCommandResult(err error, capture *processCapture, failure, diagnost
 }
 
 func runRuntimeCommand(ctx context.Context, launcher string, args []string) CommandResult {
+	return runRuntimeCommandWithTimeout(ctx, launcher, args, runtimeCLITimeout)
+}
+
+func runRuntimeProbe(ctx context.Context, launcher string, args []string) CommandResult {
+	return runRuntimeCommandWithTimeout(ctx, launcher, args, runtimeProbeTimeout)
+}
+
+func runRuntimeCommandWithTimeout(ctx context.Context, launcher string, args []string, timeout time.Duration) CommandResult {
 	cmd, err := platformCommand(launcher, args)
 	if err != nil {
 		return CommandResult{ExitCode: -1, Stderr: err.Error()}
 	}
 	cmd.Dir = filepath.Dir(launcher)
-	return runProcessTree(ctx, cmd, 90*time.Second)
+	return runProcessTree(ctx, cmd, timeout)
 }
 
 func validateArgv(args []string) error {
@@ -213,12 +223,12 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 		status.State, status.Reason = "unhealthy", fmt.Sprintf("fingerprint managed runtime launcher: %v", err)
 		return status
 	}
-	version := runRuntimeCommand(ctx, launcher, []string{"--version"})
+	version := runRuntimeProbe(ctx, launcher, []string{"--version"})
 	if err := verifyLauncherFingerprint(c, fingerprint); err != nil {
 		status.State, status.Reason = "unhealthy", err.Error()
 		return status
 	}
-	doctor := runRuntimeCommand(ctx, launcher, []string{"doctor", "--json"})
+	doctor := runRuntimeProbe(ctx, launcher, []string{"doctor", "--json"})
 	if err := verifyLauncherFingerprint(c, fingerprint); err != nil {
 		status.State, status.Reason = "unhealthy", err.Error()
 		return status

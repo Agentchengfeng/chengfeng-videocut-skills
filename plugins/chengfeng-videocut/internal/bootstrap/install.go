@@ -110,7 +110,7 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if err != nil {
 		return nil, err
 	}
-	result := runInstallerCommand(ctx, installerPath, args, temp, 10*time.Minute)
+	result := runInstallerCommand(ctx, installerPath, args, temp, runtimeCLITimeout)
 	if !result.OK {
 		return nil, fmt.Errorf("compiled installer failed with exit %d: %s", result.ExitCode, strings.TrimSpace(result.Stderr))
 	}

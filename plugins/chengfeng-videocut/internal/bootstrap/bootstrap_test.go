@@ -95,6 +95,15 @@ func TestCommandOutputOverflowFailsClosed(t *testing.T) {
 	}
 }
 
+func TestRuntimeTimeoutsStayBelowHostBoundary(t *testing.T) {
+	if runtimeProbeTimeout != 90*time.Second {
+		t.Fatalf("probe timeout=%s", runtimeProbeTimeout)
+	}
+	if runtimeCLITimeout != 9*time.Minute || runtimeCLITimeout >= 601*time.Second {
+		t.Fatalf("runtime CLI timeout=%s must preserve long synchronous operations below the 601s host boundary", runtimeCLITimeout)
+	}
+}
+
 func TestSemverAndCapabilities(t *testing.T) {
 	c, _ := LoadContract()
 	if !semverAtLeast("0.5.1", "0.5.0") || semverAtLeast("0.4.9", "0.5.0") || semverAtLeast("junk", "0.5.0") || semverAtLeast("0.5.0junk", "0.5.0") || semverAtLeast("00.5.0", "0.5.0") {
