@@ -49,9 +49,11 @@ winget install OpenJS.NodeJS.LTS Google.Chrome
 Skill 合同的行为（真实发生过：Runtime 缺失时 Agent 手搓了一个"审片台"，产出与产品
 完全不兼容）。遇到这种情况，把 Agent 的报错原文发 Issue。
 
-本分支候选 Plugin 是 `0.11.0`。它尚未生成内容提交 A / Marketplace 快照 B，也没有
-写入 bootstrap；Runtime 0.5.0 的 installer 与 install manifest 两个 pinned SHA-256
-回填之前不得发布或把候选说成可安装。当前公开的 0.10.8 快照仅是历史稳定入口：
+本分支候选 Plugin 是 `0.11.0`：内容提交 A 为
+`fb97bd8c1e17cfafa5de4335698126d8f6e5afae`，只增加 provenance 的快照 B 为
+`78f44b508e738e15816e39a0363d2bbbcba4d7fb`。bootstrap 尚未改指针；Runtime 0.5.0 的
+installer 与 install manifest 两个 pinned SHA-256 回填之前不得发布或把候选说成可安装。
+当前公开的 0.10.8 快照仅是历史稳定入口：
 
 ```bash
 codex plugin marketplace add Agentchengfeng/chengfeng-videocut-skills --ref 1487e02b1c0c39ea74d079e8ce45da56bf59bc32 && codex plugin marketplace upgrade chengfeng-videocut --json && codex plugin add chengfeng-videocut@chengfeng-videocut
