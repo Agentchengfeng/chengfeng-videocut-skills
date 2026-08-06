@@ -40,16 +40,14 @@ user-invocable: true
 标点、去掉的口头禅、专名的正式写法，这些本来就该不一样。逼一份字符串同时干两件事，
 字幕就永远加不了逗号。
 
-## 0. 就绪
+## 0. Runtime 门禁
 
-先执行 [检查更新](../chengfeng-check-updates/SKILL.md) 的「就绪检查」——skills 是否
-最新、Runtime 是否配套；**插件根**也在那里定位（本文命令里的 `<插件根>` 都代入
-那个字面路径）。只有「就绪」才继续；「需新会话」或「停」按它的处置执行
-（含「禁止自制替代界面」禁令），业务 Skill 不自带环境逻辑。
+直接调用原生 MCP `runtime_status`；不在每个字幕任务中检查 Plugin 更新。
+`ready=true` 才继续。其他状态按 [检查更新](../chengfeng-check-updates/SKILL.md)
+「检查 Runtime 就绪」处置；没有 ready 读回就停止，禁止自制替代界面。
 
-若就绪结果为 `runtime.kind=desktop-managed`，直接复用桌面 App 已安装的稳定 CLI 与
-同一 `launchd/windows-task` 服务；不要解析 Electron 路径、另装依赖或起第二个
-Runtime。
+从本 Skill 实际源文件路径向上两级定位 `<插件根>`，只用于读包内词典。
+不搜索 Electron 路径、不起第二个 Runtime，不要求用户另装系统依赖。
 
 ## 1. 入口断言
 

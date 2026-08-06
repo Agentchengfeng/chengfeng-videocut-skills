@@ -9,7 +9,7 @@ user-invocable: true
 从一条视频到**一份人工复核过的删词账本（Cuts + EDL）**，不碰媒体文件。七步一线：
 
 ```text
-0  就绪     引用「检查更新」的就绪检查（本 Skill 不带环境逻辑）
+0  Runtime  原生 MCP 只检查受管 Runtime（不联网检查 Plugin 更新）
 1  建档     真实视频 → 云端逐词转录 → 产品建项目 → 起服务 → 读回状态
 2  修字     词典把字改对（通用一本 + 用户一本）→ 出修字表
 3  删词     读偏好与规则 → 五轮扫描，每轮只找一类，只记行
@@ -31,16 +31,16 @@ Studio 状态的唯一写入者。
 
 各条规矩的事故来历在 [事故簿](references/lessons.md)——规矩在正文，故事在那边。
 
-## 0. 就绪
+## 0. Runtime 门禁
 
-先执行 [检查更新](../chengfeng-check-updates/SKILL.md) 的「就绪检查」——skills 是否
-最新、Runtime 是否配套；**插件根**也在那里定位（本文命令里的 `<插件根>` 都代入
-那个字面路径）。只有拿到「就绪」才继续；「需新会话」或「停」都按它的处置执行
-（含「禁止自制替代界面」禁令）。
+直接调用原生 MCP `runtime_status`；每个剪辑任务不运行 Plugin 更新脚本，也不
+联网刷新 Marketplace。`ready=true` 才继续。`missing / unhealthy /
+incompatible` 按 [检查更新](../chengfeng-check-updates/SKILL.md)「检查 Runtime
+就绪」处置；没有 ready 读回就停止，禁止自制替代界面。
 
-若就绪结果为 `runtime.kind=desktop-managed`，它与 CLI 安装共用同一稳定入口和
-`launchd/windows-task` 服务，直接继续；不要查找 Electron 安装目录、另装 Bun /
-FFmpeg，或启动第二个 Runtime。
+从本 Skill 实际源文件路径向上两级定位 `<插件根>`，只用于读包内词典。
+不搜索 Electron 安装目录，不启动第二个 Runtime，不要求用户安装任何系统
+媒体工具；这些都由受管 Runtime 所有。
 
 ## 1. 建档：真实输入 → 转录 → 产品建项目
 
@@ -226,7 +226,7 @@ FFmpeg，或启动第二个 Runtime。
 
 随后用 Codex 内置浏览器读取同一 canonical origin 的
 `/chengfeng-videocut-capabilities.json`，验证其中声明 `koubo` 顶层视图；不要再调用
-Plugin 的 Node `ensure-studio.cjs`。
+任何 Plugin 私有脚本或用户系统浏览器。
 
 规矩：
 

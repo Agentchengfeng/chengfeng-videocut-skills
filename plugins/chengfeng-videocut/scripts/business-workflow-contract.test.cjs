@@ -48,18 +48,18 @@ assert.match(contract, /不产生一次性 Product receipt/, "one-time receipt m
 assert.match(contract, /素材库、material-library、上传会话/, "contract must explicitly prohibit asset/upload workflows");
 assert.match(
   checkUpdates,
-  /Plugin runtime_install[\s\S]*Headless Shell[\s\S]*不要求用户把 Bun、Node、FFmpeg 加入系统 PATH/,
+  /Plugin runtime_install[\s\S]*Headless Shell[\s\S]*用户流程不要求系统 Node/,
   "environment manager must document the managed installer route",
 );
 assert.match(
   reportBug,
-  /kind=desktop-managed[\s\S]*不授权本 Skill 启动/,
-  "bug reporting must keep the Desktop source read-only",
+  /不得安装 Runtime、启动 Studio、改项目/,
+  "bug reporting must keep Product state read-only",
 );
 assert.doesNotMatch(
   reportBug,
-  /跑 `codex plugin list --json`/,
-  "bug reporting must locate its own cache without querying another installation",
+  /node\s+"?<插件根>/,
+  "bug reporting must not invoke a repository Node helper",
 );
 
 const skills = fs.readdirSync(path.join(root, "skills")).sort();

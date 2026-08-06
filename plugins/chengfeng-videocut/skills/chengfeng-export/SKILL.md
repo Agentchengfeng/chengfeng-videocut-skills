@@ -16,24 +16,20 @@ user-invocable: true
 产出   成片.mp4
 ```
 
-前提工具：机器上有 **Google Chrome**（用来把字幕和动画画成图）。桌面安装来源的
-FFmpeg / FFprobe 已随 App 进入 Product 受管目录；纯 CLI 安装仍要求系统
-`ffmpeg ≥ 6`。缺 Chrome 会明确报错，不要试图绕过——没有它就没有字幕层和动画层。
+渲染引擎、Headless Shell 与媒体工具全部由 Product Runtime 受管。用户无需安装
+系统浏览器或媒体 CLI；若 Runtime 缺少任一能力，doctor/capability 门禁必须
+拒绝导出，不转嫁给用户修复 `PATH`。
 
 先读取并执行 [业务 Skill 的阶段合同](../../references/business-workflow-contract.md)
 里的「结论等级」一节。**导出不进剪辑状态机**：它不改任何项目文件、不做 CAS 写入、
 不推进 stage，产出是一个新文件，重跑一次就覆盖。所以它不需要确认卡。
 
-## 0. 就绪
+## 0. Runtime 门禁
 
-先执行 [检查更新](../chengfeng-check-updates/SKILL.md) 的「就绪检查」——skills 是否
-最新、Runtime 是否配套；**插件根**也在那里定位（本文命令里的 `<插件根>` 都代入
-那个字面路径）。只有「就绪」才继续；「需新会话」或「停」按它的处置执行
-（含「禁止自制替代界面」禁令），业务 Skill 不自带环境逻辑。
-
-若就绪结果为 `runtime.kind=desktop-managed`，直接复用桌面 App 已安装的稳定 CLI、
-媒体工具与同一 `launchd/windows-task` 服务；不要解析 Electron 路径、另装
-FFmpeg/Bun 或起第二个 Runtime。
+直接调用原生 MCP `runtime_status`；不在每个导出任务中检查 Plugin 更新。
+`ready=true` 才继续。其他状态按 [检查更新](../chengfeng-check-updates/SKILL.md)
+「检查 Runtime 就绪」处置；没有 ready 读回就停止，禁止自制替代界面。
+不搜索 Electron 路径、不起第二个 Runtime，不要求用户另装系统依赖。
 
 ## 命令
 
@@ -83,49 +79,22 @@ FFmpeg/Bun 或起第二个 Runtime。
 
 **不要为了「更清晰」去调 `--fps`。** 帧率跟着源片走；改它只会让动画的采样和录屏对不上。
 
-## 换源：用户拿出同一次录制的高清版时
+## 换源边界
 
-这不是导出流程的一部分——导出本身永远只读。换源是用户明确点头后的独立素材操作，
-做完再回来正常导出。
-
-**先判定是不是同一条**（前两条就足够硬）：
-
-```bash
-ffprobe -v error -show_entries format=duration -of csv=p=0 <两个文件>   # 时长精确到毫秒相同
-ffmpeg -v error -i <文件> -map 0:a:0 -c copy -f md5 -                  # 音频流逐位相同
-# 再抽两三帧对比画面内容，眼睛确认
-```
-
-**音频逐位相同 = 时间线相同**：逐词稿、账本、字幕、画面层全绑词 id，一个不用动。
-这正是「绑词不绑秒」在换源这件事上的兑现。
-
-**换源四步**（2026-07-29 真实走过一次；第 ③ 步当时漏了，剪辑预览当场报
-「生成失败」——指纹记录不止一处，grep 旧指纹找全再动手）：
-
-```text
-① 换文件      input/source.mp4 和 uploads/source.mp4 是硬链接对 ——
-              删两个，拷新文件到 input/，再建硬链接回 uploads/
-              （macOS 用 ln；Windows 用 New-Item -ItemType HardLink）
-② 更新指纹    project.json 的 source.sha256 改成新文件的
-③ 再查一处    workbench.json 的 sourceSha256 也记着源片指纹，
-              剪辑预览管道校验的恰恰是这本 —— 漏了它，预览拒绝生成
-              （这是产品的正确行为：指纹对不上宁可失败，不拿旧预览冒充）
-④ 重导        --scale 1 —— 换源就是为了原生像素，别再放大
-```
-
-保险做法：用你的搜索工具在 <项目目录> 的全部 *.json 里找旧指纹前 8 位，
-列出来的每一处都要处理（缓存记录如 preview-edited/current.json 会自动重算，不用手动改）。
-
-音频不同（重新录了一遍、剪过、时长不一样）就**不是换源**，是新项目：
-逐词稿要重新转，所有标注作废。别硬套。
+导出本身永远只读。当前公开 Runtime 合同没有已验证的原子「换源」命令，
+因此本 Skill 不直接调用媒体 CLI 比对，不删文件/建硬链，不手改
+`project.json` 或任何指纹。用户拿出高清版时，明确报告「自动换源尚未
+实现」；要么继续使用当前受管源片，要么以新源片建新项目并重新转录。
 
 ## 验收：三件事，缺一件就不算导出完成
 
 ```text
-① 命令成功返回        产品自己数成片的尺寸、帧数、音轨，和计划逐项比。
+① Product 结构验收      `job get` 的最终结果必须读回 `actualDuration`、
+                     `hasAudio`、`renderedFrames`、`problems`，并和 dry-run 计划逐项比。
                      对不上就是 readback_mismatch 报错，文件留在盘上当证据，
                      不算导出完成
-② 抽帧看像素          从成片里抽帧，用眼睛看。至少覆盖：一个推近段、
+② 真实成片看像素      仅使用 Product 返回的成片验证 URL/帧产物，通过
+                     Codex 内置浏览器用眼睛看。至少覆盖：一个推近段、
                      一个整屏动画段、一个只有字幕的段、一个层与层的边界
 ③ 人耳听感            没人真的听过，一律记 human listening UNVERIFIED
 ```
@@ -139,11 +108,9 @@ ffmpeg -v error -i <文件> -map 0:a:0 -c copy -f md5 -                  # 音�
 被裁掉一半的元素（气泡从中间断开）、消失的边缘元素（侧栏、标题栏）。
 和源片同刻帧对比一眼定案。
 
-抽帧就用 ffmpeg：
-
-```bash
-ffmpeg -v error -ss 8.84 -i 成片.mp4 -frames:v 1 -y frame.png
-```
+若 Product 最终 job 没有返回成片验证 URL/帧产物，明确报告
+**visual frame UNVERIFIED（自动成片抽帧尚未实现）**。不得私自调用系统
+媒体 CLI，不得用 Studio 预览帧或静态 DOM 代替成片帧。
 
 ## 出问题往哪查
 
@@ -167,7 +134,7 @@ spans/*.mp4      合成后的分段。它错 = 推近或对齐错
 层边界闪一小段原片      overlay 截图陈旧（帧标记验证失效）。产品靠页面顶部的
                       帧标记条自证每张截图属于哪一帧；若复发，先确认 overlay
                       PNG 顶部有标记条、compose 有裁掉它的 crop
-找不到 Chrome          装 Google Chrome，别改成别的渲染路径
+缺少受管渲染器        Runtime doctor/capability 失败，停止并引导修复 Runtime
 ```
 
 ## 不许做什么

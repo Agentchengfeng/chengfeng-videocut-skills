@@ -35,7 +35,7 @@ $chengfeng-videocut:chengfeng-check-updates
 导出        -> 成片.mp4（剪辑+推近+字幕+画面层一次烧成）
 字幕        -> subtitles.json（按账本算时间，不再发布 SRT）
 上报 Bug    -> 脱敏草稿 -> 用户确认 -> GitHub Issue URL
-检查更新    -> 官方 Marketplace 快照 -> 来源证明 -> 用户确认 -> 复读版本
+检查更新    -> Codex 原生 Marketplace 刷新 -> 用户确认 -> Plugin add -> 复读版本
 ```
 
 共同边界只存在于 `references/runtime-and-product-contract.md` 与 `references/business-workflow-contract.md`。普通 reference 没有 `SKILL.md`、公开 ID 或 UI 卡片，不占用用户入口。
@@ -58,68 +58,38 @@ Product 受管根，可以被兼容复用，但 Desktop 不再是正式新装入
 Electron 资源目录，也不接受 foreground 进程冒充正式服务；
 `chengfeng-report-bug` 对任何既有安装都保持只读。
 
-`chengfeng-report-bug` 不安装 Runtime、不启动 Studio，也不改项目。它只生成脱敏 Issue 草稿，用户确认同一份正文后才调用 GitHub CLI；没有明确 Issue URL 就不宣称上报成功。
+`chengfeng-report-bug` 不安装 Runtime、不启动 Studio，也不改项目。Agent 直接
+生成和通读脱敏 Issue 草稿；用户确认同一份 repo/title/body 后，只使用
+当前 Agent 已有的 GitHub Issue 能力提交。能力不可用时返回草稿并明确写
+「未提交」；没有明确 Issue URL 就不宣称成功。
 
-`chengfeng-check-updates` 把“发现候选”与“改变用户安装”分成两个事务。`--inspect`
-与普通检查都直接读取当前 Plugin cache；检查阶段不会以用户 `CODEX_HOME` 调用任何
-`codex` 命令，也不会写用户的 Marketplace、配置或 cache。联网发现只在一次性临时
-`CODEX_HOME` 中把官方 `stable` 解析为发布快照 `snapshotRevision`（40-hex，记作
-B）；包内 provenance 再把该快照绑定到内容提交 `contentRevision`（40-hex，记作
-A）和可重算的 `publisherChecksum`。只有 version + B + A + SHA-256 四项一致才会
-展示候选；`stable` 只是临时候选发现入口，不是用户安装的持久引用。
+`chengfeng-check-updates` 委托给 Codex 0.146+ 原生 Plugin 管理：用户要求检查
+时执行 `plugin marketplace upgrade chengfeng-videocut`，再用
+`plugin list --available --json` 展示 candidate；用户确认后执行
+`plugin add chengfeng-videocut@chengfeng-videocut`，并以 `plugin list --json` 复读
+installed/enabled 版本。不存在 `codex plugin update` 这个子命令。更新 Plugin
+不安装、不替换 Runtime，也不改项目或媒体。当前会话不中途换 Skill，
+激活成功后需新会话。
 
-候选还必须通过 Git 来源证明：临时 Marketplace 的 origin 必须是官方仓库，HEAD
-必须等于 B，A 必须是 B 可达的提交，且 A 到 B 的 Plugin 子树只能新增 provenance；
-工作树必须干净，清单摘要也必须等于 `publisherChecksum`。当前安装则必须来自同一
-exact pinned Marketplace 的官方 Git 工作树，所选 cache 与该快照中的 Plugin 字节
-完全一致。cache 中允许保留更低版本目录，但活跃项必须是唯一的最高 strict semver；
-若两个目录具有相同的最高 semver 优先级，则以 `installed_identity_untrusted`
-停止，不能猜测该用哪个。
-
-用户确认所见四项后，脚本会重新隔离 stage；候选未漂移才进入写事务。用户
-Marketplace 始终固定到 exact B。写入前再以 CAS 复读 Marketplace 与 cache；状态
-变化就返回 `activation_state_changed`，不开始激活。状态未变才通过官方命令执行
-remove → add `--ref B` → upgrade，再直接复读 cache 验证 version + B + A +
-SHA-256。命令失败但安装仍与旧状态完全相同时返回
-`activation_failed_no_change`，不做多余回滚；已经发生变化时才尝试恢复更新前的
-exact snapshot revision。只有完整恢复才返回
-`activation_failed_rolled_back`（cache 锁冲突为
-`activation_cache_locked_rolled_back`），恢复不完整返回
-`activation_failed_rollback_incomplete` 并明确报告实际状态。历史 0.10.5 安装没有
-完整 provenance 时仍可作为一次性迁移源：检查结果带
-`legacyInstalledIdentity=true`，继续使用同一个
-`update_available_confirmation_required` 确认门，无需用户先做 Marketplace ref
-变更；旧 revision、cache 版本、manifest 或清单互相矛盾时返回
-`installed_identity_untrusted`。更新失败或回滚都不安装、不替换 Runtime，也不改
-项目或媒体。
-
-Windows 上，更新脚本与 GitHub npm bootstrap 都按 `PATHEXT` 优先解析原生可执行
-扩展名，再回退无扩展名文件；`.cmd` / `.bat` 始终由 `ComSpec` 包装执行。因此 pnpm
-目录同时存在 Unix `codex` shim 与 `codex.cmd` 时，会选择可在 Windows 启动的
-`codex.cmd`。
-
-首次 GitHub npm bootstrap 与日后更新是两条独立事务。bootstrap 预检无同名
-Marketplace/Plugin 后，先以 manifest 的 exact 40-hex ref 执行 Marketplace add；
-紧接着、在 upgrade 之前读取 available inventory。若这一步暴露出 add 前不可见的
-历史 orphan Plugin，它会拒绝激活，只移除本次新加的 Marketplace 并保留 orphan，
-不会调用 Plugin remove。通过该门禁后才执行 upgrade、Git/metadata 身份复读和
-Plugin add；后续失败则按本次实际创建的状态执行 Plugin remove → Marketplace
-remove，并再次复读确认。
+业务 Skill 的 Runtime 门禁不会每任务刷新 Marketplace。它只调用原生 MCP
+`runtime_status`，并在缺失时经摘要确认卡进入 `runtime_install`。
 
 Plugin 是独立的 `0.11.0` 版本；`runtime-requirements.json` 要求 Product Runtime `0.5.0`。两者不能互相替代。
 
 ## 开发验证
 
-原生 MCP 开发基线是 Go 1.24；发布包必须提交预构建二进制，因为 Marketplace 安装不
+原生 MCP 开发基线是 Go 1.25；发布包必须提交预构建二进制，因为 Marketplace 安装不
 保证运行构建生命周期，用户机器也不应需要 Go。构建产物必须复现出 macOS Universal 2
 与 Windows x64：
 
 ```bash
 go test ./...
 ./scripts/build-native-mcp.sh
+go run ./cmd/native-mcp-raw-smoke ./bin/chengfeng-videocut-mcp
 go run ./cmd/native-mcp-smoke ./bin/chengfeng-videocut-mcp
 ```
 
-核心剪辑、Runtime 状态/安装/调用都不依赖系统 Node/Bun。当前残余 Node-only 范围只有
-Plugin Marketplace 更新脚本，以及 Bug draft/submit 安全事务；它们不是核心剪辑链，
-但调用时仍要求 Node.js ≥ 20。不得把 0.11.0 宣称为所有辅助能力都零系统依赖。
+六个用户 Skill 都不要求系统 Node/Bun/Git/`gh`/Chrome/FFmpeg/FFprobe。
+媒体和渲染依赖只由 Product Runtime 管理。仓库中的 Node 脚本仍可用于开发回归，
+但不是用户流程。`runtime_cli` 为既有同步命令保留有界 9 分钟窗口；持久
+job 契约当前只声明 `export`，不宣称 transcribe 已经 durable。

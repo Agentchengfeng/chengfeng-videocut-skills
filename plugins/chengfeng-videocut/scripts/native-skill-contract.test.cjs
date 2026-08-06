@@ -11,29 +11,39 @@ const core = ["chengfeng-cut", "chengfeng-subtitle", "chengfeng-visual", "chengf
 for (const skill of core) {
   const text = read(`skills/${skill}/SKILL.md`);
   assert.match(text, /runtime_cli/, `${skill} must use the native MCP bridge`);
-  assert.doesNotMatch(text, /node\s+"?<插件根>\/scripts\/(?:ensure-runtime|ensure-running|ensure-studio|videocut-cli)\.cjs/, `${skill} must not require system Node for the core flow`);
+  assert.match(text, /runtime_status/, `${skill} must use the native runtime gate`);
+  assert.doesNotMatch(text, /check-plugin-update\.cjs/, `${skill} must not refresh Plugin updates per task`);
+  assert.doesNotMatch(text, /```(?:bash|sh)[\s\S]*?\b(?:node|ffmpeg|ffprobe|gh|git)\b[\s\S]*?```/i, `${skill} must not call user system tools`);
 }
 
 const exportSkill = read("skills/chengfeng-export/SKILL.md");
 assert.match(exportSkill, /"job","start","export"/, "real export must use a Product persistent job");
 assert.match(exportSkill, /"job","get"/, "export must describe persistent job readback");
+assert.match(exportSkill, /actualDuration[\s\S]*hasAudio[\s\S]*renderedFrames[\s\S]*problems/, "export must use Product structural verification fields");
+assert.doesNotMatch(exportSkill, /^ff(?:mpeg|probe)\s/m, "export must not call system media tools");
 assert.doesNotMatch(exportSkill, /\{"argv":\["export","<project>","--json"/, "synchronous export bypass must not be documented");
 
 const reportBug = read("skills/chengfeng-report-bug/SKILL.md");
 assert.match(reportBug, /runtime_status/, "Bug diagnostics must use the read-only native MCP status tool");
-assert.doesNotMatch(reportBug, /ensure-runtime\.cjs/, "Bug diagnostics must not call the legacy Node preflight");
+assert.match(reportBug, /Agent (?:已经可调用的|已有) GitHub Issue/, "Bug submission must use an existing Agent capability");
+assert.match(reportBug, /未提交/, "Bug submission must return a draft when the capability is unavailable");
+assert.doesNotMatch(reportBug, /node\s+"?<插件根>/, "Bug reporting must not execute the repository Node helper");
 
 const updates = read("skills/chengfeng-check-updates/SKILL.md");
 assert.match(updates, /show_workflow_confirmation/);
 assert.match(updates, /approvalDigest/);
 assert.match(updates, /runtime_install/);
+assert.match(updates, /plugin marketplace upgrade chengfeng-videocut --json/);
+assert.match(updates, /plugin add chengfeng-videocut@chengfeng-videocut --json/);
+assert.doesNotMatch(updates, /^codex plugin update(?:\s|$)/m, "must not document a nonexistent Codex command");
 
 const readme = read("README.md");
-assert.match(readme, /残余 Node-only/);
-assert.match(readme, /Bug draft\/submit/);
+assert.match(readme, /六个用户 Skill 都不要求系统 Node\/Bun\/Git/);
+assert.match(readme, /持久[\s\S]*只声明 `export`/);
 
 const mcp = JSON.parse(read(".mcp.json")).mcpServers["chengfeng-videocut"];
 assert.equal(mcp.command, "./bin/chengfeng-videocut-mcp");
 assert.equal(mcp.cwd, ".");
+assert.equal(mcp.tool_timeout_sec, 601);
 
-console.log(JSON.stringify({ coreSkillsUseNativeMCP: true, persistentExportJobs: true, residualNodeScopeExplicit: true }));
+console.log(JSON.stringify({ coreSkillsUseNativeMCP: true, persistentExportJobs: true, userSystemDependenciesRemoved: true }));
