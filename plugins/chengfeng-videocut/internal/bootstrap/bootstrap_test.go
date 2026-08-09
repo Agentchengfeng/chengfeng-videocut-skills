@@ -130,7 +130,7 @@ func TestRuntimeTimeoutsStayBelowHostBoundary(t *testing.T) {
 
 func TestSemverAndCapabilities(t *testing.T) {
 	c, _ := LoadContract()
-	if !semverAtLeast("0.5.1", "0.5.0") || semverAtLeast("0.4.9", "0.5.0") || semverAtLeast("junk", "0.5.0") || semverAtLeast("0.5.0junk", "0.5.0") || semverAtLeast("00.5.0", "0.5.0") {
+	if !semverAtLeast("0.5.2", "0.5.1") || semverAtLeast("0.5.0", "0.5.1") || semverAtLeast("junk", "0.5.1") || semverAtLeast("0.5.1junk", "0.5.1") || semverAtLeast("00.5.1", "0.5.1") {
 		t.Fatal("semver comparison failed")
 	}
 	if !semverAtLeast("1.0.0", "1.0.0-rc.1") || semverAtLeast("1.0.0-rc.1", "1.0.0") || !semverAtLeast("1.0.0-rc.10", "1.0.0-rc.2") {
@@ -189,7 +189,7 @@ func TestRuntimeStatusAndCLIUseManagedLauncher(t *testing.T) {
 		t.Fatal(err)
 	}
 	caps, _ := jsonMarshal(c.Capabilities)
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.0'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nprintf '%s\\n' \"$@\"\n"
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.1'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nprintf '%s\\n' \"$@\"\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -259,7 +259,7 @@ func TestRuntimeStatusRejectsLauncherTamper(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.0'; exit 0; fi\nexit 2\n"
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.1'; exit 0; fi\nexit 2\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -306,7 +306,7 @@ test -n "$target"
 mkdir -p "$target/bin"
 cat > "$target/bin/chengfeng-videocut" <<'EOF'
 #!/bin/sh
-if [ "$1" = "--version" ]; then echo 'chengfeng-videocut 0.5.0'; exit 0; fi
+if [ "$1" = "--version" ]; then echo 'chengfeng-videocut 0.5.1'; exit 0; fi
 if [ "$1" = "doctor" ]; then echo '{"ok":true,"data":{"healthy":true,"capabilities":%s}}'; exit 0; fi
 exit 2
 EOF

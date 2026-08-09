@@ -16,9 +16,12 @@ user-invocable: true
 产出   成片.mp4
 ```
 
-渲染引擎、Headless Shell 与媒体工具全部由 Product Runtime 受管。用户无需安装
-系统浏览器或媒体 CLI；若 Runtime 缺少任一能力，doctor/capability 门禁必须
-拒绝导出，不转嫁给用户修复 `PATH`。
+媒体工具由 Product Runtime 受管，用户无需安装系统媒体 CLI。Headless Shell 的
+生命周期只属于实际 `job start export` 的 HTML 覆盖层渲染：Product 先读取并校验
+自己的缓存；缓存未命中才下载锁定版本，校验归档和可执行文件后原子写入缓存，后续
+实际导出复用。安装、`runtime_status`、doctor 与 `--dry-run` 都不会预下载或预检它。
+Product 绝不搜索、借用或回退系统 Chrome / Chromium；受管引擎取得或校验失败时，
+实际导出必须 fail-closed，不转嫁给用户修复 `PATH`。
 
 先读取并执行 [业务 Skill 的阶段合同](../../references/business-workflow-contract.md)
 里的「结论等级」一节。**导出不进剪辑状态机**：它不改任何项目文件、不做 CAS 写入、

@@ -100,16 +100,22 @@ Runtime 安装后再调用一次 `runtime_status`，必须读回 `ready=true`。
 
 ```text
 Plugin runtime_install
-  -> 下载并校验一个内嵌依赖的 Runtime 安装包
-  -> 安装包只在本地安装 Runtime、Headless Shell 与全部媒体工具
-  -> Runtime 统一管理服务、Headless Shell 与全部媒体工具
-  -> Skill 只通过受管稳定启动器调用
+  -> 下载并校验一个 Runtime 安装包
+  -> 安装 Runtime 与受管媒体工具；不内嵌、下载或预检 Headless Shell
+  -> Runtime 统一管理服务与媒体工具；Skill 只通过受管稳定启动器调用
+
+实际 job start export 的 HTML 覆盖层渲染
+  -> Product 先读取并校验自己的 Headless Shell 缓存
+  -> 缓存未命中才下载锁定版本，校验归档和可执行文件后原子写入缓存
+  -> 后续实际导出复用缓存；绝不搜索、借用或回退系统 Chrome / Chromium
 ```
 
 用户流程不要求系统 Node、Bun、Git、`gh`、Chrome、Chromium、FFmpeg 或
-FFprobe，也不要求它们进入 `PATH`。缺少媒体或渲染能力时，将 Runtime
-判为 unhealthy/incompatible，由 Runtime 安装或升级修复；不把依赖转嫁给
-用户。
+FFprobe，也不要求它们进入 `PATH`。`runtime_status`、doctor、安装和
+`--dry-run` 均不下载 Headless Shell；它只在实际导出渲染时由 Product 取得。
+媒体能力缺失按 Runtime unhealthy/incompatible 停止；Headless Shell 的下载、
+校验或缓存失败则实际导出 fail-closed。两种情况都不把依赖转嫁给用户，也不让
+用户安装或指定系统浏览器。
 
 云端转录凭证通过 MCP 结构化调用配置：
 

@@ -30,22 +30,24 @@ Windows 支持自 Runtime v0.4.2 起正式可用（真机验收：安装、常�
 `bcdedit /set {default} hypervisorlaunchtype off`（物理机不受影响）。
 
 正式新装机唯一入口是 Plugin `runtime_install`。单个 Runtime 安装包内嵌 Runtime、受管 Bun、
-媒体工具与 managed Headless Shell，并装到 `~/.chengfeng-videocut`。六个用户 Skill 都不要求系统
+FFmpeg 与 FFprobe，并装到 `~/.chengfeng-videocut`。Headless Shell 不属于安装期：只有用户确认
+实际 export 后，Product Runtime 才按固定版本和 SHA-256 获取、校验并缓存它。六个用户 Skill 都不要求系统
 Node、Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入 `PATH`。
 历史 Desktop / 既有安装仅在已经指向同一 Product 受管根时兼容复用。
 
 | 依赖 | 用途 | 要求 |
 | --- | --- | --- |
-| Product managed tools | Runtime、Bun、媒体工具、Headless Shell | 单个 Runtime 安装包本地安装，不下载依赖 |
+| Product Runtime 安装包 | Runtime、Bun、FFmpeg、FFprobe | 单个安装包本地安装，不下载上游依赖 |
+| Product renderer manager | Headless Shell | 仅确认的实际 export 按锁下载、校验、缓存复用 |
 | Codex Plugin 管理 | Marketplace 刷新、Plugin 安装/启用 | Codex 0.146+ 原生能力 |
 
 **Runtime 装不上时，Agent 应停在安装指引上**——用自制审核页/播放器替代产品属于违反
 Skill 合同的行为（真实发生过：Runtime 缺失时 Agent 手搓了一个"审片台"，产出与产品
 完全不兼容）。遇到这种情况，把 Agent 的报错原文发 Issue。
 
-本分支候选 Plugin 是 `0.11.0`。原始候选曾产生内容 A 和 provenance B；
+本分支候选 Plugin 是 `0.11.1`。原始候选曾产生内容 A 和 provenance B；
 本轮追加修复已改变 Plugin 字节，因此集成后必须重新产生最终内容提交与
-provenance 快照，不得沿用旧 A/B 宣称可发布。Runtime 0.5.0 各平台单文件 Runtime
+provenance 快照，不得沿用旧 A/B 宣称可发布。Runtime 0.5.1 各平台单文件 Runtime
 安装包的 pinned SHA-256 回填之前，同样不得发布或把候选说成可安装。
 当前公开的 0.10.8 快照仅是历史稳定入口：
 
@@ -102,7 +104,7 @@ Runtime 默认安装到：
 ~/.chengfeng-videocut
 ```
 
-Plugin 0.11.0 的合同固定为 Runtime `v0.5.0`。requirements 每个平台只列一个
+Plugin 0.11.1 的合同固定为 Runtime `v0.5.1`。requirements 每个平台只列一个
 `runtimePackageAsset`、它的 `runtimePackageSHA256` 和稳定启动器；代码不再请求 checksum、
 install manifest、Runtime tarball 或 tools tarball。单包的 pinned SHA-256 未发布时，确认卡
 不生成可执行摘要，安装 fail-closed。Runtime 健康还不够：semver 必须达到最低版本并覆盖完整 capability 集。
@@ -175,7 +177,8 @@ Codex
   v
 Product Runtime
   |
-  +-- runtime_install -> 受管 Runtime / Headless Shell / 媒体工具
+  +-- runtime_install -> 受管 Runtime / Bun / FFmpeg / FFprobe
+  +-- confirmed export -> locked Headless Shell cache
   |
   +-- service ensure -> macOS LaunchAgent / Windows 计划任务
   +-- CLI / API
@@ -219,11 +222,11 @@ chengfeng-videocut-skills/
 
 ## 发布边界
 
-Plugin 0.11.0 依赖 Runtime 0.5.0 的单文件 Runtime 安装包、managed tools、用户服务与当前 EDL / Studio 合同。稳定发布顺序是：
+Plugin 0.11.1 依赖 Runtime 0.5.1 的单文件 Runtime 安装包、managed tools、用户服务与当前 EDL / Studio 合同。稳定发布顺序是：
 
 ```text
-Runtime v0.5.0 Release
-  -> 每个平台发布一个内嵌 Runtime 与全部受管依赖的可执行安装包
+Runtime v0.5.1 Release
+  -> 每个平台发布一个内嵌 Runtime、Bun、FFmpeg、FFprobe 的可执行安装包
   -> 把各平台 Runtime 安装包的 pinned SHA-256 回填 requirements
   -> 从公开附件在 Windows / macOS 隔离环境安装并执行 doctor
   -> Plugin 内容提交 A

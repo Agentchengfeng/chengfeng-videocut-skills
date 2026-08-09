@@ -41,19 +41,20 @@ $chengfeng-videocut:chengfeng-check-updates
 共同边界只存在于 `references/runtime-and-product-contract.md` 与 `references/business-workflow-contract.md`。普通 reference 没有 `SKILL.md`、公开 ID 或 UI 卡片，不占用用户入口。
 
 业务 Skill 共用原生 MCP 的四个工具：`runtime_status`、`runtime_cli`、
-`show_workflow_confirmation`、`runtime_install`。Plugin package `0.11.0` 消费 Runtime
-compatibility contract `0.5.0`；MCP 以提交在包内的 macOS Universal 2 / Windows x64
+`show_workflow_confirmation`、`runtime_install`。Plugin package `0.11.1` 消费 Runtime
+compatibility contract `0.5.1`；MCP 以提交在包内的 macOS Universal 2 / Windows x64
 二进制离线启动，不需要系统 Node.js 或 Bun。`runtime_cli` 只接受结构化 `argv`，并且
 只调用 Product 受管目录中的唯一稳定 launcher。Runtime 缺失时先显示安装卡片；用户
 确认的 `approvalDigest` 同时绑定版本、平台单个 Runtime 安装包、该包 SHA-256、目标目录与
 写入影响，`runtime_install` 会重新计算并精确比较，再下载和校验这一个包，最后在本地执行。
-包内包含 Runtime、受管 Bun、FFmpeg、FFprobe 和 Headless Shell，不再下载 Release 的其他依赖。
-0.5.0 发布摘要尚未填入 requirements 时安装明确
+包内只包含 Runtime、受管 Bun、FFmpeg 与 FFprobe；浏览器引擎不属于安装包。只有用户确认实际
+export 后，Runtime 才按固定 platform/build/SHA-256 获取 Headless Shell、校验后缓存复用，绝不
+扫描或回退系统 Chrome/Chromium/Edge。0.5.1 发布摘要尚未填入 requirements 时安装明确
 fail-closed。Studio 只在人工审核状态、浏览器真实读取同一服务的 capability manifest
 并通过门禁后打开。
 
 正式新装机唯一入口是 Plugin 的 `runtime_install`：单个 Runtime 安装包把 Runtime、平台受管
-工具（含 managed Headless Shell）装入 `~/.chengfeng-videocut` 的版本化目录，并由
+工具装入 `~/.chengfeng-videocut` 的版本化目录，并由
 同一个稳定 launcher 执行 `service ensure`。历史 Desktop / 既有安装若已经写入同一
 Product 受管根，可以被兼容复用，但 Desktop 不再是正式新装入口。Plugin 不搜索
 Electron 资源目录，也不接受 foreground 进程冒充正式服务；
@@ -75,7 +76,7 @@ installed/enabled 版本。不存在 `codex plugin update` 这个子命令。更
 业务 Skill 的 Runtime 门禁不会每任务刷新 Marketplace。它只调用原生 MCP
 `runtime_status`，并在缺失时经摘要确认卡进入 `runtime_install`。
 
-Plugin 是独立的 `0.11.0` 版本；`runtime-requirements.json` 要求 Product Runtime `0.5.0`。两者不能互相替代。
+Plugin 是独立的 `0.11.1` 版本；`runtime-requirements.json` 要求 Product Runtime `0.5.1`。两者不能互相替代。
 
 ## 开发验证
 
@@ -91,7 +92,8 @@ go run ./cmd/native-mcp-smoke ./bin/chengfeng-videocut-mcp
 ```
 
 六个用户 Skill 都不要求系统 Node/Bun/Git/`gh`/Chrome/FFmpeg/FFprobe。
-媒体和渲染依赖只由 Product Runtime 管理。仓库中的 Node 脚本仍可用于开发回归，
+媒体工具由安装包受管；Headless Shell 只由 Product Runtime 在用户确认的实际 export 中受管。
+仓库中的 Node 脚本仍可用于开发回归，
 但不是用户流程。`runtime_cli` 为既有同步命令保留有界 9 分钟窗口；持久
 job 契约当前只声明 `export`，不宣称 transcribe 已经 durable。Runtime 冷安装
 从下载到最终读回共用 19 分钟内部上界，低于 MCP host 的 1201 秒边界。

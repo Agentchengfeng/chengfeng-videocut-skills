@@ -128,7 +128,7 @@ func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan,
 		Product: c.Product, Action: "runtime_install", ReleaseTag: c.ReleaseTag,
 		ReleaseVersion: c.ReleaseVersion, Platform: key, RuntimePackageAsset: assets.RuntimePackageAsset,
 		RuntimePackageSHA256: digest, TargetRoot: root,
-		Impact: "下载一个已锁定 SHA-256 的 Product Runtime 安装包；包内包含 Runtime、受管 Bun、FFmpeg、FFprobe 和 Headless Shell，安装器只在本地解包和安装，不会再下载依赖；写入 Product Runtime 目录，可能替换 current 版本。",
+		Impact: "下载一个已锁定 SHA-256 的 Product Runtime 安装包；包内包含 Runtime、受管 Bun、FFmpeg 和 FFprobe，安装器只在本地解包和安装，不会再下载依赖。Headless Shell 不属于安装包；只有用户确认实际导出时，Runtime 才会按固定版本和 SHA-256 获取、校验并缓存它。写入 Product Runtime 目录，可能替换 current 版本。",
 	}
 	if !validSHA256(plan.RuntimePackageSHA256) {
 		return plan, nil

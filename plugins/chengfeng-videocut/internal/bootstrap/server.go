@@ -14,7 +14,7 @@ import (
 
 const TemplateURI = "ui://chengfeng-videocut/workflow-confirm-v1.html"
 
-var Version = "0.11.0"
+var Version = "0.11.1"
 var revisionPattern = regexp.MustCompile(`^[a-f0-9]{64}$`)
 
 type ConfirmationInput struct {
@@ -112,7 +112,7 @@ func confirmationOutput(c Contract, input ConfirmationInput) (map[string]any, er
 		selected := "confirm"
 		prompt := "确认后 Agent 可把 approvalDigest 原样交给 runtime_install。此确认门防误操作，不是身份认证。"
 		if !validSHA256(plan.RuntimePackageSHA256) {
-			availability = "Runtime 0.5.0 单个安装包摘要尚未发布；执行会 fail-closed"
+			availability = fmt.Sprintf("Runtime %s 单个安装包摘要尚未发布；执行会 fail-closed", plan.ReleaseVersion)
 			options = options[1:]
 			selected = "pause"
 			prompt = "Release 摘要尚未锁定，本卡片只展示计划并允许暂停；不会生成可执行 approvalDigest。"

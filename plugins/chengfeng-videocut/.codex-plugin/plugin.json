@@ -1,6 +1,6 @@
 {
   "name": "chengfeng-videocut",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Six task-facing chengfeng-videocut Skills plus a native offline MCP bootstrap for review confirmation and the managed Product Runtime.",
   "author": {
     "name": "Chengfeng",

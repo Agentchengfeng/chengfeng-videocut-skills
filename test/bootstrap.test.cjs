@@ -56,7 +56,7 @@ test('checked-in bootstrap remains pinned to the released 0.10.8 snapshot while 
 
   const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
   assert.match(readme, /当前公开的 0\.10\.8 快照仅是历史稳定入口/);
-  assert.match(readme, /本分支候选 Plugin 是 `0\.11\.0`/);
+  assert.match(readme, /本分支候选 Plugin 是 `0\.11\.1`/);
   assert.match(readme, /重新产生最终内容提交与\s*provenance 快照/);
   assert.match(readme, new RegExp(RELEASE_SNAPSHOT_REF));
   assert.doesNotMatch(readme, /当前 `main` 候选 Plugin 是 `0\.10\.7`/);

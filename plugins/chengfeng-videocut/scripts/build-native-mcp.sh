@@ -6,7 +6,7 @@ output_dir="$plugin_root/bin"
 build_dir=$(mktemp -d "${TMPDIR:-/tmp}/chengfeng-videocut-native.XXXXXX")
 trap 'rm -rf -- "$build_dir"' EXIT HUP INT TERM
 
-version=0.11.0
+version=0.11.1
 package=./cmd/chengfeng-videocut-mcp
 ldflags="-s -w -buildid= -X github.com/Agentchengfeng/chengfeng-videocut-skills/plugins/chengfeng-videocut/internal/bootstrap.Version=$version"
 

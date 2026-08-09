@@ -29,15 +29,20 @@ runtime_status
                                       停止，不回退旧剪辑链
 ```
 
-- Plugin package `0.11.0` 消费 `runtime-requirements.json` 的 `v0.5.0` 合同；最低 Runtime 为 `0.5.0`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。
-- 缺失时只从精确 `v0.5.0` Release 下载**一个**平台对应的 Runtime 安装包。requirements 必须预先锁定该包的 `runtimePackageSHA256`；它为 `null` 或哈希不符时，不生成可执行 `approvalDigest`。
-- 正式新装机只经 Plugin 的 `runtime_install`；该 Runtime 安装包内嵌 Runtime、受管 Bun、FFmpeg、FFprobe 和 Headless Shell。Plugin 只下载并校验这一包，安装器只在本地解包、安装并执行同一个 `service ensure`，不再从上游下载任何依赖。历史 Desktop / 既有安装若已在同一受管根可兼容复用，但不再是正式新装入口。
-- `v0.5.0` Release 尚不存在、单包摘要未锁定或哈希不符时，以 `install_failed` 停止；不得转装公开旧版、源码 clone、npm 或 bunx。
+- Plugin package `0.11.1` 消费 `runtime-requirements.json` 的 `v0.5.1` 合同；最低 Runtime 为 `0.5.1`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。
+- 缺失时只从精确 `v0.5.1` Release 下载**一个**平台对应的 Runtime 安装包。requirements 必须预先锁定该包的 `runtimePackageSHA256`；它为 `null` 或哈希不符时，不生成可执行 `approvalDigest`。
+- 正式新装机只经 Plugin 的 `runtime_install`；该 Runtime 安装包内嵌 Runtime、受管 Bun、FFmpeg
+  与 FFprobe。Plugin 只下载并校验这一包，安装器只在本地解包、安装并执行同一个 `service ensure`，
+  不再从上游下载这些依赖。Headless Shell 不属于安装包或预检：只有用户确认实际 export 后，
+  Runtime 才按固定 platform/build/SHA-256 获取、校验、缓存和复用它；损坏、离线或锁不完整必须
+  fail-closed，绝不扫描或回退系统浏览器。历史 Desktop / 既有安装若已在同一受管根可兼容复用，
+  但不再是正式新装入口。
+- `v0.5.1` Release 尚不存在、单包摘要未锁定或哈希不符时，以 `install_failed` 停止；不得转装公开旧版、源码 clone、npm 或 bunx。
 - Runtime 冷安装的单包下载、安装器执行与最终 readback 共用 19 分钟
   内部 context；MCP host `tool_timeout_sec=1201` 留出有界终止和响应收尾窗口。
 - 安装位置是 `CHENGFENG_VIDEOCUT_HOME` 或 `~/.chengfeng-videocut`。
-- CLI 已存在但 doctor 失败时不自动覆盖或循环重装；已有 Runtime 低于 0.5.0 时也不静默覆盖。
-- CLI doctor 健康但 semver 低于 0.5.0，或缺少合同 capability 时，以 `runtime_capability_missing` 停止；不把“健康”误当“兼容”。
+- CLI 已存在但 doctor 失败时不自动覆盖或循环重装；已有 Runtime 低于 0.5.1 时也不静默覆盖。
+- CLI doctor 健康但 semver 低于 0.5.1，或缺少合同 capability 时，以 `runtime_capability_missing` 停止；不把“健康”误当“兼容”。
 - MCP 只认 `CHENGFENG_VIDEOCUT_HOME` 或默认受管根内的 stable launcher；逐级 `Lstat` 拒绝 symlink、目录与越界路径，启动器必须是单硬链普通文件。健康检查和 CLI 调用前后的指纹发生改变时以 `unhealthy / launcher_integrity_changed` 停止；不回退 PATH、源码或显式任意 binary。
 - Plugin 不搜索 Electron `.app`、NSIS 目录或 resources；只有经过摘要确认的 Runtime
   installer 能建立新的 Product 稳定入口。
@@ -57,7 +62,7 @@ Product service ensure --json
 ```
 
 - Plugin 不直接调用 `launchctl`、`nohup`、PID 文件或后台进程 API；服务安装、启动、升级收敛和 crash restart 全部属于 Product。
-- `service ensure` 成功必须返回 `ok=true`，且 `data` 同时满足：`healthy=true`、`runtimeMode=launchd|windows-task`、`productVersion>=0.5.0`、正整数 `pid`、`url=http://127.0.0.1:5190/`。
+- `service ensure` 成功必须返回 `ok=true`，且 `data` 同时满足：`healthy=true`、`runtimeMode=launchd|windows-task`、`productVersion>=0.5.1`、正整数 `pid`、`url=http://127.0.0.1:5190/`。
 - 健康服务会幂等复用；页面或 Codex 父终端关闭不应结束服务。
 - 返回 foreground 身份、未知端口占用、错误 URL、旧版本或不完整 JSON 时 fail-closed；Skill 不杀进程、不换 5191、不回退临时 foreground。
 - `service ensure` 不创建项目、不打开 Studio；仍只在 `*_review_ready` 后执行 `open`。
@@ -111,10 +116,11 @@ Product open 返回项目 URL
 
 ## 当前 Runtime 兼容门禁
 
-- 低于 0.5.0 的 Runtime 不具备本 Plugin 发布所绑定的完整受管工具与当前 EDL / Studio compatibility contract，必须被版本门禁拒绝。
-- Runtime `v0.5.0` Release 必须先于 Plugin package `0.11.0` 正式激活，并为每个平台提供一个已签名、内嵌 Runtime 和全部受管依赖的可执行安装包；每个包的 SHA-256 必须预先写入 Plugin requirements。
-- `v0.5.0` 必须提供正式原视频云端转录命令；缺少时以 `missing_cloud_transcription_adapter` 停止，禁止回退本地 ASR。
-- `v0.5.0` 必须内置可用 renderer 与 managed Headless Shell；新版 Skill 不得把旧 renderer 重新打包。
+- 低于 0.5.1 的 Runtime 不具备本 Plugin 发布所绑定的完整受管工具与当前 EDL / Studio compatibility contract，必须被版本门禁拒绝。
+- Runtime `v0.5.1` Release 必须先于 Plugin package `0.11.1` 正式激活，并为每个平台提供一个已签名、内嵌 Runtime、Bun、FFmpeg 与 FFprobe 的可执行安装包；每个包的 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
+- `v0.5.1` 必须提供正式原视频云端转录命令；缺少时以 `missing_cloud_transcription_adapter` 停止，禁止回退本地 ASR。
+- `v0.5.1` 必须提供可用 renderer manager；它仅在用户确认的实际 export 中确保固定锁定的
+  Headless Shell，且新版 Skill 不得把旧 renderer 或系统浏览器重新打包、扫描或回退。
 - 没有 HyperFrames 顶层 `koubo` 视图或 capability manifest 的历史 Studio 必须被能力门禁拒绝，不能再作为审核界面回退。
 - 这些缺口不允许通过旧 8898/8899 页面、直接文件写入、旧任务面板或 Skill 私有导出器绕过。
 
@@ -155,13 +161,14 @@ codex plugin list --marketplace chengfeng-videocut --json
   开发/兼容回归工具，不属于用户更新或首次安装路径。
 
 六个用户 Skill 都不要求系统 Node、Bun、Git、`gh`、Chrome、Chromium、FFmpeg 或
-FFprobe。Product Runtime 的 installer 负责 managed Headless Shell 和全部媒体工具；
+FFprobe。Runtime 安装包负责 Bun/FFmpeg/FFprobe；Product Runtime 的 renderer manager 只在确认的
+实际 export 中负责 managed Headless Shell；
 Bug 草稿由 Agent 直接生成，确认后只使用 Agent 已有 GitHub Issue 能力。该能力不可用
 时返回草稿并明确“未提交”，不回退系统 CLI。
 ## 发布顺序
 
 ```text
-Product 0.5.0 tag
+Product 0.5.1 tag
       |
       v
 每个平台一个已签名、内嵌依赖的 Runtime 安装包 + SHA-256
@@ -170,7 +177,7 @@ Product 0.5.0 tag
 隔离环境首次安装 + doctor + Studio capability 验收
       |
       v
-Plugin 0.11.0 内容提交
+Plugin 0.11.1 内容提交
       |
       +------------------------------> contentRevision A
       |
@@ -189,4 +196,4 @@ Codex 原生 marketplace upgrade 发现候选
 用户确认后 plugin add 并复读版本
 ```
 
-Plugin package 0.11.0 可以先形成候选，但在 Product Runtime v0.5.0 Release 的三个单文件 Runtime 安装包通过公开下载、安装和 Skills 共用服务验收，并把各平台 pinned SHA-256 回填 requirements 之前不得推进 `stable`；这段空窗期的预期行为是安装卡只允许暂停、`runtime_install` 安全失败。
+Plugin package 0.11.1 可以先形成候选，但在 Product Runtime v0.5.1 Release 的三个单文件 Runtime 安装包通过公开下载、安装和 Skills 共用服务验收，并把各平台 pinned SHA-256 回填 requirements 之前不得推进 `stable`；这段空窗期的预期行为是安装卡只允许暂停、`runtime_install` 安全失败。
