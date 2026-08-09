@@ -49,6 +49,8 @@ compatibility contract `0.5.1`；MCP 以提交在包内的 macOS Universal 2 / W
 平台、目标目录、分发策略与写入影响。`runtime_install` 会重新计算并精确比较，由原生 MCP
 读取 Registry 元数据、下载和安全解开 `.tgz`，不要求系统 npm/Node，也不执行 lifecycle scripts；
 随后复核包内 manifest 和安装器 SHA-256，最后才在本地执行安装器。
+平台包必须同时包含 manifest 固定的七份许可/NOTICE 文件与 SPDX 2.3 SBOM；Plugin 按清单逐项
+复核路径、大小和 SHA-256，缺失、增加或篡改任一文件都会在执行安装器前停止。
 包内只包含 Runtime、受管 Bun、FFmpeg 与 FFprobe；浏览器引擎不属于安装包。只有用户确认实际
 export 后，Runtime 才按固定 platform/build/SHA-256 获取 Headless Shell、校验后缓存复用，绝不
 扫描或回退系统 Chrome/Chromium/Edge。0.5.1 npm 平台包的 integrity 或安装器摘要尚未填入 requirements 时安装明确
@@ -91,6 +93,9 @@ go test ./...
 ./scripts/build-native-mcp.sh
 go run ./cmd/native-mcp-raw-smoke ./bin/chengfeng-videocut-mcp
 go run ./cmd/native-mcp-smoke ./bin/chengfeng-videocut-mcp
+
+# 跨仓：Runtime 的真实 stage + npm pack 产物，经本地 Registry fixture 进入 Plugin
+CHENGFENG_VIDEOCUT_RUNTIME_REPO=/absolute/runtime/worktree npm run test:cross-repo-runtime
 ```
 
 六个用户 Skill 都不要求系统 Node/Bun/Git/`gh`/Chrome/FFmpeg/FFprobe。

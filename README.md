@@ -23,6 +23,7 @@ Plugin 根名  -> 安装与 UI 群组名，不是同名 Skill
 Product Runtime / Studio 不需要单独寻找安装包：第一次让 Agent 真正干活时，原生 MCP
 先显示固定 npm Registry、平台包精确版本、integrity、目标与影响；用户确认同一
 `approvalDigest` 后才由原生 MCP 下载、安全解包、校验并执行包内安装器。用户不需要 npm/Node。
+每个平台包还带固定法律材料与 SPDX 2.3 SBOM，均由 manifest 的 SHA-256 收据绑定并在安装前复核。
 
 **系统要求：macOS**（Apple Silicon / Intel）**或 Windows 10/11**。
 Windows 支持自 Runtime v0.4.2 起正式可用（真机验收：安装、常驻服务、崩溃自愈、

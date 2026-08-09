@@ -26,8 +26,14 @@ const (
 	runtimePackageExtractLimit  int64 = 4 << 30
 	runtimeMetadataLimit        int64 = 1 << 20
 	runtimeManifestLimit        int64 = 1 << 20
-	runtimePackageEntryLimit          = 16
+	runtimePackageEntryLimit          = 32
 )
+
+var runtimePackageLegalFiles = []string{
+	"LICENSES.md", "LICENSE", "NOTICE.md", "MODIFICATIONS.md",
+	"THIRD_PARTY_NOTICES.md", "THIRD_PARTY_LICENSES.md",
+	"LICENSES/HyperFrames-Apache-2.0.txt",
+}
 
 type npmVersionMetadata struct {
 	Name    string `json:"name"`
@@ -47,6 +53,7 @@ type npmPackageJSON struct {
 	CPU           []string          `json:"cpu"`
 	Files         []string          `json:"files"`
 	PublishConfig map[string]string `json:"publishConfig"`
+	Private       *bool             `json:"private"`
 }
 
 type runtimePackageManifest struct {
@@ -58,7 +65,24 @@ type runtimePackageManifest struct {
 	DistributionMode string             `json:"distributionMode"`
 	LicenseStatus    string             `json:"licenseStatus"`
 	LicenseNote      string             `json:"licenseNote"`
+	Legal            packageLegal       `json:"legal"`
+	SBOM             packageSBOM        `json:"sbom"`
 	Installer        packageInstaller   `json:"installer"`
+}
+
+type packageFileRecord struct {
+	Path   string `json:"path"`
+	SHA256 string `json:"sha256"`
+	Size   int64  `json:"size"`
+}
+type packageLegal struct {
+	Files []packageFileRecord `json:"files"`
+}
+type packageSBOM struct {
+	Path   string `json:"path"`
+	Format string `json:"format"`
+	SHA256 string `json:"sha256"`
+	Size   int64  `json:"size"`
 }
 
 type manifestNPMPackage struct {
@@ -124,7 +148,8 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if err := extractRuntimePackage(tarballPath, extractRoot, plan); err != nil {
 		return nil, fmt.Errorf("extract npm Runtime tarball: %w", err)
 	}
-	manifest, err := validateRuntimePackage(extractRoot, plan)
+	allowLocalFixture := testOptions != nil && testOptions.AllowLocalFixture
+	manifest, err := validateRuntimePackage(extractRoot, plan, allowLocalFixture)
 	if err != nil {
 		return nil, fmt.Errorf("validate npm Runtime package: %w", err)
 	}
@@ -255,7 +280,11 @@ func extractRuntimePackage(tarballPath, destination string, plan InstallPlan) er
 		plan.PackageManifest:   false,
 		plan.InstallerPath:     false,
 	}
-	allowedDirs := map[string]bool{"package": true, "package/": true, "package/payload": true, "package/payload/": true}
+	for _, path := range runtimePackageLegalFiles {
+		allowedFiles["package/"+path] = false
+	}
+	allowedFiles["package/SBOM.spdx.json"] = false
+	allowedDirs := map[string]bool{"package": true, "package/": true, "package/payload": true, "package/payload/": true, "package/LICENSES": true, "package/LICENSES/": true}
 	seen := map[string]bool{}
 	var total int64
 	entries := 0
@@ -321,7 +350,7 @@ func extractRuntimePackage(tarballPath, destination string, plan InstallPlan) er
 	return nil
 }
 
-func validateRuntimePackage(root string, plan InstallPlan) (runtimePackageManifest, error) {
+func validateRuntimePackage(root string, plan InstallPlan, allowLocalFixture bool) (runtimePackageManifest, error) {
 	var manifest runtimePackageManifest
 	packageJSONPath := filepath.Join(root, "package", "package.json")
 	packageData, err := readBoundedFile(packageJSONPath, runtimeManifestLimit)
@@ -338,8 +367,12 @@ func validateRuntimePackage(root string, plan InstallPlan) (runtimePackageManife
 		return manifest, fmt.Errorf("package.json trailing JSON is not allowed")
 	}
 	expectedOS, expectedCPU := npmPlatformValues(plan.Platform)
-	expectedFiles := []string{strings.TrimPrefix(plan.PackageManifest, "package/"), strings.TrimPrefix(plan.InstallerPath, "package/")}
-	if packageJSON.Name != plan.NPMPackage || packageJSON.Version != plan.NPMPackageVersion || packageJSON.Description == "" || packageJSON.License == "" || !sameStrings(packageJSON.OS, []string{expectedOS}) || !sameStrings(packageJSON.CPU, []string{expectedCPU}) || !sameStrings(packageJSON.Files, expectedFiles) || len(packageJSON.PublishConfig) != 1 || packageJSON.PublishConfig["access"] != "public" {
+	expectedFiles := []string{strings.TrimPrefix(plan.PackageManifest, "package/")}
+	expectedFiles = append(expectedFiles, runtimePackageLegalFiles...)
+	expectedFiles = append(expectedFiles, "SBOM.spdx.json", strings.TrimPrefix(plan.InstallerPath, "package/"))
+	formalPublish := packageJSON.Private == nil && len(packageJSON.PublishConfig) == 1 && packageJSON.PublishConfig["access"] == "public"
+	localPrivate := allowLocalFixture && packageJSON.Private != nil && *packageJSON.Private && len(packageJSON.PublishConfig) == 0
+	if packageJSON.Name != plan.NPMPackage || packageJSON.Version != plan.NPMPackageVersion || packageJSON.Description == "" || packageJSON.License != "SEE LICENSE IN LICENSES.md" || !sameStrings(packageJSON.OS, []string{expectedOS}) || !sameStrings(packageJSON.CPU, []string{expectedCPU}) || !sameStrings(packageJSON.Files, expectedFiles) || (!formalPublish && !localPrivate) {
 		return manifest, fmt.Errorf("package.json identity, platform, files, or publish policy mismatch")
 	}
 	manifestPath := filepath.Join(root, filepath.FromSlash(plan.PackageManifest))
@@ -377,7 +410,47 @@ func validateRuntimePackage(root string, plan InstallPlan) (runtimePackageManife
 	if digest != plan.InstallerSHA256 {
 		return manifest, fmt.Errorf("installer SHA-256 mismatch")
 	}
+	if len(manifest.Legal.Files) != len(runtimePackageLegalFiles) {
+		return manifest, fmt.Errorf("legal material list is not exact")
+	}
+	for index, expectedPath := range runtimePackageLegalFiles {
+		record := manifest.Legal.Files[index]
+		if record.Path != expectedPath {
+			return manifest, fmt.Errorf("legal material order/path is not exact")
+		}
+		if err := verifyPackageFileRecord(root, record); err != nil {
+			return manifest, fmt.Errorf("legal material %s: %w", expectedPath, err)
+		}
+	}
+	if manifest.SBOM.Path != "SBOM.spdx.json" || manifest.SBOM.Format != "SPDX-2.3" {
+		return manifest, fmt.Errorf("SBOM receipt is not exact")
+	}
+	if err := verifyPackageFileRecord(root, packageFileRecord{Path: manifest.SBOM.Path, SHA256: manifest.SBOM.SHA256, Size: manifest.SBOM.Size}); err != nil {
+		return manifest, fmt.Errorf("SBOM: %w", err)
+	}
 	return manifest, nil
+}
+
+func verifyPackageFileRecord(root string, record packageFileRecord) error {
+	if strings.Contains(record.Path, "\\") || strings.HasPrefix(record.Path, "/") || filepath.ToSlash(filepath.Clean(record.Path)) != record.Path || strings.HasPrefix(record.Path, "../") || !validSHA256(record.SHA256) || record.Size <= 0 {
+		return fmt.Errorf("record is invalid")
+	}
+	path := filepath.Join(root, "package", filepath.FromSlash(record.Path))
+	info, err := os.Lstat(path)
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 || info.Size() != record.Size {
+		return fmt.Errorf("file type or size mismatch")
+	}
+	digest, err := fileSHA256(path)
+	if err != nil {
+		return err
+	}
+	if digest != record.SHA256 {
+		return fmt.Errorf("SHA-256 mismatch")
+	}
+	return nil
 }
 
 func npmPlatformValues(platform string) (string, string) {

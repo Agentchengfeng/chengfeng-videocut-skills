@@ -123,7 +123,8 @@ func BuildInstallPlan(c Contract) (InstallPlan, error) {
 }
 
 type installTestOptions struct {
-	RunInstaller installerCommandFunc
+	RunInstaller      installerCommandFunc
+	AllowLocalFixture bool
 }
 
 func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan, error) {

@@ -419,12 +419,26 @@ func makeRuntimeNPMTarball(t *testing.T, c Contract, installer []byte, extras []
 		NPMPackage:  manifestNPMPackage{Name: assets.NPMPackage, Version: assets.NPMPackageVersion, OS: []string{osValue}, CPU: []string{cpuValue}},
 		Installer:   packageInstaller{Asset: filepath.Base(assets.InstallerPath), Path: strings.TrimPrefix(assets.InstallerPath, "package/"), Size: int64(len(installer)), SHA256: installerDigest, Executable: true},
 	}
+	legalEntries := []fixtureTarEntry{}
+	for _, path := range runtimePackageLegalFiles {
+		data := []byte("fixture legal material: " + path + "\n")
+		sum := sha256.Sum256(data)
+		manifest.Legal.Files = append(manifest.Legal.Files, packageFileRecord{Path: path, SHA256: hex.EncodeToString(sum[:]), Size: int64(len(data))})
+		legalEntries = append(legalEntries, fixtureTarEntry{name: "package/" + path, typeflag: tar.TypeReg, data: data})
+	}
+	sbomData := []byte("{\"spdxVersion\":\"SPDX-2.3\"}\n")
+	sbomSum := sha256.Sum256(sbomData)
+	manifest.SBOM = packageSBOM{Path: "SBOM.spdx.json", Format: "SPDX-2.3", SHA256: hex.EncodeToString(sbomSum[:]), Size: int64(len(sbomData))}
 	manifestData, err := json.Marshal(manifest)
 	if err != nil {
 		t.Fatal(err)
 	}
-	packageData, _ := json.Marshal(npmPackageJSON{Name: assets.NPMPackage, Version: assets.NPMPackageVersion, Description: "fixture", License: "UNLICENSED", OS: manifest.NPMPackage.OS, CPU: manifest.NPMPackage.CPU, Files: []string{strings.TrimPrefix(assets.PackageManifest, "package/"), strings.TrimPrefix(assets.InstallerPath, "package/")}, PublishConfig: map[string]string{"access": "public"}})
-	entries := []fixtureTarEntry{{name: "package/package.json", typeflag: tar.TypeReg, data: packageData}, {name: assets.PackageManifest, typeflag: tar.TypeReg, data: manifestData}, {name: assets.InstallerPath, typeflag: tar.TypeReg, data: installer}}
+	packageFiles := []string{strings.TrimPrefix(assets.PackageManifest, "package/")}
+	packageFiles = append(packageFiles, runtimePackageLegalFiles...)
+	packageFiles = append(packageFiles, "SBOM.spdx.json", strings.TrimPrefix(assets.InstallerPath, "package/"))
+	packageData, _ := json.Marshal(npmPackageJSON{Name: assets.NPMPackage, Version: assets.NPMPackageVersion, Description: "fixture", License: "SEE LICENSE IN LICENSES.md", OS: manifest.NPMPackage.OS, CPU: manifest.NPMPackage.CPU, Files: packageFiles, PublishConfig: map[string]string{"access": "public"}})
+	entries := []fixtureTarEntry{{name: "package/package.json", typeflag: tar.TypeReg, data: packageData}, {name: assets.PackageManifest, typeflag: tar.TypeReg, data: manifestData}, {name: "package/SBOM.spdx.json", typeflag: tar.TypeReg, data: sbomData}, {name: assets.InstallerPath, typeflag: tar.TypeReg, data: installer}}
+	entries = append(entries, legalEntries...)
 	entries = append(entries, extras...)
 	tarball := buildFixtureTGZ(t, entries)
 	sum := sha512.Sum512(tarball)
@@ -534,7 +548,7 @@ func TestPackageJSONLifecycleScriptsAreRejected(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "package", "package.json"), []byte(packageJSON), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := validateRuntimePackage(root, plan); err == nil || !strings.Contains(err.Error(), "unknown field \"scripts\"") {
+	if _, err := validateRuntimePackage(root, plan, false); err == nil || !strings.Contains(err.Error(), "unknown field \"scripts\"") {
 		t.Fatalf("lifecycle scripts were not rejected: %v", err)
 	}
 }
@@ -559,8 +573,27 @@ func TestCanonicalWindowsPackageAcceptsNonPOSIXExecutableInstaller(t *testing.T)
 	if err := os.MkdirAll(filepath.Join(root, "package", "payload"), 0o700); err != nil {
 		t.Fatal(err)
 	}
-	packageJSON, _ := json.Marshal(npmPackageJSON{Name: plan.NPMPackage, Version: plan.NPMPackageVersion, Description: "fixture", License: "UNLICENSED", OS: []string{"win32"}, CPU: []string{"x64"}, Files: []string{strings.TrimPrefix(plan.PackageManifest, "package/"), strings.TrimPrefix(plan.InstallerPath, "package/")}, PublishConfig: map[string]string{"access": "public"}})
-	manifest, _ := json.Marshal(runtimePackageManifest{SchemaVersion: 1, Product: plan.Product, ProductVersion: plan.RuntimeVersion, PlatformKey: plan.Platform, NPMPackage: manifestNPMPackage{Name: plan.NPMPackage, Version: plan.NPMPackageVersion, OS: []string{"win32"}, CPU: []string{"x64"}}, DistributionMode: plan.DistributionMode, LicenseStatus: plan.LicenseStatus, LicenseNote: "fixture", Installer: packageInstaller{Asset: filepath.Base(plan.InstallerPath), Path: strings.TrimPrefix(plan.InstallerPath, "package/"), SHA256: digest, Size: int64(len(installer)), Executable: false}})
+	packageFiles := []string{strings.TrimPrefix(plan.PackageManifest, "package/")}
+	packageFiles = append(packageFiles, runtimePackageLegalFiles...)
+	packageFiles = append(packageFiles, "SBOM.spdx.json", strings.TrimPrefix(plan.InstallerPath, "package/"))
+	packageJSON, _ := json.Marshal(npmPackageJSON{Name: plan.NPMPackage, Version: plan.NPMPackageVersion, Description: "fixture", License: "SEE LICENSE IN LICENSES.md", OS: []string{"win32"}, CPU: []string{"x64"}, Files: packageFiles, PublishConfig: map[string]string{"access": "public"}})
+	manifestValue := runtimePackageManifest{SchemaVersion: 1, Product: plan.Product, ProductVersion: plan.RuntimeVersion, PlatformKey: plan.Platform, NPMPackage: manifestNPMPackage{Name: plan.NPMPackage, Version: plan.NPMPackageVersion, OS: []string{"win32"}, CPU: []string{"x64"}}, DistributionMode: plan.DistributionMode, LicenseStatus: plan.LicenseStatus, LicenseNote: "fixture", Installer: packageInstaller{Asset: filepath.Base(plan.InstallerPath), Path: strings.TrimPrefix(plan.InstallerPath, "package/"), SHA256: digest, Size: int64(len(installer)), Executable: false}}
+	for _, path := range runtimePackageLegalFiles {
+		data := []byte("fixture:" + path)
+		sum := sha256.Sum256(data)
+		manifestValue.Legal.Files = append(manifestValue.Legal.Files, packageFileRecord{Path: path, SHA256: hex.EncodeToString(sum[:]), Size: int64(len(data))})
+		absolute := filepath.Join(root, "package", filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(absolute), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(absolute, data, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sbomData := []byte("{}\n")
+	sbomSum := sha256.Sum256(sbomData)
+	manifestValue.SBOM = packageSBOM{Path: "SBOM.spdx.json", Format: "SPDX-2.3", SHA256: hex.EncodeToString(sbomSum[:]), Size: int64(len(sbomData))}
+	manifest, _ := json.Marshal(manifestValue)
 	if err := os.WriteFile(filepath.Join(root, "package", "package.json"), packageJSON, 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -570,7 +603,10 @@ func TestCanonicalWindowsPackageAcceptsNonPOSIXExecutableInstaller(t *testing.T)
 	if err := os.WriteFile(filepath.Join(root, filepath.FromSlash(plan.InstallerPath)), installer, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := validateRuntimePackage(root, plan); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "package", "SBOM.spdx.json"), sbomData, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := validateRuntimePackage(root, plan, false); err != nil {
 		t.Fatalf("canonical Windows package rejected: %v", err)
 	}
 }
@@ -595,5 +631,28 @@ func TestExtractRuntimePackageRejectsTraversalLinksSpecialsAndExtraFiles(t *test
 				t.Fatal("malicious tar entry was accepted")
 			}
 		})
+	}
+}
+
+func TestRuntimePackageRejectsTamperedLegalReceipt(t *testing.T) {
+	c, _ := LoadContract()
+	tarball, integrity, installerDigest := makeRuntimeNPMTarball(t, c, []byte("#!/bin/sh\nexit 0\n"), nil)
+	assets := c.Platforms[platformKey()]
+	assets.DistIntegrity, assets.InstallerSHA256 = &integrity, &installerDigest
+	c.Platforms[platformKey()] = assets
+	plan, _ := BuildInstallPlan(c)
+	root := t.TempDir()
+	path := filepath.Join(t.TempDir(), "runtime.tgz")
+	if err := os.WriteFile(path, tarball, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := extractRuntimePackage(path, root, plan); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "package", "NOTICE.md"), []byte("tampered\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := validateRuntimePackage(root, plan, false); err == nil || !strings.Contains(err.Error(), "NOTICE.md") {
+		t.Fatalf("tampered legal material was accepted: %v", err)
 	}
 }

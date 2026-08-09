@@ -31,6 +31,9 @@ runtime_status
 
 - Plugin package `0.11.1` 消费 `runtime-requirements.json` 的 `v0.5.1` 合同；最低 Runtime 为 `0.5.1`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。
 - 缺失时只从固定 npm Registry 下载**一个**平台对应的精确版本 Runtime 包。requirements 必须预先锁定 package name/version、`dist.integrity`、包内 installer path/SHA-256、目标分发模式与许可状态；任一为空或不符时，不生成可执行 `approvalDigest`。
+- npm tarball 只允许 `package.json`、Runtime package manifest、七份固定法律材料、
+  `SBOM.spdx.json` 与一个平台 installer。Plugin 对 manifest 中 legal/SBOM/installer 的路径、
+  大小和 SHA-256 逐项复核；拒绝 traversal、link、special、重复和任何额外 tar entry。
 - 正式新装机只经 Plugin 的 `runtime_install`；该 Runtime 安装包内嵌 Runtime、受管 Bun、FFmpeg
   与 FFprobe。Plugin 只下载并校验这一包，安装器只在本地解包、安装并执行同一个 `service ensure`，
   不再从上游下载这些依赖。Headless Shell 不属于安装包或预检：只有用户确认实际 export 后，
