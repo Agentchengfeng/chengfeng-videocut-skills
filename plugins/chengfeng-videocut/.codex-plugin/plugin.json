@@ -1,6 +1,6 @@
 {
-  "name": "chengfeng-videocut",
-  "version": "0.11.2",
+  "name": "chengfeng-videocut-local-development",
+  "version": "0.11.3-local.1",
   "description": "Six task-facing chengfeng-videocut Skills plus a native offline MCP bootstrap for review confirmation and the managed Product Runtime.",
   "author": {
     "name": "Chengfeng",
@@ -17,7 +17,7 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "chengfeng-videocut",
+    "displayName": "chengfeng-videocut local development",
     "shortDescription": "剪口播、成片、安全 Bug 与更新检查",
     "longDescription": "提供两个口播业务入口、原生离线 MCP 审核卡片与 Product Runtime 桥接，以及先脱敏确认的 Bug 上报和只经官方 Codex Marketplace 机制执行的 Skills 更新检查。MCP 启动不依赖系统 Node/Bun；Runtime 安装要求计划摘要精确确认并 fail-closed 校验资产。",
     "developerName": "Chengfeng",
@@ -27,9 +27,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "使用 $chengfeng-videocut:chengfeng-cut 剪掉这条视频里的口误，审核后生成删词账本。",
-      "使用 $chengfeng-videocut:chengfeng-visual 给剪好的口播配画面：圈重点或整屏动画。",
-      "使用 $chengfeng-videocut:chengfeng-export 把这个项目导出成成片并抽帧验收。"
+      "使用 $chengfeng-videocut-local-development:chengfeng-cut 剪掉这条视频里的口误，审核后生成删词账本。",
+      "使用 $chengfeng-videocut-local-development:chengfeng-visual 给剪好的口播配画面：圈重点或整屏动画。",
+      "使用 $chengfeng-videocut-local-development:chengfeng-export 把这个项目导出成成片并抽帧验收。"
     ],
     "brandColor": "#16A37A"
   },

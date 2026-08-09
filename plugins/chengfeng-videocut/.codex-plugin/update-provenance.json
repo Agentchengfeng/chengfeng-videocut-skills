@@ -1,6 +1,6 @@
 {
-  "name": "chengfeng-videocut",
-  "version": "0.11.2",
-  "immutableRef": "86bf5080a9e7f0efe3d360d04efe97380e402d0a",
-  "publisherChecksum": "6cd50e30c81bde21eec6162f96a41e6c5d611af5ed44931dbeec087d06fb8813"
+  "name": "chengfeng-videocut-local-development",
+  "version": "0.11.3-local.1",
+  "localDevelopment": true,
+  "releaseReady": false
 }

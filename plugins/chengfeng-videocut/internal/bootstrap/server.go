@@ -14,7 +14,11 @@ import (
 
 const TemplateURI = "ui://chengfeng-videocut/workflow-confirm-v1.html"
 
-var Version = "0.11.2"
+var Version = "0.11.3-local.1"
+
+// BuildChannel is set only by the dedicated local-development build script.
+// The default and every release build stay fail-closed on release readiness.
+var BuildChannel = "release"
 var revisionPattern = regexp.MustCompile(`^[a-f0-9]{64}$`)
 
 type ConfirmationInput struct {
@@ -47,7 +51,11 @@ var stages = map[string]stageText{
 
 func NewServer(c Contract) *mcp.Server {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
-	server := mcp.NewServer(&mcp.Implementation{Name: "chengfeng-videocut", Version: Version}, &mcp.ServerOptions{Logger: logger})
+	implementationName := "chengfeng-videocut"
+	if BuildChannel == "local-development" {
+		implementationName = "chengfeng-videocut-local-development"
+	}
+	server := mcp.NewServer(&mcp.Implementation{Name: implementationName, Version: Version}, &mcp.ServerOptions{Logger: logger})
 	server.AddResource(&mcp.Resource{
 		Name: "workflow-confirm-card", Title: "chengfeng-videocut 审核与安装确认", URI: TemplateURI,
 		Description: "确认已保存的工作流 revision，或确认 Product Runtime 安装计划。", MIMEType: "text/html;profile=mcp-app",

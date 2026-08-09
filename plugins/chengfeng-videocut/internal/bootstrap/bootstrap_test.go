@@ -211,7 +211,7 @@ func TestRuntimeStatusAndCLIUseManagedLauncher(t *testing.T) {
 		t.Fatal(err)
 	}
 	caps, _ := jsonMarshal(c.Capabilities)
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.1'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nprintf '%s\\n' \"$@\"\n"
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":false,\"releaseReady\":true,\"readinessMode\":\"release-ready\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nprintf '%s\\n' \"$@\"\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -222,6 +222,85 @@ func TestRuntimeStatusAndCLIUseManagedLauncher(t *testing.T) {
 	result := runRuntimeCommand(context.Background(), launcher, []string{"echo", "space value", "a&b", `say "hi"`})
 	if !result.OK || !strings.Contains(result.Stdout, "a&b") || !strings.Contains(result.Stdout, `say "hi"`) {
 		t.Fatalf("argv was not preserved: %#v", result)
+	}
+}
+
+func TestLocalDevelopmentBuildAcceptsOnlyExactDevelopmentReadiness(t *testing.T) {
+	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
+		t.Skip("Unix fixture targets supported macOS contract")
+	}
+	originalChannel := BuildChannel
+	BuildChannel = "local-development"
+	t.Cleanup(func() { BuildChannel = originalChannel })
+	c, _ := LoadContract()
+	if c.MinimumRuntimeVersion != "0.5.2" {
+		t.Fatalf("local development doctor contract must require Runtime 0.5.2, got %s", c.MinimumRuntimeVersion)
+	}
+	caps, _ := jsonMarshal(c.Capabilities)
+	for _, scenario := range []struct {
+		name      string
+		fields    string
+		wantReady bool
+	}{
+		{"exact local readiness", `"healthy":true,"developmentMode":true,"releaseReady":false,"readinessMode":"local-development"`, true},
+		{"missing development marker", `"healthy":true,"releaseReady":false,"readinessMode":"local-development"`, false},
+		{"release-ready cannot masquerade as local", `"healthy":true,"developmentMode":true,"releaseReady":true,"readinessMode":"local-development"`, false},
+		{"wrong readiness mode", `"healthy":true,"developmentMode":true,"releaseReady":false,"readinessMode":"release-ready"`, false},
+		{"unhealthy local runtime", `"healthy":false,"developmentMode":true,"releaseReady":false,"readinessMode":"local-development"`, false},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			root := t.TempDir()
+			t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
+			launcher, _ := launcherPath(c)
+			if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			doctorJSON := fmt.Sprintf(`{"ok":true,"data":{%s,"capabilities":%s}}`, scenario.fields, caps)
+			script := "#!/bin/sh\n" +
+				"if [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi\n" +
+				"if [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--local-development\" ] && [ \"$3\" = \"--json\" ]; then echo '" + doctorJSON + "'; exit 0; fi\n" +
+				"exit 3\n"
+			if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			status := inspectRuntime(context.Background(), c)
+			if status.Ready != scenario.wantReady {
+				t.Fatalf("ready=%v, want %v: %#v", status.Ready, scenario.wantReady, status)
+			}
+			if scenario.wantReady {
+				if status.State != "development_ready" || !status.DevelopmentMode || status.ReleaseReady {
+					t.Fatalf("local readiness was not explicit: %#v", status)
+				}
+			} else if status.State == "development_ready" {
+				t.Fatalf("invalid readiness reached development_ready: %#v", status)
+			}
+		})
+	}
+}
+
+func TestReleaseBuildRejectsDevelopmentDoctorResponse(t *testing.T) {
+	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
+		t.Skip("Unix fixture targets supported macOS contract")
+	}
+	originalChannel := BuildChannel
+	BuildChannel = "release"
+	t.Cleanup(func() { BuildChannel = originalChannel })
+	root := t.TempDir()
+	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
+	c, _ := LoadContract()
+	launcher, _ := launcherPath(c)
+	if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	caps, _ := jsonMarshal(c.Capabilities)
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi\n" +
+		"if [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--json\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":true,\"releaseReady\":false,\"readinessMode\":\"local-development\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nexit 3\n"
+	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	status := inspectRuntime(context.Background(), c)
+	if status.Ready || status.State == "development_ready" || !status.DevelopmentMode || status.ReleaseReady {
+		t.Fatalf("release build accepted or hid development response: %#v", status)
 	}
 }
 
@@ -281,7 +360,7 @@ func TestRuntimeStatusRejectsLauncherTamper(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.1'; exit 0; fi\nexit 2\n"
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.2'; exit 0; fi\nexit 2\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -326,8 +405,8 @@ test -n "$target"
 mkdir -p "$target/bin"
 cat > "$target/bin/chengfeng-videocut" <<'EOF'
 #!/bin/sh
-if [ "$1" = "--version" ]; then echo 'chengfeng-videocut 0.5.1'; exit 0; fi
-if [ "$1" = "doctor" ]; then echo '{"ok":true,"data":{"healthy":true,"capabilities":%s}}'; exit 0; fi
+if [ "$1" = "--version" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi
+if [ "$1" = "doctor" ]; then echo '{"ok":true,"data":{"healthy":true,"developmentMode":false,"releaseReady":true,"readinessMode":"release-ready","capabilities":%s}}'; exit 0; fi
 exit 2
 EOF
 chmod 0755 "$target/bin/chengfeng-videocut"

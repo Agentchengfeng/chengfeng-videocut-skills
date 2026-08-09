@@ -195,6 +195,8 @@ type RuntimeStatus struct {
 	Launcher        string                `json:"launcher"`
 	Doctor          map[string]any        `json:"doctor,omitempty"`
 	Compatibility   *RuntimeCompatibility `json:"compatibility,omitempty"`
+	DevelopmentMode bool                  `json:"developmentMode"`
+	ReleaseReady    bool                  `json:"releaseReady"`
 	Reason          string                `json:"reason,omitempty"`
 }
 
@@ -230,7 +232,12 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 		status.State, status.Reason = "unhealthy", err.Error()
 		return status
 	}
-	doctor := runRuntimeProbe(ctx, launcher, []string{"doctor", "--json"})
+	doctorArgs := []string{"doctor", "--json"}
+	localDevelopmentBuild := BuildChannel == "local-development"
+	if localDevelopmentBuild {
+		doctorArgs = []string{"doctor", "--local-development", "--json"}
+	}
+	doctor := runRuntimeProbe(ctx, launcher, doctorArgs)
 	if err := verifyLauncherFingerprint(c, fingerprint); err != nil {
 		status.State, status.Reason = "unhealthy", err.Error()
 		return status
@@ -240,16 +247,27 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 		status.Doctor = parsed
 	}
 	healthy := doctor.OK && boolPath(status.Doctor, "ok") && boolPath(status.Doctor, "data", "healthy")
+	status.DevelopmentMode = boolPath(status.Doctor, "data", "developmentMode")
+	status.ReleaseReady = boolPath(status.Doctor, "data", "releaseReady")
+	readinessMode := stringPath(status.Doctor, "data", "readinessMode")
+	readinessCompatible := status.ReleaseReady && !status.DevelopmentMode && readinessMode == "release-ready"
+	if localDevelopmentBuild {
+		readinessCompatible = healthy && status.DevelopmentMode && !status.ReleaseReady && readinessMode == "local-development"
+	}
 	versionCompatible := semverAtLeast(status.RuntimeVersion, c.MinimumRuntimeVersion)
 	capabilityCompatible := supportsCapabilities(status.Doctor, c.Capabilities)
 	if healthy {
 		status.Compatibility = &RuntimeCompatibility{VersionCompatible: versionCompatible, CapabilityCompatible: capabilityCompatible}
 	}
-	if version.OK && healthy && versionCompatible && capabilityCompatible {
-		status.State, status.Ready = "ready", true
+	if version.OK && healthy && readinessCompatible && versionCompatible && capabilityCompatible {
+		if localDevelopmentBuild {
+			status.State, status.Ready = "development_ready", true
+		} else {
+			status.State, status.Ready = "ready", true
+		}
 		return status
 	}
-	if version.OK && healthy {
+	if version.OK && healthy && readinessCompatible {
 		status.State = "incompatible"
 	} else {
 		status.State = "unhealthy"
@@ -257,7 +275,7 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 	status.Reason = strings.TrimSpace(version.Stderr + " " + doctor.Stderr)
 	if status.Reason == "" {
 		if healthy {
-			status.Reason = "runtime version or capability contract is incompatible"
+			status.Reason = "runtime readiness, version or capability contract is incompatible"
 		} else {
 			status.Reason = "version or doctor check failed"
 		}
@@ -507,4 +525,17 @@ func boolPath(value map[string]any, path ...string) bool {
 	}
 	b, _ := current.(bool)
 	return b
+}
+
+func stringPath(value map[string]any, path ...string) string {
+	var current any = value
+	for _, key := range path {
+		m, ok := current.(map[string]any)
+		if !ok {
+			return ""
+		}
+		current = m[key]
+	}
+	text, _ := current.(string)
+	return text
 }

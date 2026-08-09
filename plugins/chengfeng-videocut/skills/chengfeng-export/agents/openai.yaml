@@ -1,6 +1,6 @@
 interface:
   display_name: "chengfeng · 导出"
   short_description: "把剪辑、推近、字幕和 HTML 画面层一次烧成成片 mp4，并抽帧验收"
-  default_prompt: "使用 $chengfeng-videocut:chengfeng-export 把这个项目导出成成片：先跑 --dry-run 报计划，再出片，最后从成片里抽帧验收。"
+  default_prompt: "使用 $chengfeng-videocut-local-development:chengfeng-export 把这个项目导出成成片：先跑 --dry-run 报计划，再出片，最后从成片里抽帧验收。"
 policy:
   allow_implicit_invocation: true

@@ -1,6 +1,6 @@
 interface:
   display_name: "chengfeng · 画面"
   short_description: "给剪好的口播配画面：录屏上盖 HTML 层，标注圈重点或整屏动画，预览逐帧驱动"
-  default_prompt: "使用 $chengfeng-videocut:chengfeng-visual 给这个项目配画面：按四步走 —— 文字定任务、抽帧看画面、量运动窗口、做层放层，然后在预览里逐层核对。"
+  default_prompt: "使用 $chengfeng-videocut-local-development:chengfeng-visual 给这个项目配画面：按四步走 —— 文字定任务、抽帧看画面、量运动窗口、做层放层，然后在预览里逐层核对。"
 policy:
   allow_implicit_invocation: true

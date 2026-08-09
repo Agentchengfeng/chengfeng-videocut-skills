@@ -1,11 +1,11 @@
 {
-  "name": "chengfeng-videocut",
+  "name": "chengfeng-videocut-local-development",
   "interface": {
-    "displayName": "chengfeng-videocut"
+    "displayName": "chengfeng-videocut local development"
   },
   "plugins": [
     {
-      "name": "chengfeng-videocut",
+      "name": "chengfeng-videocut-local-development",
       "source": {
         "source": "local",
         "path": "./plugins/chengfeng-videocut"

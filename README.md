@@ -1,5 +1,12 @@
 # chengfeng-videocut
 
+> **Local-development candidate only:** this branch contains Plugin
+> `0.11.3-local.1`, marketplace/plugin id
+> `chengfeng-videocut-local-development`, and requires Runtime `0.5.2` with an
+> exact machine-local authorization. It must not be published, promoted to
+> `stable`, or installed over the public `chengfeng-videocut` Plugin. The
+> release documentation below remains the fail-closed public baseline.
+
 给 Codex 用的中文口播剪辑 Marketplace 插件。
 
 Plugin 根入口、四个业务入口和两个支持入口组成；共同规则是内部 reference，不占用户 Skill：

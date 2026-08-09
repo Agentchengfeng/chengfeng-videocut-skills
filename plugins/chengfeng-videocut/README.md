@@ -1,5 +1,12 @@
 # chengfeng-videocut Codex Plugin
 
+> **Local-development candidate only:** this bundle is
+> `chengfeng-videocut-local-development@0.11.3-local.1`. Its compiled MCP calls
+> `doctor --local-development --json`, requires Runtime `>=0.5.2`, and accepts
+> only `developmentMode=true`, `releaseReady=false`,
+> `readinessMode=local-development`. Do not publish it or use it as evidence
+> that the public release contract is ready.
+
 `chengfeng-videocut` 是安装和 Plugin 群组名称，不是一个同名的业务 Skill。
 
 ```text

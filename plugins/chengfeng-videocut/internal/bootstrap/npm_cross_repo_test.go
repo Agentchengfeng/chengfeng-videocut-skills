@@ -90,7 +90,7 @@ func TestCrossRepoRuntimeNPMPackIntegration(t *testing.T) {
 		if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
 			return CommandResult{ExitCode: 92, Stderr: err.Error()}
 		}
-		script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.1'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '" + strings.ReplaceAll(fmt.Sprintf(`{"ok":true,"data":{"healthy":true,"capabilities":%s}}`, capabilities), "'", "'\\''") + "'; exit 0; fi\nexit 2\n"
+		script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '" + strings.ReplaceAll(fmt.Sprintf(`{"ok":true,"data":{"healthy":true,"developmentMode":false,"releaseReady":true,"readinessMode":"release-ready","capabilities":%s}}`, capabilities), "'", "'\\''") + "'; exit 0; fi\nexit 2\n"
 		if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 			return CommandResult{ExitCode: 93, Stderr: err.Error()}
 		}

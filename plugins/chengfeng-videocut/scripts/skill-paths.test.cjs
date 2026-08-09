@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
-const pluginName = "chengfeng-videocut";
+const pluginName = "chengfeng-videocut-local-development";
 const publicSkills = [
   "chengfeng-cut",
   "chengfeng-subtitle",

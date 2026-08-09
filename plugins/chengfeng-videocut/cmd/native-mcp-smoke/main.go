@@ -19,7 +19,7 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	client := mcp.NewClient(&mcp.Implementation{Name: "chengfeng-native-smoke", Version: "0.11.2"}, nil)
+	client := mcp.NewClient(&mcp.Implementation{Name: "chengfeng-native-smoke", Version: "0.11.3-local.1"}, nil)
 	cmd := exec.Command(os.Args[1])
 	cmd.Stderr = os.Stderr
 	session, err := client.Connect(ctx, &mcp.CommandTransport{Command: cmd}, nil)
@@ -33,7 +33,11 @@ func main() {
 		}
 	}
 	init := session.InitializeResult()
-	if init.ServerInfo == nil || init.ServerInfo.Name != "chengfeng-videocut" || init.ServerInfo.Version != "0.11.2" {
+	expectedServer := strings.TrimSpace(os.Getenv("CHENGFENG_VIDEOCUT_EXPECT_SERVER"))
+	if expectedServer == "" {
+		expectedServer = "chengfeng-videocut-local-development"
+	}
+	if init.ServerInfo == nil || init.ServerInfo.Name != expectedServer || init.ServerInfo.Version != "0.11.3-local.1" {
 		fatal(fmt.Errorf("unexpected server info: %#v", init.ServerInfo))
 	}
 	listed, err := session.ListTools(ctx, nil)
@@ -89,6 +93,14 @@ func main() {
 		fatal(err)
 	}
 	statusJSON, _ := json.Marshal(status.StructuredContent)
+	if expected := strings.TrimSpace(os.Getenv("CHENGFENG_VIDEOCUT_EXPECT_STATUS")); expected != "" {
+		if !strings.Contains(string(statusJSON), `"state":"`+expected+`"`) {
+			fatal(fmt.Errorf("runtime status=%s, want %s", statusJSON, expected))
+		}
+		if expected == "development_ready" && (!strings.Contains(string(statusJSON), `"developmentMode":true`) || !strings.Contains(string(statusJSON), `"releaseReady":false`)) {
+			fatal(fmt.Errorf("development status lacks exact readiness fields: %s", statusJSON))
+		}
+	}
 	fmt.Printf("PASS protocol=%s version=%s tools=%s resource=%d workflow=%d install=%d status=%s\n", init.ProtocolVersion, init.ServerInfo.Version, strings.Join(names, ","), len(resource.Contents[0].Text), len(workflowJSON), len(installJSON), statusJSON)
 }
 

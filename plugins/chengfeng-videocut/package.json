@@ -1,10 +1,11 @@
 {
-  "name": "chengfeng-videocut-codex-plugin",
-  "version": "0.11.2",
+  "name": "chengfeng-videocut-local-development-codex-plugin",
+  "version": "0.11.3-local.1",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "./scripts/build-native-mcp.sh",
+    "build:local-development": "./scripts/build-native-mcp-local-development.sh",
     "test:cross-repo-runtime": "bun scripts/cross-repo-npm-runtime-integration.ts",
     "test": "go test ./... && node scripts/native-skill-contract.test.cjs && node scripts/bug-report.test.cjs && node scripts/skill-paths.test.cjs && node scripts/business-workflow-contract.test.cjs && node scripts/update-provenance.test.cjs && node scripts/check-plugin-update.test.cjs && node scripts/check-plugin-update-windows-shim.test.cjs"
   },
