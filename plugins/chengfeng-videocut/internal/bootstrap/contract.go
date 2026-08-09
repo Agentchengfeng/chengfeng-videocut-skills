@@ -77,6 +77,12 @@ func LoadContract() (Contract, error) {
 	if !strings.HasPrefix(c.Registry, "https://") || strings.HasSuffix(c.Registry, "/") {
 		return c, fmt.Errorf("embedded npm registry must be an HTTPS origin without a trailing slash")
 	}
+	for _, name := range []string{"projectIngestVersion", "transcriptPlaybackPagingVersion"} {
+		version, ok := c.Capabilities[name].(float64)
+		if !ok || version != 1 {
+			return c, fmt.Errorf("embedded Runtime capability %s must be exactly 1", name)
+		}
+	}
 	for key, assets := range c.Platforms {
 		if !npmPackagePattern.MatchString(assets.NPMPackage) || !exactVersionPattern.MatchString(assets.NPMPackageVersion) || assets.NPMPackageVersion != c.RuntimeVersion || assets.TarballMaxBytes <= 0 || assets.TarballMaxBytes > runtimePackageDownloadLimit || !safePackagePath(assets.PackageManifest) || !safePackagePath(assets.InstallerPath) || assets.PackageManifest != "package/chengfeng-videocut-runtime-package.json" || !strings.HasPrefix(assets.InstallerPath, "package/payload/") || assets.RuntimeLauncher == "" || filepath.IsAbs(assets.RuntimeLauncher) || strings.Contains(strings.ReplaceAll(assets.RuntimeLauncher, "\\", "/"), "../") {
 			return c, fmt.Errorf("embedded platform contract %s is invalid", key)

@@ -247,6 +247,55 @@ func TestRuntimeStatusRejectsRuntime052(t *testing.T) {
 	}
 }
 
+func TestRuntimeStatusRejectsMissingOrWrongIngestPaginationCapabilities(t *testing.T) {
+	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
+		t.Skip("Unix fixture targets supported macOS contract")
+	}
+	originalChannel := BuildChannel
+	BuildChannel = "local-development"
+	t.Cleanup(func() { BuildChannel = originalChannel })
+	c, err := LoadContract()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, scenario := range []struct {
+		name   string
+		mutate func(map[string]any)
+	}{
+		{"missing project ingest", func(capabilities map[string]any) { delete(capabilities, "projectIngestVersion") }},
+		{"wrong playback paging version", func(capabilities map[string]any) { capabilities["transcriptPlaybackPagingVersion"] = float64(2) }},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			root := t.TempDir()
+			t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
+			launcher, launcherErr := launcherPath(c)
+			if launcherErr != nil {
+				t.Fatal(launcherErr)
+			}
+			if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			actualCapabilities := map[string]any{}
+			for name, value := range c.Capabilities {
+				actualCapabilities[name] = value
+			}
+			scenario.mutate(actualCapabilities)
+			caps, marshalErr := jsonMarshal(actualCapabilities)
+			if marshalErr != nil {
+				t.Fatal(marshalErr)
+			}
+			script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.3'; exit 0; fi\nif [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--local-development\" ] && [ \"$3\" = \"--json\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":true,\"releaseReady\":false,\"readinessMode\":\"local-development\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nexit 2\n"
+			if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			status := inspectRuntime(context.Background(), c)
+			if status.Ready || status.State != "incompatible" || status.Compatibility == nil || status.Compatibility.CapabilityCompatible {
+				t.Fatalf("Runtime with %s must be capability-incompatible: %#v", scenario.name, status)
+			}
+		})
+	}
+}
+
 func TestLocalDevelopmentBuildAcceptsOnlyExactDevelopmentReadiness(t *testing.T) {
 	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
 		t.Skip("Unix fixture targets supported macOS contract")

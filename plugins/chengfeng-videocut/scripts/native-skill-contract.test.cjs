@@ -75,6 +75,8 @@ assert.equal(runtimeRequirements.registry, "https://registry.npmjs.org");
 assert.equal(runtimeRequirements.requiredDistributionMode, "release-ready");
 assert.equal(runtimeRequirements.requiredLicenseStatus, "VERIFIED");
 assert.equal(runtimeRequirements.minimumRuntimeVersion, "0.5.3", "Runtime without atomic ingest and paginated playback must not pass");
+assert.equal(runtimeRequirements.capabilities.projectIngestVersion, 1, "atomic project ingest must be an exact Runtime capability");
+assert.equal(runtimeRequirements.capabilities.transcriptPlaybackPagingVersion, 1, "paginated transcript playback must be an exact Runtime capability");
 for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) {
   assert.deepEqual(
     Object.keys(assets).sort(),
