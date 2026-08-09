@@ -41,7 +41,7 @@ $chengfeng-videocut:chengfeng-check-updates
 共同边界只存在于 `references/runtime-and-product-contract.md` 与 `references/business-workflow-contract.md`。普通 reference 没有 `SKILL.md`、公开 ID 或 UI 卡片，不占用用户入口。
 
 业务 Skill 共用原生 MCP 的四个工具：`runtime_status`、`runtime_cli`、
-`show_workflow_confirmation`、`runtime_install`。Plugin package `0.11.1` 消费 Runtime
+`show_workflow_confirmation`、`runtime_install`。Plugin package `0.11.2` 消费 Runtime
 compatibility contract `0.5.1`；MCP 以提交在包内的 macOS Universal 2 / Windows x64
 二进制离线启动，不需要系统 Node.js 或 Bun。`runtime_cli` 只接受结构化 `argv`，并且
 只调用 Product 受管目录中的唯一稳定 launcher。Runtime 缺失时先显示安装卡片；用户
@@ -80,7 +80,7 @@ installed/enabled 版本。不存在 `codex plugin update` 这个子命令。更
 业务 Skill 的 Runtime 门禁不会每任务刷新 Marketplace。它只调用原生 MCP
 `runtime_status`，并在缺失时经摘要确认卡进入 `runtime_install`。
 
-Plugin 是独立的 `0.11.1` 版本；`runtime-requirements.json` 要求 Product Runtime `0.5.1`。两者不能互相替代。
+Plugin 是独立的 `0.11.2` 版本；`runtime-requirements.json` 要求 Product Runtime `0.5.1`。两者不能互相替代。
 
 ## 开发验证
 

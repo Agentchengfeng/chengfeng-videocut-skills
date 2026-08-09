@@ -29,7 +29,7 @@ runtime_status
                                       停止，不回退旧剪辑链
 ```
 
-- Plugin package `0.11.1` 消费 `runtime-requirements.json` 的 `v0.5.1` 合同；最低 Runtime 为 `0.5.1`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。
+- Plugin package `0.11.2` 消费 `runtime-requirements.json` 的 `v0.5.1` 合同；最低 Runtime 为 `0.5.1`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。
 - 缺失时只从固定 npm Registry 下载**一个**平台对应的精确版本 Runtime 包。requirements 必须预先锁定 package name/version、`dist.integrity`、包内 installer path/SHA-256、目标分发模式与许可状态；任一为空或不符时，不生成可执行 `approvalDigest`。
 - npm tarball 只允许 `package.json`、Runtime package manifest、七份固定法律材料、
   `SBOM.spdx.json` 与一个平台 installer。Plugin 对 manifest 中 legal/SBOM/installer 的路径、
@@ -120,7 +120,7 @@ Product open 返回项目 URL
 ## 当前 Runtime 兼容门禁
 
 - 低于 0.5.1 的 Runtime 不具备本 Plugin 发布所绑定的完整受管工具与当前 EDL / Studio compatibility contract，必须被版本门禁拒绝。
-- Runtime `0.5.1` npm 平台包必须先于 Plugin package `0.11.1` 正式激活，并为每个平台提供一个内嵌 Runtime、Bun、FFmpeg 与 FFprobe 的包；每个包的精确版本、`sha512` integrity 与包内安装器 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
+- Runtime `0.5.1` npm 平台包必须先于 Plugin package `0.11.2` 正式激活，并为每个平台提供一个内嵌 Runtime、Bun、FFmpeg 与 FFprobe 的包；每个包的精确版本、`sha512` integrity 与包内安装器 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
 - `v0.5.1` 必须提供正式原视频云端转录命令；缺少时以 `missing_cloud_transcription_adapter` 停止，禁止回退本地 ASR。
 - `v0.5.1` 必须提供可用 renderer manager；它仅在用户确认的实际 export 中确保固定锁定的
   Headless Shell，且新版 Skill 不得把旧 renderer 或系统浏览器重新打包、扫描或回退。
@@ -183,7 +183,7 @@ GitHub Actions + npm Trusted Publishing
 隔离环境首次安装 + doctor + Studio capability 验收
       |
       v
-Plugin 0.11.1 内容提交
+Plugin 0.11.2 内容提交
       |
       +------------------------------> contentRevision A
       |
@@ -204,4 +204,4 @@ Codex 原生 marketplace upgrade 发现候选
 
 GitHub 是源码与 GitHub Actions 构建来源，平台包通过 npm Trusted Publishing 发布；Plugin
 只直连 requirements 固定的 npm Registry，不再读取 GitHub Release 附件。Plugin package
-0.11.1 可以先形成候选，但在 Product Runtime 0.5.1 的三个 npm 平台包通过公开 Registry 下载、原生安全解包、安装和 Skills 共用服务验收，并把各平台 pinned integrity 与 installer SHA-256 回填 requirements 之前不得推进 `stable`；这段空窗期的预期行为是安装卡只允许暂停、`runtime_install` 安全失败。
+0.11.2 可以先形成候选，但在 Product Runtime 0.5.1 的三个 npm 平台包通过公开 Registry 下载、原生安全解包、安装和 Skills 共用服务验收，并把各平台 pinned integrity 与 installer SHA-256 回填 requirements 之前不得推进 `stable`；这段空窗期的预期行为是安装卡只允许暂停、`runtime_install` 安全失败。

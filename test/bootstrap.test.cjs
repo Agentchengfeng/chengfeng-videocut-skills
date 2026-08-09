@@ -13,7 +13,7 @@ const ORIGIN = `https://github.com/${SOURCE}.git`;
 const RELEASE_PLUGIN_VERSION = '0.10.8';
 const RELEASE_CONTENT_REF = 'a513462f65b6f50083a20ac8da6ec3c32d2ddcde';
 const RELEASE_SNAPSHOT_REF = '1487e02b1c0c39ea74d079e8ce45da56bf59bc32';
-const CANDIDATE_PLUGIN_VERSION = '0.11.1';
+const CANDIDATE_PLUGIN_VERSION = '0.11.2';
 
 function run(command, args, options = {}) {
   const batch = process.platform === 'win32' && /^(npm|npx|pnpm|yarn)$/i.test(command)
@@ -37,7 +37,7 @@ function gitAtRoot(args) {
   return run('git', ['-C', ROOT, ...args]);
 }
 
-test('checked-in bootstrap remains pinned to released 0.10.8 while candidate 0.11.1 is unreleased', () => {
+test('checked-in bootstrap remains pinned to released 0.10.8 while candidate 0.11.2 is unreleased', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'installer-manifest.json'), 'utf8'));
   assert.equal(manifest.pluginRef, RELEASE_SNAPSHOT_REF);
   assert.equal(manifest.marketplaceRef, RELEASE_SNAPSHOT_REF);

@@ -14,7 +14,7 @@ import (
 
 const TemplateURI = "ui://chengfeng-videocut/workflow-confirm-v1.html"
 
-var Version = "0.11.1"
+var Version = "0.11.2"
 var revisionPattern = regexp.MustCompile(`^[a-f0-9]{64}$`)
 
 type ConfirmationInput struct {
