@@ -436,7 +436,7 @@ func makeRuntimeNPMTarball(t *testing.T, c Contract, installer []byte, extras []
 	packageFiles := []string{strings.TrimPrefix(assets.PackageManifest, "package/")}
 	packageFiles = append(packageFiles, runtimePackageLegalFiles...)
 	packageFiles = append(packageFiles, "SBOM.spdx.json", strings.TrimPrefix(assets.InstallerPath, "package/"))
-	packageData, _ := json.Marshal(npmPackageJSON{Name: assets.NPMPackage, Version: assets.NPMPackageVersion, Description: "fixture", License: "SEE LICENSE IN LICENSES.md", OS: manifest.NPMPackage.OS, CPU: manifest.NPMPackage.CPU, Files: packageFiles, PublishConfig: map[string]string{"access": "public"}})
+	packageData, _ := json.Marshal(npmPackageJSON{Name: assets.NPMPackage, Version: assets.NPMPackageVersion, Description: "fixture", License: "SEE LICENSE IN LICENSES.md", Repository: npmRepository{Type: "git", URL: "https://github.com/Agentchengfeng/chengfeng-videocut.git"}, OS: manifest.NPMPackage.OS, CPU: manifest.NPMPackage.CPU, Files: packageFiles, PublishConfig: map[string]string{"access": "public"}})
 	entries := []fixtureTarEntry{{name: "package/package.json", typeflag: tar.TypeReg, data: packageData}, {name: assets.PackageManifest, typeflag: tar.TypeReg, data: manifestData}, {name: "package/SBOM.spdx.json", typeflag: tar.TypeReg, data: sbomData}, {name: assets.InstallerPath, typeflag: tar.TypeReg, data: installer}}
 	entries = append(entries, legalEntries...)
 	entries = append(entries, extras...)
@@ -576,7 +576,7 @@ func TestCanonicalWindowsPackageAcceptsNonPOSIXExecutableInstaller(t *testing.T)
 	packageFiles := []string{strings.TrimPrefix(plan.PackageManifest, "package/")}
 	packageFiles = append(packageFiles, runtimePackageLegalFiles...)
 	packageFiles = append(packageFiles, "SBOM.spdx.json", strings.TrimPrefix(plan.InstallerPath, "package/"))
-	packageJSON, _ := json.Marshal(npmPackageJSON{Name: plan.NPMPackage, Version: plan.NPMPackageVersion, Description: "fixture", License: "SEE LICENSE IN LICENSES.md", OS: []string{"win32"}, CPU: []string{"x64"}, Files: packageFiles, PublishConfig: map[string]string{"access": "public"}})
+	packageJSON, _ := json.Marshal(npmPackageJSON{Name: plan.NPMPackage, Version: plan.NPMPackageVersion, Description: "fixture", License: "SEE LICENSE IN LICENSES.md", Repository: npmRepository{Type: "git", URL: "https://github.com/Agentchengfeng/chengfeng-videocut.git"}, OS: []string{"win32"}, CPU: []string{"x64"}, Files: packageFiles, PublishConfig: map[string]string{"access": "public"}})
 	manifestValue := runtimePackageManifest{SchemaVersion: 1, Product: plan.Product, ProductVersion: plan.RuntimeVersion, PlatformKey: plan.Platform, NPMPackage: manifestNPMPackage{Name: plan.NPMPackage, Version: plan.NPMPackageVersion, OS: []string{"win32"}, CPU: []string{"x64"}}, DistributionMode: plan.DistributionMode, LicenseStatus: plan.LicenseStatus, LicenseNote: "fixture", Installer: packageInstaller{Asset: filepath.Base(plan.InstallerPath), Path: strings.TrimPrefix(plan.InstallerPath, "package/"), SHA256: digest, Size: int64(len(installer)), Executable: false}}
 	for _, path := range runtimePackageLegalFiles {
 		data := []byte("fixture:" + path)
@@ -654,5 +654,39 @@ func TestRuntimePackageRejectsTamperedLegalReceipt(t *testing.T) {
 	}
 	if _, err := validateRuntimePackage(root, plan, false); err == nil || !strings.Contains(err.Error(), "NOTICE.md") {
 		t.Fatalf("tampered legal material was accepted: %v", err)
+	}
+}
+
+func TestRuntimePackageRequiresExactRepositoryProvenance(t *testing.T) {
+	c, _ := LoadContract()
+	tarball, integrity, installerDigest := makeRuntimeNPMTarball(t, c, []byte("#!/bin/sh\nexit 0\n"), nil)
+	assets := c.Platforms[platformKey()]
+	assets.DistIntegrity, assets.InstallerSHA256 = &integrity, &installerDigest
+	c.Platforms[platformKey()] = assets
+	plan, _ := BuildInstallPlan(c)
+	root := t.TempDir()
+	path := filepath.Join(t.TempDir(), "runtime.tgz")
+	if err := os.WriteFile(path, tarball, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := extractRuntimePackage(path, root, plan); err != nil {
+		t.Fatal(err)
+	}
+	packagePath := filepath.Join(root, "package", "package.json")
+	data, err := os.ReadFile(packagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var packageJSON npmPackageJSON
+	if err := json.Unmarshal(data, &packageJSON); err != nil {
+		t.Fatal(err)
+	}
+	packageJSON.Repository.URL = "https://example.invalid/wrong.git"
+	tampered, _ := json.Marshal(packageJSON)
+	if err := os.WriteFile(packagePath, tampered, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := validateRuntimePackage(root, plan, false); err == nil || !strings.Contains(err.Error(), "package.json identity") {
+		t.Fatalf("wrong repository provenance was accepted: %v", err)
 	}
 }

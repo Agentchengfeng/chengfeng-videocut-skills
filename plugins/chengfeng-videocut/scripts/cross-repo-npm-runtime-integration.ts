@@ -90,7 +90,7 @@ try {
   process.stdout.write(goTest.stdout);
   process.stderr.write(goTest.stderr);
   if (goTest.status !== 0) throw new Error(`Plugin cross-repo Go test failed with exit ${goTest.status}`);
-  console.log(JSON.stringify({ ok: true, runtimeRevision: "5d8324d4f333a4c639e22cc572a9c7d13edd0cb4", platformKey, packageName: receipts[0].manifest.npmPackage.name, tarball: report[0].filename, integrity: report[0].integrity, files: report[0].files.map((entry: { path: string }) => entry.path).sort() }));
+  console.log(JSON.stringify({ ok: true, runtimeRevision: "c5247a51284de4bcab626bbcf5e09d82d22b9188", platformKey, packageName: receipts[0].manifest.npmPackage.name, tarball: report[0].filename, integrity: report[0].integrity, files: report[0].files.map((entry: { path: string }) => entry.path).sort() }));
 } finally {
   if (process.env.CHENGFENG_VIDEOCUT_KEEP_CROSS_REPO_FIXTURE !== "1") await rm(temporaryRoot, { recursive: true, force: true });
   else console.error(`cross-repo fixture retained at ${temporaryRoot}`);

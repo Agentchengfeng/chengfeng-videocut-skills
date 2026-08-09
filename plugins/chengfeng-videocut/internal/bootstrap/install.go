@@ -49,11 +49,17 @@ type npmPackageJSON struct {
 	Version       string            `json:"version"`
 	Description   string            `json:"description"`
 	License       string            `json:"license"`
+	Repository    npmRepository     `json:"repository"`
 	OS            []string          `json:"os"`
 	CPU           []string          `json:"cpu"`
 	Files         []string          `json:"files"`
 	PublishConfig map[string]string `json:"publishConfig"`
 	Private       *bool             `json:"private"`
+}
+
+type npmRepository struct {
+	Type string `json:"type"`
+	URL  string `json:"url"`
 }
 
 type runtimePackageManifest struct {
@@ -372,7 +378,7 @@ func validateRuntimePackage(root string, plan InstallPlan, allowLocalFixture boo
 	expectedFiles = append(expectedFiles, "SBOM.spdx.json", strings.TrimPrefix(plan.InstallerPath, "package/"))
 	formalPublish := packageJSON.Private == nil && len(packageJSON.PublishConfig) == 1 && packageJSON.PublishConfig["access"] == "public"
 	localPrivate := allowLocalFixture && packageJSON.Private != nil && *packageJSON.Private && len(packageJSON.PublishConfig) == 0
-	if packageJSON.Name != plan.NPMPackage || packageJSON.Version != plan.NPMPackageVersion || packageJSON.Description == "" || packageJSON.License != "SEE LICENSE IN LICENSES.md" || !sameStrings(packageJSON.OS, []string{expectedOS}) || !sameStrings(packageJSON.CPU, []string{expectedCPU}) || !sameStrings(packageJSON.Files, expectedFiles) || (!formalPublish && !localPrivate) {
+	if packageJSON.Name != plan.NPMPackage || packageJSON.Version != plan.NPMPackageVersion || packageJSON.Description == "" || packageJSON.License != "SEE LICENSE IN LICENSES.md" || packageJSON.Repository.Type != "git" || packageJSON.Repository.URL != "https://github.com/Agentchengfeng/chengfeng-videocut.git" || !sameStrings(packageJSON.OS, []string{expectedOS}) || !sameStrings(packageJSON.CPU, []string{expectedCPU}) || !sameStrings(packageJSON.Files, expectedFiles) || (!formalPublish && !localPrivate) {
 		return manifest, fmt.Errorf("package.json identity, platform, files, or publish policy mismatch")
 	}
 	manifestPath := filepath.Join(root, filepath.FromSlash(plan.PackageManifest))
