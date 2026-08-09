@@ -96,15 +96,18 @@ Runtime 安装后再调用一次 `runtime_status`，必须读回 `ready=true`。
 
 ## 机器依赖边界
 
-用户只需支持的 macOS 或 Windows 10/11 上的 Codex：
+用户只安装一个 `chengfeng-videocut` Codex Plugin。Plugin 包内预构建的原生 MCP
+自动识别平台，并把 npm Registry 当作内部 Runtime 依赖仓库；用户不运行 `npm install`，
+也不需要安装 npm/Node。支持的 macOS 或 Windows 10/11 上流程是：
 
 ```text
 Plugin runtime_install
-  -> 下载并校验一个 Runtime 安装包
+  -> 从固定 npm Registry 下载 requirements 锁定名称、精确版本和 sha512 integrity 的一个平台 Runtime 包
+  -> 原生 MCP 安全解包并校验 package manifest、法律材料、SBOM 和 installer SHA-256
   -> 安装 Runtime 与受管媒体工具；不内嵌、下载或预检 Headless Shell
   -> Runtime 统一管理服务与媒体工具；Skill 只通过受管稳定启动器调用
 
-实际 job start export 的 HTML 覆盖层渲染
+实际 job start export 的 HTML 覆盖层渲染（仅当用户已确认且导出确实存在覆盖层）
   -> Product 先读取并校验自己的 Headless Shell 缓存
   -> 缓存未命中才下载锁定版本，校验归档和可执行文件后原子写入缓存
   -> 后续实际导出复用缓存；绝不搜索、借用或回退系统 Chrome / Chromium
@@ -129,7 +132,7 @@ FFprobe，也不要求它们进入 `PATH`。`runtime_status`、doctor、安装�
   兼容验证工具，不属于用户更新流程。
 - Plugin 与 Runtime 版本相互独立；最低 Runtime 和 capability 合同只由
   `runtime-requirements.json` 控制。
-- requirements 中平台 Runtime 安装包摘要为 `null` 时，安装卡只能暂停，
+- requirements 中平台 Runtime 包的 `distIntegrity` 或 `installerSHA256` 为 `null` 时，安装卡只能暂停，
   `runtime_install` 必须 fail-closed。
 - 更新 Plugin 只改 Codex 的 Marketplace/Plugin 状态；Runtime 安装只改受管
   Runtime 根。两者都不得改项目、媒体、EDL 或 Studio 状态。

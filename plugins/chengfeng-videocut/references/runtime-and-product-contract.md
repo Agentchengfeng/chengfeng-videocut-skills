@@ -34,7 +34,7 @@ runtime_status
 - npm tarball 只允许 `package.json`、Runtime package manifest、七份固定法律材料、
   `SBOM.spdx.json` 与一个平台 installer。Plugin 对 manifest 中 legal/SBOM/installer 的路径、
   大小和 SHA-256 逐项复核；拒绝 traversal、link、special、重复和任何额外 tar entry。
-- 正式新装机只经 Plugin 的 `runtime_install`；该 Runtime 安装包内嵌 Runtime、受管 Bun、FFmpeg
+- 正式新装机只经唯一 Codex Plugin 的 `runtime_install`；原生 MCP 自动选择的 npm Runtime 平台包内嵌 Runtime、受管 Bun、FFmpeg
   与 FFprobe。Plugin 只下载并校验这一包，安装器只在本地解包、安装并执行同一个 `service ensure`，
   不再从上游下载这些依赖。Headless Shell 不属于安装包或预检：只有用户确认实际 export 后，
   Runtime 才按固定 platform/build/SHA-256 获取、校验、缓存和复用它；损坏、离线或锁不完整必须
