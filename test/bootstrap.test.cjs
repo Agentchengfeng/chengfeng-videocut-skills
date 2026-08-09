@@ -13,6 +13,7 @@ const ORIGIN = `https://github.com/${SOURCE}.git`;
 const RELEASE_PLUGIN_VERSION = '0.10.8';
 const RELEASE_CONTENT_REF = 'a513462f65b6f50083a20ac8da6ec3c32d2ddcde';
 const RELEASE_SNAPSHOT_REF = '1487e02b1c0c39ea74d079e8ce45da56bf59bc32';
+const CANDIDATE_PLUGIN_VERSION = '0.11.1';
 
 function run(command, args, options = {}) {
   const batch = process.platform === 'win32' && /^(npm|npx|pnpm|yarn)$/i.test(command)
@@ -36,10 +37,21 @@ function gitAtRoot(args) {
   return run('git', ['-C', ROOT, ...args]);
 }
 
-test('checked-in bootstrap remains pinned to the released 0.10.8 snapshot while 0.11 is unreleased', () => {
+test('checked-in bootstrap remains pinned to released 0.10.8 while candidate 0.11.1 is unreleased', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'installer-manifest.json'), 'utf8'));
   assert.equal(manifest.pluginRef, RELEASE_SNAPSHOT_REF);
   assert.equal(manifest.marketplaceRef, RELEASE_SNAPSHOT_REF);
+
+  const candidatePluginManifest = JSON.parse(fs.readFileSync(
+    path.join(ROOT, 'plugins/chengfeng-videocut/.codex-plugin/plugin.json'),
+    'utf8'
+  ));
+  const candidatePackageManifest = JSON.parse(fs.readFileSync(
+    path.join(ROOT, 'plugins/chengfeng-videocut/package.json'),
+    'utf8'
+  ));
+  assert.equal(candidatePluginManifest.version, CANDIDATE_PLUGIN_VERSION);
+  assert.equal(candidatePackageManifest.version, CANDIDATE_PLUGIN_VERSION);
 
   const pluginManifest = JSON.parse(gitAtRoot([
     'show',
@@ -56,7 +68,10 @@ test('checked-in bootstrap remains pinned to the released 0.10.8 snapshot while 
 
   const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
   assert.match(readme, /当前公开的 0\.10\.8 快照仅是历史稳定入口/);
-  assert.match(readme, /本分支候选 Plugin 是 `0\.11\.1`/);
+  assert.match(
+    readme,
+    new RegExp('本分支候选 Plugin 是 `' + CANDIDATE_PLUGIN_VERSION.replaceAll('.', '\\.') + '`')
+  );
   assert.match(readme, /重新产生最终内容提交与\s*provenance 快照/);
   assert.match(readme, new RegExp(RELEASE_SNAPSHOT_REF));
   assert.doesNotMatch(readme, /当前 `main` 候选 Plugin 是 `0\.10\.7`/);
