@@ -211,7 +211,7 @@ func TestRuntimeStatusAndCLIUseManagedLauncher(t *testing.T) {
 		t.Fatal(err)
 	}
 	caps, _ := jsonMarshal(c.Capabilities)
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":false,\"releaseReady\":true,\"readinessMode\":\"release-ready\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nprintf '%s\\n' \"$@\"\n"
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.3'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":false,\"releaseReady\":true,\"readinessMode\":\"release-ready\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nprintf '%s\\n' \"$@\"\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -225,6 +225,28 @@ func TestRuntimeStatusAndCLIUseManagedLauncher(t *testing.T) {
 	}
 }
 
+func TestRuntimeStatusRejectsRuntime052(t *testing.T) {
+	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
+		t.Skip("Unix fixture targets supported macOS contract")
+	}
+	root := t.TempDir()
+	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
+	c, _ := LoadContract()
+	launcher, _ := launcherPath(c)
+	if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	caps, _ := jsonMarshal(c.Capabilities)
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":false,\"releaseReady\":true,\"readinessMode\":\"release-ready\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nexit 2\n"
+	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	status := inspectRuntime(context.Background(), c)
+	if status.Ready || status.State != "incompatible" || status.RuntimeVersion != "0.5.2" || status.RequiredVersion != "0.5.3" {
+		t.Fatalf("Runtime 0.5.2 must be incompatible with the 0.5.3 contract: %#v", status)
+	}
+}
+
 func TestLocalDevelopmentBuildAcceptsOnlyExactDevelopmentReadiness(t *testing.T) {
 	if platformKey() != "darwin-arm64" && platformKey() != "darwin-amd64" {
 		t.Skip("Unix fixture targets supported macOS contract")
@@ -233,8 +255,8 @@ func TestLocalDevelopmentBuildAcceptsOnlyExactDevelopmentReadiness(t *testing.T)
 	BuildChannel = "local-development"
 	t.Cleanup(func() { BuildChannel = originalChannel })
 	c, _ := LoadContract()
-	if c.MinimumRuntimeVersion != "0.5.2" {
-		t.Fatalf("local development doctor contract must require Runtime 0.5.2, got %s", c.MinimumRuntimeVersion)
+	if c.MinimumRuntimeVersion != "0.5.3" {
+		t.Fatalf("local development ingest contract must require Runtime 0.5.3, got %s", c.MinimumRuntimeVersion)
 	}
 	caps, _ := jsonMarshal(c.Capabilities)
 	for _, scenario := range []struct {
@@ -257,7 +279,7 @@ func TestLocalDevelopmentBuildAcceptsOnlyExactDevelopmentReadiness(t *testing.T)
 			}
 			doctorJSON := fmt.Sprintf(`{"ok":true,"data":{%s,"capabilities":%s}}`, scenario.fields, caps)
 			script := "#!/bin/sh\n" +
-				"if [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi\n" +
+				"if [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.3'; exit 0; fi\n" +
 				"if [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--local-development\" ] && [ \"$3\" = \"--json\" ]; then echo '" + doctorJSON + "'; exit 0; fi\n" +
 				"exit 3\n"
 			if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
@@ -293,7 +315,7 @@ func TestReleaseBuildRejectsDevelopmentDoctorResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 	caps, _ := jsonMarshal(c.Capabilities)
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi\n" +
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.3'; exit 0; fi\n" +
 		"if [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--json\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":true,\"releaseReady\":false,\"readinessMode\":\"local-development\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nexit 3\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
@@ -360,7 +382,7 @@ func TestRuntimeStatusRejectsLauncherTamper(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.2'; exit 0; fi\nexit 2\n"
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.3'; exit 0; fi\nexit 2\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -405,7 +427,7 @@ test -n "$target"
 mkdir -p "$target/bin"
 cat > "$target/bin/chengfeng-videocut" <<'EOF'
 #!/bin/sh
-if [ "$1" = "--version" ]; then echo 'chengfeng-videocut 0.5.2'; exit 0; fi
+if [ "$1" = "--version" ]; then echo 'chengfeng-videocut 0.5.3'; exit 0; fi
 if [ "$1" = "doctor" ]; then echo '{"ok":true,"data":{"healthy":true,"developmentMode":false,"releaseReady":true,"readinessMode":"release-ready","capabilities":%s}}'; exit 0; fi
 exit 2
 EOF

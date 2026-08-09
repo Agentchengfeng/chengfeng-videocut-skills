@@ -1,8 +1,8 @@
 {
   "schemaVersion": 4,
   "product": "chengfeng-videocut",
-  "runtimeVersion": "0.5.2",
-  "minimumRuntimeVersion": "0.5.2",
+  "runtimeVersion": "0.5.3",
+  "minimumRuntimeVersion": "0.5.3",
   "registry": "https://registry.npmjs.org",
   "requiredDistributionMode": "release-ready",
   "requiredLicenseStatus": "VERIFIED",
@@ -10,7 +10,7 @@
   "platforms": {
     "darwin-arm64": {
       "npmPackage": "@chengfeng/videocut-runtime-darwin-arm64",
-      "npmPackageVersion": "0.5.2",
+      "npmPackageVersion": "0.5.3",
       "distIntegrity": null,
       "tarballMaxBytes": 2147483648,
       "packageManifest": "package/chengfeng-videocut-runtime-package.json",
@@ -20,7 +20,7 @@
     },
     "darwin-amd64": {
       "npmPackage": "@chengfeng/videocut-runtime-darwin-x64",
-      "npmPackageVersion": "0.5.2",
+      "npmPackageVersion": "0.5.3",
       "distIntegrity": null,
       "tarballMaxBytes": 2147483648,
       "packageManifest": "package/chengfeng-videocut-runtime-package.json",
@@ -30,7 +30,7 @@
     },
     "windows-amd64": {
       "npmPackage": "@chengfeng/videocut-runtime-win32-x64",
-      "npmPackageVersion": "0.5.2",
+      "npmPackageVersion": "0.5.3",
       "distIntegrity": null,
       "tarballMaxBytes": 2147483648,
       "packageManifest": "package/chengfeng-videocut-runtime-package.json",

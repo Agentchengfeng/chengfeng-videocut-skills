@@ -10,7 +10,7 @@ user-invocable: true
 
 ```text
 0  Runtime  原生 MCP 只检查受管 Runtime（不联网检查 Plugin 更新）
-1  建档     真实视频 → 云端逐词转录 → 产品建项目 → 起服务 → 读回状态
+1  建档     真实视频 → Product 原子导入（转录、暂存、建档）→ 起服务 → 读回状态
 2  修字     词典把字改对（通用一本 + 用户一本）→ 出修字表
 3  删词     读偏好与规则 → 五轮扫描，每轮只找一类，只记行
 4  汇总     删词汇总表 + 重复句子表 → 按表自读校验
@@ -42,14 +42,14 @@ incompatible` 按 [检查更新](../chengfeng-check-updates/SKILL.md)「检查 R
 不搜索 Electron 安装目录，不启动第二个 Runtime，不要求用户安装任何系统
 媒体工具；这些都由受管 Runtime 所有。
 
-## 1. 建档：真实输入 → 转录 → 产品建项目
+## 1. 建档：真实输入 → Product 原子导入
 
-**干什么**：把用户的本地真实视频和云端逐词稿交给产品，原子建档，起服务，读回状态。
+**干什么**：把用户的本地真实视频交给 Product；Product 自己转录、暂存并原子建档，随后起服务、读回状态。
 
 下列均调用 MCP `runtime_cli`；`argv` 是结构化数组，不拼 shell 字符串：
 
 ```json
-{"argv":["project","create","<项目目录>","--video","<任务目录内的视频文件>","--transcript","<任务目录内的逐词稿>","--json"]}
+{"argv":["project","ingest","<任务目录>","--video","<任务目录内的相对视频路径>","--json"]}
 {"argv":["service","ensure","--json"]}
 {"argv":["workflow","get","<项目目录>","--json"]}
 {"argv":["cuts","get","<项目目录>","--json"]}
@@ -61,14 +61,17 @@ incompatible` 按 [检查更新](../chengfeng-check-updates/SKILL.md)「检查 R
   占位视频顶替
 - 转录只用当前环境已获准的**云端 ASR**；禁止回退本地 ASR；没有可用云端 ASR 时报告
   `missing_cloud_transcription_adapter`，不开 Studio、不伪造 transcript
-- `--video` / `--transcript` 必须是任务目录内的真实文件；画幅比不要传——产品会
-  从视频实际尺寸自动推导（Runtime 0.4.4+）。只有用户明确要求特殊画幅时才加
-  `--aspect-ratio W:H`
+- `<任务目录>` 必须是任务根，`--video` 必须是该目录内的真实、任务相对路径；**不传、
+  不命名、也不预写逐词稿或转录输出**。
+  Product 会把 ASR 暂存到它自己的隐藏角色，并只在媒体、语言与转录配置完全相同且前次
+  建档回滚时复用它。画幅比不要传——产品会从视频实际尺寸自动推导；只有用户明确要求
+  特殊画幅时才加 `--aspect-ratio W:H`
 - 已有规范项目先 `inspect` 确认并复用，不重复创建 `projectId`；同一个视频剪过时
   问用户：继续上次，还是重来（这是三个说话点之一）。`project prepare` 是幂等
   编译器，只在恢复中断或明确刷新时用，中断了直接重跑即可
-- `project create` 是唯一入口：不经过素材库、上传会话或额外 Skill；Skill 不得先写
-  `project.json`
+- `project ingest` 是新素材唯一入口：不经过素材库、上传会话或额外 Skill；Skill 不得先写
+  `project.json`，不得调用裸 `transcribe`，不得传 `--output`，不得读写或猜测
+  `transcript.json`
 - 服务必须由脚本确认 `healthy=true`、`runtimeMode=launchd`（macOS）或
   `runtimeMode=windows-task`（Windows）、版本兼容、URL 为
   canonical 5190 后才继续；失败透传结构化错误并停止，禁止回退 foreground、换端口、
@@ -126,8 +129,15 @@ incompatible` 按 [检查更新](../chengfeng-check-updates/SKILL.md)「检查 R
 先读材料：
 
 ```json
-{"argv":["transcript","playback","<项目目录>","--json"]}
+{"argv":["transcript","playback","<项目目录>","--limit","64","--json"]}
 ```
+
+返回的是一页播放顺序稿，而不是可截断的大 JSON。由唯一协调者串行读取 `stream`；只要
+`page.nextCursor` 不是 `null`，就继续调用同一命令并加
+`--cursor <page.nextCursor>`；每一页必须满足 `page.startIndex` 等于上一页的
+`page.endIndex`，且 `transcriptRevision`、`editListRevision` 一直相同。只有读到
+`nextCursor=null` 才算完整一轮。若收到 `revision_conflict / playback_cursor_stale`，
+说明逐词稿或账本在中途变了：丢弃本轮记录，从第一页重扫，禁止拼接两种版本。
 
 再用你的读文件工具读 `$HOME/.chengfeng-videocut/cut-preferences.md`（用户偏好，
 他说过的算数；文件不存在就是新用户，跳过）。
@@ -150,6 +160,10 @@ incompatible` 按 [检查更新](../chengfeng-check-updates/SKILL.md)「检查 R
 
 - **判断只用 `transcript playback` 的播放顺序，不许自己从 `transcript.json` 拼**——
   「说了两遍」靠播出来相邻，自己拼会把跳号读成缺内容而误否（见事故簿）
+- 唯一协调者读完并冻结同一轮全部页面后，可以把这份完整版本并行交给子 Agent 扫五类
+  问题；**子 Agent 只能返回候选行**（稳定 `wordIds`、类型、风险、上下文），不能翻页、
+  调用 `cuts set`、写项目账本或各自交提案。协调者去重、处理重叠并生成唯一一份全量候选；
+  版本变化就丢弃所有子结果并整轮重扫
 - 删除只有「删除 / 未删除」两态；AI 原因不形成「建议删除」第三态
 - 口误、重复、残句默认删前保后；长句、整句、分叉重说必须高风险复核
 - 普通停顿不由 Skill 计算：相邻静音合并与 `natural-pause-v2` 由产品确定性执行
@@ -216,6 +230,9 @@ incompatible` 按 [检查更新](../chengfeng-check-updates/SKILL.md)「检查 R
   不一致即停，绝不直接写 JSON 或自动覆盖
 - **提交后把 `<提案文件>` 留在任务目录**——第 6 步复盘要用（reasons 在用户编辑后
   会被产品裁掉，事后从账本反查不可靠）
+- 每个稳定版本只有协调者能执行**一次** `cuts set` CAS。五轮不能各写一次；若 CAS 冲突，
+  本轮即告失效，重新串行读完全部页面、重新扫描并合并全量候选后，才能对新 revision 发起
+  新的一次 CAS；禁止把旧提案硬覆盖到新 revision
 
 然后**先呈表、再开页**：把两张表发给用户，让他拿着表进 Studio 复核。
 
@@ -290,5 +307,6 @@ DOM、截图或媒体探测替代。
 - 页面关闭但服务仍在：读取 workflow 后从当前状态续做，不新建项目
 - 任何失败都不得把「账本已写」说成「已经剪好」——到这一段为止没有任何媒体文件产生
 
-附注：本 Skill 接受**本地真实视频**与**云端逐词稿**直接进入产品，这是合同 preflight
-的要求；两者都真实存在是一切判断的前提。
+附注：本 Skill 只把**任务目录内的本地真实视频相对路径**交给 `project ingest`；云端
+逐词稿由 Product 原子导入流程产生并管理。媒体真实存在、导入 readback 完整，是一切判断
+的前提。

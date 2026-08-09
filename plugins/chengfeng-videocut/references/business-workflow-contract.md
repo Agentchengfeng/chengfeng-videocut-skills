@@ -19,10 +19,10 @@ preflight
 
 | 阶段 | 必须做 | 失败时 |
 | --- | --- | --- |
-| preflight | 核对兼容 Runtime、managed service；剪口播还核对用户提供的本地真实视频与已获准的云端逐词稿。剪口播把这两个本地真实文件直接传给 `project create`，不走素材库、material-library、上传会话或导入 Skill。口播成片只接受现有 `projectId`，不得创建第二个项目。 | 停止并保留最后完整 Product 状态。 |
-| Product state readback | 对现有项目执行 `workflow get`；剪口播的 `project create` 成功后也必须立即执行 `workflow get` 与 `cuts get`，以 Product 返回的 `projectId`、workflow stage、Project / Cuts / EditList revisions 为唯一输入。 | 缺字段、项目不一致或 artifact 非 current 时 fail-closed。 |
-| proposal | Agent 只在任务临时位置生成一类语义候选；不改 `project.json`、Cuts、EditList、事件或媒体。 | 不提交、不进入审核。 |
-| Product CAS | 使用上一步 readback 的 expected revision 调用 `cuts set`、`artifact put` 或 Product transition；随后立即 readback，确认 Product 返回的新 revision 与预期 stage。 | `revision_conflict` 或 readback 不匹配时停止、展示差异、重新提案/审核；不覆盖。 |
+| preflight | 核对兼容 Runtime、managed service；剪口播还核对用户提供的任务目录与其中的本地真实视频。新素材只调用 `project ingest <task-dir> --video <task-relative> --json`，由 Product 完成转录、暂存和原子建档；不走裸 `transcribe`、`--output`、素材库、material-library、上传会话或导入 Skill，也不读写 `transcript.json`。口播成片只接受现有 `projectId`，不得创建第二个项目。 | 停止并保留最后完整 Product 状态。 |
+| Product state readback | 对现有项目执行 `workflow get`；剪口播的 `project ingest` 成功后也必须立即执行 `workflow get` 与 `cuts get`，以 Product 返回的 `projectId`、workflow stage、Project / Cuts / EditList revisions 为唯一输入。长逐词稿通过 `transcript playback --limit 64 --json` 和 `page.nextCursor` 串行读完；revision 变化或 cursor stale 时丢弃整轮，从第一页重读。 | 缺字段、项目不一致或 artifact 非 current 时 fail-closed。 |
+| proposal | 子 Agent 只返回带类型的候选行；唯一协调者只在任务临时位置合并成一份全量语义候选。不改 `project.json`、Cuts、EditList、事件或媒体。 | 不提交、不进入审核。 |
+| Product CAS | 子 Agent 只返回候选行，不写 Product。唯一协调者在同一完整 playback 版本上合并全量候选，并对每个稳定版本只调用一次 `cuts set` CAS；其他业务阶段仍使用上一步 readback 的 expected revision 调用 `artifact put` 或 Product transition。写入后立即 readback，确认 Product 返回的新 revision 与预期 stage。 | `revision_conflict`、cursor stale 或 readback 不匹配时丢弃整轮候选，从完整 Product readback 与 playback 重做；不覆盖、不增量补写。 |
 | project-level review binding | 只有 `*_review_ready` 才允许 `open`。把 Product `open` 返回的 URL 中 `#project/<projectId>` 与 readback `projectId` 比对，并同时绑定精确 workflow stage、Project revision、Cuts revision（剪口播）和 EditList revision；成片阶段还绑定当前 artifact revision。`ensure-studio` capability PASS 只能证明产品面存在，不能替代这项项目级比对。 | URL/hash、stage 或任一 revision 不一致时不打开/不确认，重新 Product readback。 |
 | user confirmation | 展示已绑定的项目级审核内容；只接受明确白名单 action。确认不产生一次性 Product receipt：该能力是本次明确非目标。 | 页面停留、预览播放、浏览器打开或“继续看看”都不是确认。 |
 | Product execution | 收到确认后再次 Product state readback，逐项比对卡片绑定值；相等时才以卡片的 frozen revision 调用 `cuts apply`、阶段 confirm 或 `render run`。 | 任何变化回到审核；不得把 latest revision 替换为确认 revision。 |
