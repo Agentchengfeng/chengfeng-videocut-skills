@@ -1,8 +1,8 @@
 # chengfeng-videocut
 
 > **Local-development candidate only:** this branch contains Plugin
-> `0.11.4-local.1`, marketplace/plugin id
-> `chengfeng-videocut-local-development`, and requires Runtime `0.5.3` with an
+> `0.11.5-local.1`, marketplace/plugin id
+> `chengfeng-videocut-local-development`, and requires Runtime `0.5.4` with an
 > exact machine-local authorization. It must not be published, promoted to
 > `stable`, or installed over the public `chengfeng-videocut` Plugin. The
 > release documentation below remains the fail-closed public baseline.

@@ -70,11 +70,11 @@ assert.equal(mcp.tool_timeout_sec, 1201);
 
 const runtimeRequirements = JSON.parse(read("runtime-requirements.json"));
 assert.equal(runtimeRequirements.schemaVersion, 4, "Runtime contract must use the exact npm package schema");
-assert.equal(runtimeRequirements.runtimeVersion, "0.5.3", "local candidate must require the ingest and paginated playback contract");
+assert.equal(runtimeRequirements.runtimeVersion, "0.5.4", "local candidate must require the ingest and paginated playback contract");
 assert.equal(runtimeRequirements.registry, "https://registry.npmjs.org");
 assert.equal(runtimeRequirements.requiredDistributionMode, "release-ready");
 assert.equal(runtimeRequirements.requiredLicenseStatus, "VERIFIED");
-assert.equal(runtimeRequirements.minimumRuntimeVersion, "0.5.3", "Runtime without atomic ingest and paginated playback must not pass");
+assert.equal(runtimeRequirements.minimumRuntimeVersion, "0.5.4", "Runtime without atomic ingest and paginated playback must not pass");
 assert.equal(runtimeRequirements.capabilities.projectIngestVersion, 1, "atomic project ingest must be an exact Runtime capability");
 assert.equal(runtimeRequirements.capabilities.transcriptPlaybackPagingVersion, 1, "paginated transcript playback must be an exact Runtime capability");
 for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) {
@@ -84,7 +84,7 @@ for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) 
     `${platform} must expose exactly one npm Runtime package and its launcher`,
   );
   assert.match(assets.npmPackage, /^@chengfeng\/videocut-runtime-/);
-  assert.equal(assets.npmPackageVersion, "0.5.3");
+  assert.equal(assets.npmPackageVersion, "0.5.4");
   assert.equal(assets.distIntegrity, null, `${platform} must fail closed before dist.integrity is published`);
   assert.equal(assets.installerSHA256, null, `${platform} must fail closed before the inner installer digest is published`);
 }

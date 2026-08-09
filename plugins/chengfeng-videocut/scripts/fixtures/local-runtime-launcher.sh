@@ -2,7 +2,7 @@
 set -eu
 
 if [ "${1:-}" = "--version" ]; then
-  echo 'chengfeng-videocut 0.5.3'
+  echo 'chengfeng-videocut 0.5.4'
   exit 0
 fi
 

@@ -34,7 +34,7 @@ func TestWindowsManagedCmdPreservesSpecialArguments(t *testing.T) {
 	}
 	caps, _ := json.Marshal(c.Capabilities)
 	script := "@echo off\r\n" +
-		"if \"%~1\"==\"--version\" (echo chengfeng-videocut 0.5.3& exit /b 0)\r\n" +
+		"if \"%~1\"==\"--version\" (echo chengfeng-videocut 0.5.4& exit /b 0)\r\n" +
 		"if \"%~1\"==\"doctor\" (echo {\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":false,\"releaseReady\":true,\"readinessMode\":\"release-ready\",\"capabilities\":" + string(caps) + "}}& exit /b 0)\r\n" +
 		":loop\r\nif \"%~1\"==\"\" exit /b 0\r\necho(%~1\r\nshift\r\ngoto loop\r\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o644); err != nil {

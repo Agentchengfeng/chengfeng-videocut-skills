@@ -1,6 +1,6 @@
 {
   "name": "chengfeng-videocut-local-development-codex-plugin",
-  "version": "0.11.4-local.1",
+  "version": "0.11.5-local.1",
   "private": true,
   "type": "module",
   "scripts": {
