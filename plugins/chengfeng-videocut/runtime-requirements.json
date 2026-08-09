@@ -1,25 +1,41 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "chengfeng-videocut",
-  "repository": "Agentchengfeng/chengfeng-videocut",
-  "releaseTag": "v0.5.1",
-  "releaseVersion": "0.5.1",
+  "runtimeVersion": "0.5.1",
   "minimumRuntimeVersion": "0.5.1",
+  "registry": "https://registry.npmjs.org",
+  "requiredDistributionMode": "release-ready",
+  "requiredLicenseStatus": "VERIFIED",
   "defaultTargetRoot": "~/.chengfeng-videocut",
   "platforms": {
     "darwin-arm64": {
-      "runtimePackageAsset": "chengfeng-videocut-installer-macos-arm64",
-      "runtimePackageSHA256": null,
+      "npmPackage": "@chengfeng/videocut-runtime-darwin-arm64",
+      "npmPackageVersion": "0.5.1",
+      "distIntegrity": null,
+      "tarballMaxBytes": 2147483648,
+      "packageManifest": "package/chengfeng-videocut-runtime-package.json",
+      "installerPath": "package/payload/chengfeng-videocut-installer-macos-arm64",
+      "installerSHA256": null,
       "runtimeLauncher": "bin/chengfeng-videocut"
     },
     "darwin-amd64": {
-      "runtimePackageAsset": "chengfeng-videocut-installer-macos-x64",
-      "runtimePackageSHA256": null,
+      "npmPackage": "@chengfeng/videocut-runtime-darwin-x64",
+      "npmPackageVersion": "0.5.1",
+      "distIntegrity": null,
+      "tarballMaxBytes": 2147483648,
+      "packageManifest": "package/chengfeng-videocut-runtime-package.json",
+      "installerPath": "package/payload/chengfeng-videocut-installer-macos-x64",
+      "installerSHA256": null,
       "runtimeLauncher": "bin/chengfeng-videocut"
     },
     "windows-amd64": {
-      "runtimePackageAsset": "chengfeng-videocut-installer-windows-x64.exe",
-      "runtimePackageSHA256": null,
+      "npmPackage": "@chengfeng/videocut-runtime-win32-x64",
+      "npmPackageVersion": "0.5.1",
+      "distIntegrity": null,
+      "tarballMaxBytes": 2147483648,
+      "packageManifest": "package/chengfeng-videocut-runtime-package.json",
+      "installerPath": "package/payload/chengfeng-videocut-installer-windows-x64.exe",
+      "installerSHA256": null,
       "runtimeLauncher": "bin\\chengfeng-videocut.cmd"
     }
   },

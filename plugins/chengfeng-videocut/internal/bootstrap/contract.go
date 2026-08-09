@@ -18,10 +18,11 @@ import (
 type Contract struct {
 	SchemaVersion         int                       `json:"schemaVersion"`
 	Product               string                    `json:"product"`
-	Repository            string                    `json:"repository"`
-	ReleaseTag            string                    `json:"releaseTag"`
-	ReleaseVersion        string                    `json:"releaseVersion"`
+	RuntimeVersion        string                    `json:"runtimeVersion"`
 	MinimumRuntimeVersion string                    `json:"minimumRuntimeVersion"`
+	Registry              string                    `json:"registry"`
+	DistributionMode      string                    `json:"requiredDistributionMode"`
+	LicenseStatus         string                    `json:"requiredLicenseStatus"`
 	DefaultTargetRoot     string                    `json:"defaultTargetRoot"`
 	Platforms             map[string]PlatformAssets `json:"platforms"`
 	StudioCapabilities    map[string]any            `json:"studioCapabilities"`
@@ -29,25 +30,39 @@ type Contract struct {
 }
 
 type PlatformAssets struct {
-	RuntimePackageAsset  string  `json:"runtimePackageAsset"`
-	RuntimePackageSHA256 *string `json:"runtimePackageSHA256"`
-	RuntimeLauncher      string  `json:"runtimeLauncher"`
+	NPMPackage        string  `json:"npmPackage"`
+	NPMPackageVersion string  `json:"npmPackageVersion"`
+	DistIntegrity     *string `json:"distIntegrity"`
+	TarballMaxBytes   int64   `json:"tarballMaxBytes"`
+	PackageManifest   string  `json:"packageManifest"`
+	InstallerPath     string  `json:"installerPath"`
+	InstallerSHA256   *string `json:"installerSHA256"`
+	RuntimeLauncher   string  `json:"runtimeLauncher"`
 }
 
 type InstallPlan struct {
-	Product              string `json:"product"`
-	Action               string `json:"action"`
-	ReleaseTag           string `json:"releaseTag"`
-	ReleaseVersion       string `json:"releaseVersion"`
-	Platform             string `json:"platform"`
-	RuntimePackageAsset  string `json:"runtimePackageAsset"`
-	RuntimePackageSHA256 string `json:"runtimePackageSHA256,omitempty"`
-	TargetRoot           string `json:"targetRoot"`
-	Impact               string `json:"impact"`
-	ApprovalDigest       string `json:"approvalDigest,omitempty"`
+	Product           string `json:"product"`
+	Action            string `json:"action"`
+	RuntimeVersion    string `json:"runtimeVersion"`
+	Registry          string `json:"registry"`
+	NPMPackage        string `json:"npmPackage"`
+	NPMPackageVersion string `json:"npmPackageVersion"`
+	DistIntegrity     string `json:"distIntegrity,omitempty"`
+	Platform          string `json:"platform"`
+	TarballMaxBytes   int64  `json:"tarballMaxBytes"`
+	PackageManifest   string `json:"packageManifest"`
+	InstallerPath     string `json:"installerPath"`
+	InstallerSHA256   string `json:"installerSHA256,omitempty"`
+	DistributionMode  string `json:"distributionMode"`
+	LicenseStatus     string `json:"licenseStatus"`
+	TargetRoot        string `json:"targetRoot"`
+	Impact            string `json:"impact"`
+	ApprovalDigest    string `json:"approvalDigest,omitempty"`
 }
 
-var assetNamePattern = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+var npmPackagePattern = regexp.MustCompile(`^@[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$`)
+var exactVersionPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$`)
+var sriSHA512Pattern = regexp.MustCompile(`^sha512-[A-Za-z0-9+/]{86}==$`)
 
 func LoadContract() (Contract, error) {
 	var c Contract
@@ -56,15 +71,21 @@ func LoadContract() (Contract, error) {
 	if err := decoder.Decode(&c); err != nil {
 		return c, fmt.Errorf("decode embedded runtime requirements: %w", err)
 	}
-	if c.SchemaVersion != 3 || c.Product == "" || c.Repository == "" || c.ReleaseTag == "" || c.ReleaseVersion == "" || c.MinimumRuntimeVersion == "" || c.DefaultTargetRoot == "" || len(c.Platforms) == 0 {
+	if c.SchemaVersion != 4 || c.Product == "" || !exactVersionPattern.MatchString(c.RuntimeVersion) || c.MinimumRuntimeVersion == "" || c.Registry == "" || c.DistributionMode == "" || c.LicenseStatus == "" || c.DefaultTargetRoot == "" || len(c.Platforms) == 0 {
 		return c, fmt.Errorf("embedded runtime requirements are incomplete")
 	}
+	if !strings.HasPrefix(c.Registry, "https://") || strings.HasSuffix(c.Registry, "/") {
+		return c, fmt.Errorf("embedded npm registry must be an HTTPS origin without a trailing slash")
+	}
 	for key, assets := range c.Platforms {
-		if !assetNamePattern.MatchString(assets.RuntimePackageAsset) || assets.RuntimeLauncher == "" || filepath.IsAbs(assets.RuntimeLauncher) || strings.Contains(strings.ReplaceAll(assets.RuntimeLauncher, "\\", "/"), "../") {
+		if !npmPackagePattern.MatchString(assets.NPMPackage) || !exactVersionPattern.MatchString(assets.NPMPackageVersion) || assets.NPMPackageVersion != c.RuntimeVersion || assets.TarballMaxBytes <= 0 || assets.TarballMaxBytes > runtimePackageDownloadLimit || !safePackagePath(assets.PackageManifest) || !safePackagePath(assets.InstallerPath) || assets.PackageManifest != "package/chengfeng-videocut-runtime-package.json" || !strings.HasPrefix(assets.InstallerPath, "package/payload/") || assets.RuntimeLauncher == "" || filepath.IsAbs(assets.RuntimeLauncher) || strings.Contains(strings.ReplaceAll(assets.RuntimeLauncher, "\\", "/"), "../") {
 			return c, fmt.Errorf("embedded platform contract %s is invalid", key)
 		}
-		if assets.RuntimePackageSHA256 != nil && !validSHA256(strings.TrimSpace(*assets.RuntimePackageSHA256)) {
-			return c, fmt.Errorf("embedded platform package digest %s is invalid", key)
+		if assets.DistIntegrity != nil && !validSHA512SRI(strings.TrimSpace(*assets.DistIntegrity)) {
+			return c, fmt.Errorf("embedded npm integrity %s is invalid", key)
+		}
+		if assets.InstallerSHA256 != nil && !validSHA256(strings.TrimSpace(*assets.InstallerSHA256)) {
+			return c, fmt.Errorf("embedded installer digest %s is invalid", key)
 		}
 	}
 	return c, nil
@@ -102,9 +123,7 @@ func BuildInstallPlan(c Contract) (InstallPlan, error) {
 }
 
 type installTestOptions struct {
-	RuntimePackageSHA256 string
-	RuntimePackageFile   string
-	RunInstaller         installerCommandFunc
+	RunInstaller installerCommandFunc
 }
 
 func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan, error) {
@@ -117,20 +136,24 @@ func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan,
 	if err != nil {
 		return InstallPlan{}, err
 	}
-	digest := ""
-	if assets.RuntimePackageSHA256 != nil {
-		digest = strings.ToLower(strings.TrimSpace(*assets.RuntimePackageSHA256))
+	integrity := ""
+	if assets.DistIntegrity != nil {
+		integrity = strings.TrimSpace(*assets.DistIntegrity)
 	}
-	if testOptions != nil && testOptions.RuntimePackageSHA256 != "" {
-		digest = strings.ToLower(strings.TrimSpace(testOptions.RuntimePackageSHA256))
+	installerDigest := ""
+	if assets.InstallerSHA256 != nil {
+		installerDigest = strings.ToLower(strings.TrimSpace(*assets.InstallerSHA256))
 	}
 	plan := InstallPlan{
-		Product: c.Product, Action: "runtime_install", ReleaseTag: c.ReleaseTag,
-		ReleaseVersion: c.ReleaseVersion, Platform: key, RuntimePackageAsset: assets.RuntimePackageAsset,
-		RuntimePackageSHA256: digest, TargetRoot: root,
-		Impact: "下载一个已锁定 SHA-256 的 Product Runtime 安装包；包内包含 Runtime、受管 Bun、FFmpeg 和 FFprobe，安装器只在本地解包和安装，不会再下载依赖。Headless Shell 不属于安装包；只有用户确认实际导出时，Runtime 才会按固定版本和 SHA-256 获取、校验并缓存它。写入 Product Runtime 目录，可能替换 current 版本。",
+		Product: c.Product, Action: "runtime_install", RuntimeVersion: c.RuntimeVersion,
+		Registry: c.Registry, NPMPackage: assets.NPMPackage, NPMPackageVersion: assets.NPMPackageVersion,
+		DistIntegrity: integrity, Platform: key, TarballMaxBytes: assets.TarballMaxBytes,
+		PackageManifest: assets.PackageManifest, InstallerPath: assets.InstallerPath,
+		InstallerSHA256: installerDigest, DistributionMode: c.DistributionMode,
+		LicenseStatus: c.LicenseStatus, TargetRoot: root,
+		Impact: "从固定 npm Registry 下载一个精确版本且锁定 sha512 integrity 的平台 Product Runtime 包；Plugin 原生解包，不调用 npm、Node 或 lifecycle scripts。包内安装器包含 Runtime、受管 Bun、FFmpeg 和 FFprobe；Headless Shell 仍只在用户确认实际导出时由 Runtime 按固定版本和摘要获取并缓存。写入 Product Runtime 目录，可能替换 current 版本。",
 	}
-	if !validSHA256(plan.RuntimePackageSHA256) {
+	if !validSHA512SRI(plan.DistIntegrity) || !validSHA256(plan.InstallerSHA256) {
 		return plan, nil
 	}
 	plan.ApprovalDigest, err = approvalDigest(plan)
@@ -154,6 +177,16 @@ func validSHA256(value string) bool {
 	}
 	_, err := hex.DecodeString(value)
 	return err == nil && strings.ToLower(value) == value
+}
+
+func validSHA512SRI(value string) bool { return sriSHA512Pattern.MatchString(value) }
+
+func safePackagePath(value string) bool {
+	if value == "" || strings.Contains(value, "\\") || strings.HasPrefix(value, "/") {
+		return false
+	}
+	clean := filepath.ToSlash(filepath.Clean(value))
+	return clean == value && clean != "." && clean != ".." && !strings.HasPrefix(clean, "../") && strings.HasPrefix(clean, "package/")
 }
 
 func launcherPath(c Contract) (string, error) {

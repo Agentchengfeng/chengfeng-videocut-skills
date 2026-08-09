@@ -69,16 +69,22 @@ assert.equal(mcp.cwd, ".");
 assert.equal(mcp.tool_timeout_sec, 1201);
 
 const runtimeRequirements = JSON.parse(read("runtime-requirements.json"));
-assert.equal(runtimeRequirements.schemaVersion, 3, "Runtime contract must use the single-package schema");
-assert.equal(runtimeRequirements.releaseVersion, "0.5.1", "Skill candidate must require the current Product Runtime");
+assert.equal(runtimeRequirements.schemaVersion, 4, "Runtime contract must use the exact npm package schema");
+assert.equal(runtimeRequirements.runtimeVersion, "0.5.1", "Skill candidate must require the current Product Runtime");
+assert.equal(runtimeRequirements.registry, "https://registry.npmjs.org");
+assert.equal(runtimeRequirements.requiredDistributionMode, "release-ready");
+assert.equal(runtimeRequirements.requiredLicenseStatus, "VERIFIED");
 assert.equal(runtimeRequirements.minimumRuntimeVersion, "0.5.1", "old Runtime UI must not pass the capability gate");
 for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) {
   assert.deepEqual(
     Object.keys(assets).sort(),
-    ["runtimeLauncher", "runtimePackageAsset", "runtimePackageSHA256"],
-    `${platform} must expose exactly one Runtime package and its launcher`,
+    ["distIntegrity", "installerPath", "installerSHA256", "npmPackage", "npmPackageVersion", "packageManifest", "runtimeLauncher", "tarballMaxBytes"],
+    `${platform} must expose exactly one npm Runtime package and its launcher`,
   );
-  assert.equal(assets.runtimePackageSHA256, null, `${platform} must fail closed before the formal digest is published`);
+  assert.match(assets.npmPackage, /^@chengfeng\/videocut-runtime-/);
+  assert.equal(assets.npmPackageVersion, "0.5.1");
+  assert.equal(assets.distIntegrity, null, `${platform} must fail closed before dist.integrity is published`);
+  assert.equal(assets.installerSHA256, null, `${platform} must fail closed before the inner installer digest is published`);
 }
 
 const runtimeContract = read("references/runtime-and-product-contract.md");
@@ -86,8 +92,9 @@ assert.match(runtimeContract, /内嵌 Runtime、Bun、FFmpeg 与 FFprobe/, "Runt
 assert.match(runtimeContract, /Headless Shell 继续只由确认后的实际 export 受管获取/, "Headless Shell must not be described as an installer payload");
 
 const confirmationCard = read("public/review-confirm.html");
-assert.match(confirmationCard, /runtimePackageAsset/);
-assert.match(confirmationCard, /runtimePackageSHA256/);
+assert.match(confirmationCard, /npmPackage/);
+assert.match(confirmationCard, /distIntegrity/);
+assert.match(confirmationCard, /installerSHA256/);
 assert.doesNotMatch(confirmationCard, /installerAsset|installManifestAsset|installManifestSHA256/);
 
 console.log(JSON.stringify({ coreSkillsUseNativeMCP: true, persistentExportJobs: true, userSystemDependenciesRemoved: true, singleRuntimePackageContract: true }));

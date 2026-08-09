@@ -30,14 +30,14 @@ runtime_status
 ```
 
 - Plugin package `0.11.1` 消费 `runtime-requirements.json` 的 `v0.5.1` 合同；最低 Runtime 为 `0.5.1`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。
-- 缺失时只从精确 `v0.5.1` Release 下载**一个**平台对应的 Runtime 安装包。requirements 必须预先锁定该包的 `runtimePackageSHA256`；它为 `null` 或哈希不符时，不生成可执行 `approvalDigest`。
+- 缺失时只从固定 npm Registry 下载**一个**平台对应的精确版本 Runtime 包。requirements 必须预先锁定 package name/version、`dist.integrity`、包内 installer path/SHA-256、目标分发模式与许可状态；任一为空或不符时，不生成可执行 `approvalDigest`。
 - 正式新装机只经 Plugin 的 `runtime_install`；该 Runtime 安装包内嵌 Runtime、受管 Bun、FFmpeg
   与 FFprobe。Plugin 只下载并校验这一包，安装器只在本地解包、安装并执行同一个 `service ensure`，
   不再从上游下载这些依赖。Headless Shell 不属于安装包或预检：只有用户确认实际 export 后，
   Runtime 才按固定 platform/build/SHA-256 获取、校验、缓存和复用它；损坏、离线或锁不完整必须
   fail-closed，绝不扫描或回退系统浏览器。历史 Desktop / 既有安装若已在同一受管根可兼容复用，
   但不再是正式新装入口。
-- `v0.5.1` Release 尚不存在、单包摘要未锁定或哈希不符时，以 `install_failed` 停止；不得转装公开旧版、源码 clone、npm 或 bunx。
+- `0.5.1` npm 平台包尚不存在、Registry 元数据漂移、tarball/安装器摘要未锁定或哈希不符时，以 `install_failed` 停止；不得转装公开旧版、源码 clone 或 bunx，也不得调用用户系统的 npm/Node。
 - Runtime 冷安装的单包下载、安装器执行与最终 readback 共用 19 分钟
   内部 context；MCP host `tool_timeout_sec=1201` 留出有界终止和响应收尾窗口。
 - 安装位置是 `CHENGFENG_VIDEOCUT_HOME` 或 `~/.chengfeng-videocut`。
@@ -117,7 +117,7 @@ Product open 返回项目 URL
 ## 当前 Runtime 兼容门禁
 
 - 低于 0.5.1 的 Runtime 不具备本 Plugin 发布所绑定的完整受管工具与当前 EDL / Studio compatibility contract，必须被版本门禁拒绝。
-- Runtime `v0.5.1` Release 必须先于 Plugin package `0.11.1` 正式激活，并为每个平台提供一个已签名、内嵌 Runtime、Bun、FFmpeg 与 FFprobe 的可执行安装包；每个包的 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
+- Runtime `0.5.1` npm 平台包必须先于 Plugin package `0.11.1` 正式激活，并为每个平台提供一个内嵌 Runtime、Bun、FFmpeg 与 FFprobe 的包；每个包的精确版本、`sha512` integrity 与包内安装器 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
 - `v0.5.1` 必须提供正式原视频云端转录命令；缺少时以 `missing_cloud_transcription_adapter` 停止，禁止回退本地 ASR。
 - `v0.5.1` 必须提供可用 renderer manager；它仅在用户确认的实际 export 中确保固定锁定的
   Headless Shell，且新版 Skill 不得把旧 renderer 或系统浏览器重新打包、扫描或回退。
@@ -168,10 +168,13 @@ Bug 草稿由 Agent 直接生成，确认后只使用 Agent 已有 GitHub Issue 
 ## 发布顺序
 
 ```text
-Product 0.5.1 tag
+Product 0.5.1 npm platform packages
       |
       v
-每个平台一个已签名、内嵌依赖的 Runtime 安装包 + SHA-256
+GitHub Actions + npm Trusted Publishing
+      |
+      v
+每个平台一个内嵌依赖的 Runtime 包 + sha512 integrity + installer SHA-256
       |
       v
 隔离环境首次安装 + doctor + Studio capability 验收
@@ -182,7 +185,7 @@ Plugin 0.11.1 内容提交
       +------------------------------> contentRevision A
       |
       v
-写入绑定 A 与包清单 SHA-256 的 provenance
+写入绑定 A 与 npm 包清单摘要的 provenance
       |
       +------------------------------> 发布 snapshotRevision B
       |
@@ -196,4 +199,6 @@ Codex 原生 marketplace upgrade 发现候选
 用户确认后 plugin add 并复读版本
 ```
 
-Plugin package 0.11.1 可以先形成候选，但在 Product Runtime v0.5.1 Release 的三个单文件 Runtime 安装包通过公开下载、安装和 Skills 共用服务验收，并把各平台 pinned SHA-256 回填 requirements 之前不得推进 `stable`；这段空窗期的预期行为是安装卡只允许暂停、`runtime_install` 安全失败。
+GitHub 是源码与 GitHub Actions 构建来源，平台包通过 npm Trusted Publishing 发布；Plugin
+只直连 requirements 固定的 npm Registry，不再读取 GitHub Release 附件。Plugin package
+0.11.1 可以先形成候选，但在 Product Runtime 0.5.1 的三个 npm 平台包通过公开 Registry 下载、原生安全解包、安装和 Skills 共用服务验收，并把各平台 pinned integrity 与 installer SHA-256 回填 requirements 之前不得推进 `stable`；这段空窗期的预期行为是安装卡只允许暂停、`runtime_install` 安全失败。

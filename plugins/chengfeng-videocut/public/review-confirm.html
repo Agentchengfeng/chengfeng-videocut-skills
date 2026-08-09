@@ -104,10 +104,15 @@
         if (data.expectedEditListRevision) lines.push(`expectedEditListRevision=${data.expectedEditListRevision}`);
         if (data.approvalDigest) lines.push(`approvalDigest=${data.approvalDigest}`);
         if (data.installPlan) {
-          lines.push(`releaseTag=${data.installPlan.releaseTag}`);
+          lines.push(`runtimeVersion=${data.installPlan.runtimeVersion}`);
+          lines.push(`registry=${data.installPlan.registry}`);
+          lines.push(`npmPackage=${data.installPlan.npmPackage}`);
+          lines.push(`npmPackageVersion=${data.installPlan.npmPackageVersion}`);
+          lines.push(`distIntegrity=${data.installPlan.distIntegrity}`);
           lines.push(`platform=${data.installPlan.platform}`);
-          lines.push(`runtimePackageAsset=${data.installPlan.runtimePackageAsset}`);
-          lines.push(`runtimePackageSHA256=${data.installPlan.runtimePackageSHA256}`);
+          lines.push(`installerSHA256=${data.installPlan.installerSHA256}`);
+          lines.push(`distributionMode=${data.installPlan.distributionMode}`);
+          lines.push(`licenseStatus=${data.installPlan.licenseStatus}`);
           lines.push(`targetRoot=${data.installPlan.targetRoot}`);
           lines.push(`impact=${data.installPlan.impact.replaceAll("\n", " ")}`);
         }

@@ -45,15 +45,17 @@ $chengfeng-videocut:chengfeng-check-updates
 compatibility contract `0.5.1`；MCP 以提交在包内的 macOS Universal 2 / Windows x64
 二进制离线启动，不需要系统 Node.js 或 Bun。`runtime_cli` 只接受结构化 `argv`，并且
 只调用 Product 受管目录中的唯一稳定 launcher。Runtime 缺失时先显示安装卡片；用户
-确认的 `approvalDigest` 同时绑定版本、平台单个 Runtime 安装包、该包 SHA-256、目标目录与
-写入影响，`runtime_install` 会重新计算并精确比较，再下载和校验这一个包，最后在本地执行。
+确认的 `approvalDigest` 同时绑定 npm Registry、平台包名称、精确版本、`sha512` integrity、
+平台、目标目录、分发策略与写入影响。`runtime_install` 会重新计算并精确比较，由原生 MCP
+读取 Registry 元数据、下载和安全解开 `.tgz`，不要求系统 npm/Node，也不执行 lifecycle scripts；
+随后复核包内 manifest 和安装器 SHA-256，最后才在本地执行安装器。
 包内只包含 Runtime、受管 Bun、FFmpeg 与 FFprobe；浏览器引擎不属于安装包。只有用户确认实际
 export 后，Runtime 才按固定 platform/build/SHA-256 获取 Headless Shell、校验后缓存复用，绝不
-扫描或回退系统 Chrome/Chromium/Edge。0.5.1 发布摘要尚未填入 requirements 时安装明确
+扫描或回退系统 Chrome/Chromium/Edge。0.5.1 npm 平台包的 integrity 或安装器摘要尚未填入 requirements 时安装明确
 fail-closed。Studio 只在人工审核状态、浏览器真实读取同一服务的 capability manifest
 并通过门禁后打开。
 
-正式新装机唯一入口是 Plugin 的 `runtime_install`：单个 Runtime 安装包把 Runtime、平台受管
+正式新装机唯一入口是 Plugin 的 `runtime_install`：单个 npm Runtime 平台包把 Runtime、平台受管
 工具装入 `~/.chengfeng-videocut` 的版本化目录，并由
 同一个稳定 launcher 执行 `service ensure`。历史 Desktop / 既有安装若已经写入同一
 Product 受管根，可以被兼容复用，但 Desktop 不再是正式新装入口。Plugin 不搜索
