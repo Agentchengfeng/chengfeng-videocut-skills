@@ -69,6 +69,8 @@ assert.equal(requirements.schemaVersion, 4, "Plugin requirements schema must rem
 assert.ok(requirements.runtimeContract, "Plugin requirements must bind a Runtime contract snapshot");
 assertSafeSnapshotPath(requirements.runtimeContract.snapshot);
 assert.match(requirements.runtimeContract.sha256, /^[a-f0-9]{64}$/, "Runtime contract sha256 is invalid");
+assert.equal(requirements.runtimeContract.repository, "https://github.com/Agentchengfeng/chengfeng-videocut.git", "Runtime contract repository is not exact");
+assert.match(requirements.runtimeContract.revision, /^[a-f0-9]{40}$/, "Runtime contract revision is invalid");
 
 const snapshotPath = path.join(root, requirements.runtimeContract.snapshot);
 const snapshotBytes = fs.readFileSync(snapshotPath);

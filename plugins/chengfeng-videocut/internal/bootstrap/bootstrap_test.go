@@ -61,6 +61,45 @@ func TestRuntimePackageContractPinsExactNPMPackagePerPlatform(t *testing.T) {
 	}
 }
 
+func TestRuntimeContractSnapshotDrivesOperativeCompatibility(t *testing.T) {
+	c, err := LoadContract()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.RuntimeSnapshot.SchemaVersion != 1 || len(c.RuntimeSnapshot.CLI.Commands) == 0 {
+		t.Fatalf("canonical Runtime snapshot was not loaded: %#v", c.RuntimeSnapshot)
+	}
+	if !reflect.DeepEqual(c.Capabilities, c.RuntimeSnapshot.Capabilities) {
+		t.Fatal("runtime_status requirements must be derived from the canonical Runtime snapshot")
+	}
+	if !reflect.DeepEqual(c.StudioCapabilities, c.RuntimeSnapshot.StudioCapabilities) {
+		t.Fatal("Studio capability requirements must be derived from the canonical Runtime snapshot")
+	}
+	for _, key := range []string{"projectIngestVersion", "transcriptPlaybackPagingVersion", "cloudTranscriptionProvider", "cloudTranscriptionTaskLocalOnly"} {
+		if _, ok := c.Capabilities[key]; !ok {
+			t.Fatalf("operative Runtime capabilities are missing %s", key)
+		}
+	}
+	if !capabilitySubset(c.Capabilities, requiredRuntimeSnapshotCapabilities()) {
+		t.Fatal("operative Runtime capabilities do not contain the complete required snapshot")
+	}
+	broken := c.RuntimeSnapshot
+	broken.Capabilities = cloneMapAny(c.RuntimeSnapshot.Capabilities)
+	delete(broken.Capabilities, "cloudTranscriptionProvider")
+	if err := validateRuntimeContractSnapshot(c, broken); err == nil || !strings.Contains(err.Error(), "capability") {
+		t.Fatalf("missing snapshot capability was not rejected: %v", err)
+	}
+	broken = c.RuntimeSnapshot
+	broken.CLI.Commands = map[string]RuntimeCLICommandSpec{}
+	for key, value := range c.RuntimeSnapshot.CLI.Commands {
+		broken.CLI.Commands[key] = value
+	}
+	delete(broken.CLI.Commands, "project.ingest")
+	if err := validateRuntimeContractSnapshot(c, broken); err == nil || !strings.Contains(err.Error(), "project.ingest") {
+		t.Fatalf("missing CLI feature command was not rejected: %v", err)
+	}
+}
+
 func TestApprovalDigestBindsRegistryPackageVersionIntegrityPlatformTargetAndPolicy(t *testing.T) {
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", filepath.Join(t.TempDir(), "home one"))
 	c, _ := LoadContract()
@@ -444,6 +483,14 @@ func TestRuntimeStatusRejectsLauncherTamper(t *testing.T) {
 func jsonMarshal(value any) ([]byte, error) {
 	// Kept local to avoid tests constructing a capability schema by hand.
 	return json.Marshal(value)
+}
+
+func cloneMapAny(input map[string]any) map[string]any {
+	output := make(map[string]any, len(input))
+	for key, value := range input {
+		output[key] = value
+	}
+	return output
 }
 
 func TestFileSHA256(t *testing.T) {

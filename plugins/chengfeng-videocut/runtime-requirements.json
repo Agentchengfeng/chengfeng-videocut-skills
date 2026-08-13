@@ -5,7 +5,9 @@
   "minimumRuntimeVersion": "0.5.4",
   "runtimeContract": {
     "snapshot": "runtime-contract.snapshot.json",
-    "sha256": "95e1cf67cab2dd1f7204796f7ef29a4bd7fd2a39c3ad3d45713887e03fea93fc"
+    "sha256": "95e1cf67cab2dd1f7204796f7ef29a4bd7fd2a39c3ad3d45713887e03fea93fc",
+    "repository": "https://github.com/Agentchengfeng/chengfeng-videocut.git",
+    "revision": "2b836d2af1c21449a4e359db490cd1a0cccb1959"
   },
   "registry": "https://registry.npmjs.org",
   "requiredDistributionMode": "release-ready",

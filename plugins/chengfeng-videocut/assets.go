@@ -11,3 +11,8 @@ var ReviewHTML string
 //
 //go:embed runtime-requirements.json
 var RuntimeRequirements []byte
+
+// RuntimeContractSnapshot is the canonical Runtime-owned capability and CLI contract.
+//
+//go:embed runtime-contract.snapshot.json
+var RuntimeContractSnapshot []byte

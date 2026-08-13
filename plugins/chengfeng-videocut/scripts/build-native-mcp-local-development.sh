@@ -6,9 +6,8 @@ output_dir="$plugin_root/bin"
 build_dir=$(mktemp -d "${TMPDIR:-/tmp}/chengfeng-videocut-native-local.XXXXXX")
 trap 'rm -rf -- "$build_dir"' EXIT HUP INT TERM
 
-version=0.11.5-local.1
 package=./cmd/chengfeng-videocut-mcp
-ldflags="-s -w -buildid= -X github.com/Agentchengfeng/chengfeng-videocut-skills/plugins/chengfeng-videocut/internal/bootstrap.Version=$version -X github.com/Agentchengfeng/chengfeng-videocut-skills/plugins/chengfeng-videocut/internal/bootstrap.BuildChannel=local-development"
+ldflags=$(node "$plugin_root/scripts/native-mcp-ldflags.cjs" local-development)
 
 mkdir -p -- "$output_dir"
 cd -- "$plugin_root"

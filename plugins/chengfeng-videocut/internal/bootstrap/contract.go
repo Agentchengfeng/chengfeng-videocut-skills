@@ -21,6 +21,7 @@ type Contract struct {
 	RuntimeVersion        string                    `json:"runtimeVersion"`
 	MinimumRuntimeVersion string                    `json:"minimumRuntimeVersion"`
 	RuntimeContract       RuntimeContractReference  `json:"runtimeContract"`
+	RuntimeSnapshot       RuntimeContractSnapshot   `json:"-"`
 	Registry              string                    `json:"registry"`
 	DistributionMode      string                    `json:"requiredDistributionMode"`
 	LicenseStatus         string                    `json:"requiredLicenseStatus"`
@@ -31,8 +32,38 @@ type Contract struct {
 }
 
 type RuntimeContractReference struct {
-	Snapshot string `json:"snapshot"`
-	SHA256   string `json:"sha256"`
+	Snapshot   string `json:"snapshot"`
+	SHA256     string `json:"sha256"`
+	Repository string `json:"repository"`
+	Revision   string `json:"revision"`
+}
+
+type RuntimeContractSnapshot struct {
+	SchemaVersion         int                `json:"schemaVersion"`
+	Product               string             `json:"product"`
+	RuntimeVersion        string             `json:"runtimeVersion"`
+	MinimumRuntimeVersion string             `json:"minimumRuntimeVersion"`
+	Capabilities          map[string]any     `json:"capabilities"`
+	StudioCapabilities    map[string]any     `json:"studioCapabilities"`
+	CLI                   RuntimeCLIContract `json:"cli"`
+}
+
+type RuntimeCLIContract struct {
+	SchemaVersion         int                              `json:"schemaVersion"`
+	EnvelopeSchemaVersion int                              `json:"envelopeSchemaVersion"`
+	Commands              map[string]RuntimeCLICommandSpec `json:"commands"`
+}
+
+type RuntimeCLICommandSpec struct {
+	Public   bool                       `json:"public"`
+	Features []RuntimeCLICommandFeature `json:"features"`
+}
+
+type RuntimeCLICommandFeature struct {
+	Kind       string `json:"kind"`
+	Capability string `json:"capability,omitempty"`
+	Operation  string `json:"operation,omitempty"`
+	JobKind    string `json:"jobKind,omitempty"`
 }
 
 type PlatformAssets struct {
@@ -69,6 +100,9 @@ type InstallPlan struct {
 var npmPackagePattern = regexp.MustCompile(`^@[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$`)
 var exactVersionPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$`)
 var sriSHA512Pattern = regexp.MustCompile(`^sha512-[A-Za-z0-9+/]{86}==$`)
+var gitRevisionPattern = regexp.MustCompile(`^[a-f0-9]{40}$`)
+
+const runtimeContractRepository = "https://github.com/Agentchengfeng/chengfeng-videocut.git"
 
 func LoadContract() (Contract, error) {
 	var c Contract
@@ -80,17 +114,15 @@ func LoadContract() (Contract, error) {
 	if c.SchemaVersion != 4 || c.Product == "" || !exactVersionPattern.MatchString(c.RuntimeVersion) || c.MinimumRuntimeVersion == "" || c.Registry == "" || c.DistributionMode == "" || c.LicenseStatus == "" || c.DefaultTargetRoot == "" || len(c.Platforms) == 0 {
 		return c, fmt.Errorf("embedded runtime requirements are incomplete")
 	}
-	if !safeSnapshotPath(c.RuntimeContract.Snapshot) || !validSHA256(c.RuntimeContract.SHA256) {
+	if !safeSnapshotPath(c.RuntimeContract.Snapshot) || !validSHA256(c.RuntimeContract.SHA256) || c.RuntimeContract.Repository != runtimeContractRepository || !gitRevisionPattern.MatchString(c.RuntimeContract.Revision) {
 		return c, fmt.Errorf("embedded Runtime contract snapshot reference is invalid")
+	}
+	snapshot, err := loadRuntimeContractSnapshot(c)
+	if err != nil {
+		return c, err
 	}
 	if !strings.HasPrefix(c.Registry, "https://") || strings.HasSuffix(c.Registry, "/") {
 		return c, fmt.Errorf("embedded npm registry must be an HTTPS origin without a trailing slash")
-	}
-	for _, name := range []string{"projectIngestVersion", "transcriptPlaybackPagingVersion"} {
-		version, ok := c.Capabilities[name].(float64)
-		if !ok || version != 1 {
-			return c, fmt.Errorf("embedded Runtime capability %s must be exactly 1", name)
-		}
 	}
 	for key, assets := range c.Platforms {
 		if !npmPackagePattern.MatchString(assets.NPMPackage) || !exactVersionPattern.MatchString(assets.NPMPackageVersion) || assets.NPMPackageVersion != c.RuntimeVersion || assets.TarballMaxBytes <= 0 || assets.TarballMaxBytes > runtimePackageDownloadLimit || !safePackagePath(assets.PackageManifest) || !safePackagePath(assets.InstallerPath) || assets.PackageManifest != "package/chengfeng-videocut-runtime-package.json" || !strings.HasPrefix(assets.InstallerPath, "package/payload/") || assets.RuntimeLauncher == "" || filepath.IsAbs(assets.RuntimeLauncher) || strings.Contains(strings.ReplaceAll(assets.RuntimeLauncher, "\\", "/"), "../") {
@@ -103,7 +135,155 @@ func LoadContract() (Contract, error) {
 			return c, fmt.Errorf("embedded installer digest %s is invalid", key)
 		}
 	}
+	c.RuntimeSnapshot = snapshot
+	c.Capabilities = snapshot.Capabilities
+	c.StudioCapabilities = snapshot.StudioCapabilities
 	return c, nil
+}
+
+func loadRuntimeContractSnapshot(requirements Contract) (RuntimeContractSnapshot, error) {
+	if requirements.RuntimeContract.Snapshot != "runtime-contract.snapshot.json" {
+		return RuntimeContractSnapshot{}, fmt.Errorf("embedded Runtime contract snapshot path is unsupported")
+	}
+	sum := sha256.Sum256(pluginassets.RuntimeContractSnapshot)
+	if hex.EncodeToString(sum[:]) != requirements.RuntimeContract.SHA256 {
+		return RuntimeContractSnapshot{}, fmt.Errorf("embedded Runtime contract snapshot sha256 drifted")
+	}
+	var snapshot RuntimeContractSnapshot
+	decoder := json.NewDecoder(bytes.NewReader(pluginassets.RuntimeContractSnapshot))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&snapshot); err != nil {
+		return snapshot, fmt.Errorf("decode embedded Runtime contract snapshot: %w", err)
+	}
+	if err := validateRuntimeContractSnapshot(requirements, snapshot); err != nil {
+		return snapshot, err
+	}
+	return snapshot, nil
+}
+
+func validateRuntimeContractSnapshot(requirements Contract, snapshot RuntimeContractSnapshot) error {
+	if snapshot.SchemaVersion != 1 || snapshot.Product != requirements.Product || snapshot.RuntimeVersion != requirements.RuntimeVersion || snapshot.MinimumRuntimeVersion != requirements.MinimumRuntimeVersion || len(snapshot.Capabilities) == 0 || len(snapshot.StudioCapabilities) == 0 {
+		return fmt.Errorf("embedded Runtime contract snapshot identity is invalid")
+	}
+	if snapshot.CLI.SchemaVersion != 1 || snapshot.CLI.EnvelopeSchemaVersion != 1 || len(snapshot.CLI.Commands) == 0 {
+		return fmt.Errorf("embedded Runtime CLI contract snapshot is incomplete")
+	}
+	if !capabilitySubset(snapshot.Capabilities, requiredRuntimeSnapshotCapabilities()) {
+		return fmt.Errorf("embedded Runtime capability snapshot is missing required fields")
+	}
+	if !capabilitySubset(snapshot.StudioCapabilities, requiredRuntimeSnapshotStudioCapabilities()) {
+		return fmt.Errorf("embedded Runtime Studio capability snapshot is missing required fields")
+	}
+	if err := validateRuntimeCommandFeatures(snapshot.CLI.Commands); err != nil {
+		return err
+	}
+	if !capabilitySubset(snapshot.Capabilities, requirements.Capabilities) {
+		return fmt.Errorf("embedded Runtime requirements are not a subset of the canonical snapshot")
+	}
+	if !capabilitySubset(snapshot.StudioCapabilities, requirements.StudioCapabilities) {
+		return fmt.Errorf("embedded Runtime Studio requirements are not a subset of the canonical snapshot")
+	}
+	return nil
+}
+
+func requiredRuntimeSnapshotCapabilities() map[string]any {
+	return map[string]any{
+		"runtimeApiVersion":               float64(1),
+		"serviceApiVersion":               float64(1),
+		"serviceOperations":               []any{"install", "start", "stop", "restart", "status", "logs", "ensure"},
+		"managedStudioService":            true,
+		"serviceParentProcessIndependent": true,
+		"serviceCrashRestart":             true,
+		"durableJobsApiVersion":           float64(1),
+		"durableJobKinds":                 []any{"export"},
+		"editListSchemaVersion":           float64(1),
+		"editListOperations":              []any{"move", "trim", "split", "delete", "restore", "delete-range", "restore-snapshot"},
+		"managedArollProjection":          true,
+		"expectedEditListRevision":        true,
+		"projectIngestVersion":            float64(1),
+		"transcriptPlaybackPagingVersion": float64(1),
+		"cloudTranscriptionProvider":      "volcengine",
+		"cloudTranscriptionTaskLocalOnly": true,
+	}
+}
+
+func requiredRuntimeSnapshotStudioCapabilities() map[string]any {
+	return map[string]any{
+		"topLevelViews":             []any{"storyboard", "preview", "koubo"},
+		"legacyWorkbenchPanel":      false,
+		"managedTimelineEditing":    true,
+		"managedTimelineOperations": []any{"move", "trim", "split", "delete", "restore", "delete-range", "restore-snapshot"},
+	}
+}
+
+func validateRuntimeCommandFeatures(commands map[string]RuntimeCLICommandSpec) error {
+	required := map[string][]RuntimeCLICommandFeature{
+		"transcribe": {
+			{Kind: "capability", Capability: "cloudTranscriptionProvider"},
+			{Kind: "capability", Capability: "cloudTranscriptionTaskLocalOnly"},
+		},
+		"project.ingest": {
+			{Kind: "capability", Capability: "projectIngestVersion"},
+		},
+		"transcript.playback": {
+			{Kind: "capability", Capability: "transcriptPlaybackPagingVersion"},
+		},
+		"transcript.retranscribe": {
+			{Kind: "capability", Capability: "cloudTranscriptionProvider"},
+			{Kind: "capability", Capability: "cloudTranscriptionTaskLocalOnly"},
+		},
+		"cuts.apply": {
+			{Kind: "capability", Capability: "expectedEditListRevision"},
+			{Kind: "capability", Capability: "editListSchemaVersion"},
+		},
+		"editList.get": {
+			{Kind: "capability", Capability: "editListSchemaVersion"},
+		},
+		"editList.patch": {
+			{Kind: "capability", Capability: "editListSchemaVersion"},
+		},
+		"export": {
+			{Kind: "durable-job", JobKind: "export"},
+		},
+		"job.start": {
+			{Kind: "capability", Capability: "durableJobsApiVersion"},
+			{Kind: "durable-job", JobKind: "export"},
+		},
+		"job.get": {
+			{Kind: "capability", Capability: "durableJobsApiVersion"},
+		},
+		"job.list": {
+			{Kind: "capability", Capability: "durableJobsApiVersion"},
+		},
+		"job.cancel": {
+			{Kind: "capability", Capability: "durableJobsApiVersion"},
+		},
+	}
+	for _, operation := range []string{"install", "start", "stop", "restart", "status", "logs", "ensure"} {
+		id := "service." + operation
+		required[id] = []RuntimeCLICommandFeature{{Kind: "service", Operation: operation}}
+	}
+	for id, features := range required {
+		command, ok := commands[id]
+		if !ok || !command.Public {
+			return fmt.Errorf("embedded Runtime CLI command %s is missing or not public", id)
+		}
+		for _, feature := range features {
+			if !runtimeCommandHasFeature(command, feature) {
+				return fmt.Errorf("embedded Runtime CLI command %s is missing feature %+v", id, feature)
+			}
+		}
+	}
+	return nil
+}
+
+func runtimeCommandHasFeature(command RuntimeCLICommandSpec, required RuntimeCLICommandFeature) bool {
+	for _, candidate := range command.Features {
+		if candidate == required {
+			return true
+		}
+	}
+	return false
 }
 
 func platformKey() string {
