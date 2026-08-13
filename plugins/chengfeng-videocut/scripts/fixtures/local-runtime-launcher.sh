@@ -2,7 +2,7 @@
 set -eu
 
 if [ "${1:-}" = "--version" ]; then
-  echo 'chengfeng-videocut 0.5.4'
+  echo 'chengfeng-videocut 0.5.8'
   exit 0
 fi
 
@@ -11,12 +11,12 @@ if [ "${1:-}" = "doctor" ] && [ "${2:-}" = "--local-development" ]; then
     printf '%s\n' '{"ok":false,"data":{"healthy":false,"developmentMode":false,"releaseReady":false,"readinessMode":"unready"}}'
     exit 3
   fi
-  printf '%s\n' '{"ok":true,"data":{"healthy":true,"developmentMode":true,"releaseReady":false,"readinessMode":"local-development","capabilities":{"runtimeApiVersion":1,"serviceApiVersion":1,"serviceOperations":["install","start","stop","restart","status","logs","ensure"],"managedStudioService":true,"serviceParentProcessIndependent":true,"serviceCrashRestart":true,"durableJobsApiVersion":1,"durableJobKinds":["export"],"editListSchemaVersion":1,"editListOperations":["move","trim","split","delete","restore","delete-range","restore-snapshot"],"managedArollProjection":true,"expectedEditListRevision":true,"projectIngestVersion":1,"transcriptPlaybackPagingVersion":1,"cloudTranscriptionProvider":"volcengine","cloudTranscriptionTaskLocalOnly":true}}}'
+  printf '%s\n' '{"ok":true,"data":{"healthy":true,"developmentMode":true,"releaseReady":false,"readinessMode":"local-development","capabilities":{"runtimeApiVersion":1,"serviceApiVersion":1,"serviceOperations":["install","start","stop","restart","status","logs","ensure"],"managedStudioService":true,"serviceParentProcessIndependent":true,"serviceCrashRestart":true,"durableJobsApiVersion":1,"durableJobKinds":["export"],"operationAdmissionVersion":1,"operationAuditVersion":1,"operationIdempotencyVersion":1,"editListSchemaVersion":1,"editListOperations":["move","trim","split","delete","restore","delete-range","restore-snapshot"],"managedArollProjection":true,"expectedEditListRevision":true,"projectIngestVersion":1,"transcriptPlaybackPagingVersion":1,"cloudTranscriptionProvider":"volcengine","cloudTranscriptionTaskLocalOnly":true}}}'
   exit 0
 fi
 
 if [ "${1:-}" = "doctor" ] && [ "${2:-}" = "--json" ]; then
-  printf '%s\n' '{"ok":true,"data":{"healthy":true,"developmentMode":true,"releaseReady":false,"readinessMode":"local-development","capabilities":{"runtimeApiVersion":1,"serviceApiVersion":1,"serviceOperations":["install","start","stop","restart","status","logs","ensure"],"managedStudioService":true,"serviceParentProcessIndependent":true,"serviceCrashRestart":true,"durableJobsApiVersion":1,"durableJobKinds":["export"],"editListSchemaVersion":1,"editListOperations":["move","trim","split","delete","restore","delete-range","restore-snapshot"],"managedArollProjection":true,"expectedEditListRevision":true,"projectIngestVersion":1,"transcriptPlaybackPagingVersion":1,"cloudTranscriptionProvider":"volcengine","cloudTranscriptionTaskLocalOnly":true}}}'
+  printf '%s\n' '{"ok":true,"data":{"healthy":true,"developmentMode":true,"releaseReady":false,"readinessMode":"local-development","capabilities":{"runtimeApiVersion":1,"serviceApiVersion":1,"serviceOperations":["install","start","stop","restart","status","logs","ensure"],"managedStudioService":true,"serviceParentProcessIndependent":true,"serviceCrashRestart":true,"durableJobsApiVersion":1,"durableJobKinds":["export"],"operationAdmissionVersion":1,"operationAuditVersion":1,"operationIdempotencyVersion":1,"editListSchemaVersion":1,"editListOperations":["move","trim","split","delete","restore","delete-range","restore-snapshot"],"managedArollProjection":true,"expectedEditListRevision":true,"projectIngestVersion":1,"transcriptPlaybackPagingVersion":1,"cloudTranscriptionProvider":"volcengine","cloudTranscriptionTaskLocalOnly":true}}}'
   exit 0
 fi
 

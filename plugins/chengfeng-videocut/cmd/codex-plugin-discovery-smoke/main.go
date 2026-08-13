@@ -62,7 +62,7 @@ func main() {
 		fatal(fmt.Errorf("unexpected available inventory: %#v", available))
 	}
 	candidate := available.Available[0]
-	if candidate.PluginID != pluginID || candidate.Version != "0.11.5-local.1" || candidate.Installed || candidate.Enabled {
+	if candidate.PluginID != pluginID || candidate.Version != "0.11.6-local.1" || candidate.Installed || candidate.Enabled {
 		fatal(fmt.Errorf("unexpected candidate fields: %#v", candidate))
 	}
 

@@ -196,6 +196,9 @@ func requiredRuntimeSnapshotCapabilities() map[string]any {
 		"serviceCrashRestart":             true,
 		"durableJobsApiVersion":           float64(1),
 		"durableJobKinds":                 []any{"export"},
+		"operationAdmissionVersion":       float64(1),
+		"operationAuditVersion":           float64(1),
+		"operationIdempotencyVersion":     float64(1),
 		"editListSchemaVersion":           float64(1),
 		"editListOperations":              []any{"move", "trim", "split", "delete", "restore", "delete-range", "restore-snapshot"},
 		"managedArollProjection":          true,
@@ -224,6 +227,9 @@ func validateRuntimeCommandFeatures(commands map[string]RuntimeCLICommandSpec) e
 		},
 		"project.ingest": {
 			{Kind: "capability", Capability: "projectIngestVersion"},
+			{Kind: "capability", Capability: "operationAdmissionVersion"},
+			{Kind: "capability", Capability: "operationAuditVersion"},
+			{Kind: "capability", Capability: "operationIdempotencyVersion"},
 		},
 		"transcript.playback": {
 			{Kind: "capability", Capability: "transcriptPlaybackPagingVersion"},
@@ -236,6 +242,11 @@ func validateRuntimeCommandFeatures(commands map[string]RuntimeCLICommandSpec) e
 			{Kind: "capability", Capability: "expectedEditListRevision"},
 			{Kind: "capability", Capability: "editListSchemaVersion"},
 		},
+		"cuts.set": {
+			{Kind: "capability", Capability: "operationAdmissionVersion"},
+			{Kind: "capability", Capability: "operationAuditVersion"},
+			{Kind: "capability", Capability: "operationIdempotencyVersion"},
+		},
 		"editList.get": {
 			{Kind: "capability", Capability: "editListSchemaVersion"},
 		},
@@ -244,10 +255,16 @@ func validateRuntimeCommandFeatures(commands map[string]RuntimeCLICommandSpec) e
 		},
 		"export": {
 			{Kind: "durable-job", JobKind: "export"},
+			{Kind: "capability", Capability: "operationAdmissionVersion"},
+			{Kind: "capability", Capability: "operationAuditVersion"},
+			{Kind: "capability", Capability: "operationIdempotencyVersion"},
 		},
 		"job.start": {
 			{Kind: "capability", Capability: "durableJobsApiVersion"},
 			{Kind: "durable-job", JobKind: "export"},
+			{Kind: "capability", Capability: "operationAdmissionVersion"},
+			{Kind: "capability", Capability: "operationAuditVersion"},
+			{Kind: "capability", Capability: "operationIdempotencyVersion"},
 		},
 		"job.get": {
 			{Kind: "capability", Capability: "durableJobsApiVersion"},

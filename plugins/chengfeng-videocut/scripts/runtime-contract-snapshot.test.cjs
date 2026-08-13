@@ -100,6 +100,20 @@ assertFeature(commands["project.ingest"], {
   kind: "capability",
   capability: "projectIngestVersion",
 }, "project.ingest");
+for (const command of ["project.ingest", "cuts.set", "export", "job.start"]) {
+  assertFeature(commands[command], {
+    kind: "capability",
+    capability: "operationAdmissionVersion",
+  }, command);
+  assertFeature(commands[command], {
+    kind: "capability",
+    capability: "operationAuditVersion",
+  }, command);
+  assertFeature(commands[command], {
+    kind: "capability",
+    capability: "operationIdempotencyVersion",
+  }, command);
+}
 assertFeature(commands["transcript.playback"], {
   kind: "capability",
   capability: "transcriptPlaybackPagingVersion",

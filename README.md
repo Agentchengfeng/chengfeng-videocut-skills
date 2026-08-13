@@ -1,8 +1,8 @@
 # chengfeng-videocut
 
 > **Local-development candidate only:** this branch contains Plugin
-> `0.11.5-local.1`, marketplace/plugin id
-> `chengfeng-videocut-local-development`, and requires Runtime `0.5.4` with an
+> `0.11.6-local.1`, marketplace/plugin id
+> `chengfeng-videocut-local-development`, and requires Runtime `0.5.8` with an
 > exact machine-local authorization. It must not be published, promoted to
 > `stable`, or installed over the public `chengfeng-videocut` Plugin. The
 > release documentation below remains the fail-closed public baseline.
@@ -53,9 +53,9 @@ Node、Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入
 Skill 合同的行为（真实发生过：Runtime 缺失时 Agent 手搓了一个"审片台"，产出与产品
 完全不兼容）。遇到这种情况，把 Agent 的报错原文发 Issue。
 
-本分支候选 Plugin 是 `0.11.5-local.1`。原始 `0.11.1` 候选曾产生内容 A 和 provenance B；
+本分支候选 Plugin 是 `0.11.6-local.1`。原始 `0.11.1` 候选曾产生内容 A 和 provenance B；
 本轮追加修复已改变 Plugin 字节，因此集成后必须重新产生最终内容提交与
-provenance 快照，不得沿用旧 A/B 宣称可发布。Runtime 0.5.4 各 npm 平台包的 pinned
+provenance 快照，不得沿用旧 A/B 宣称可发布。Runtime 0.5.8 各 npm 平台包的 pinned
 sha512 integrity 与包内安装器 SHA-256 回填之前，同样不得发布或把候选说成可安装。
 当前公开的 0.10.8 快照仅是历史稳定入口：
 
@@ -112,7 +112,7 @@ Runtime 默认安装到：
 ~/.chengfeng-videocut
 ```
 
-Plugin 0.11.5-local.1 的合同固定为 Runtime `0.5.4`。requirements 每个平台只列一个精确
+Plugin 0.11.6-local.1 的合同固定为 Runtime `0.5.8`。requirements 每个平台只列一个精确
 npm package/version、`distIntegrity`、包内 installer SHA-256 和稳定启动器；原生 MCP 不调用
 npm、Node 或 lifecycle scripts。任一 pinned 摘要未发布时，确认卡
 不生成可执行摘要，安装 fail-closed。Runtime 健康还不够：semver 必须达到最低版本并覆盖完整 capability 集。
@@ -230,10 +230,10 @@ chengfeng-videocut-skills/
 
 ## 发布边界
 
-Plugin 0.11.5-local.1 依赖 Runtime 0.5.4 的 npm 平台包、managed tools、用户服务与当前 EDL / Studio 合同。稳定发布顺序是：
+Plugin 0.11.6-local.1 依赖 Runtime 0.5.8 的 npm 平台包、managed tools、用户服务与当前 EDL / Studio 合同。稳定发布顺序是：
 
 ```text
-Runtime 0.5.4 npm platform packages
+Runtime 0.5.8 npm platform packages
   -> GitHub Actions 通过 npm Trusted Publishing 发布各平台包
   -> 每个平台一个内嵌 Runtime、Bun、FFmpeg、FFprobe 的包
   -> 把各平台 pinned sha512 integrity 与 installer SHA-256 回填 requirements

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "product": "chengfeng-videocut",
-  "runtimeVersion": "0.5.4",
-  "minimumRuntimeVersion": "0.5.4",
+  "runtimeVersion": "0.5.8",
+  "minimumRuntimeVersion": "0.5.8",
   "capabilities": {
     "runtimeApiVersion": 1,
     "serviceApiVersion": 1,
@@ -22,6 +22,9 @@
     "durableJobKinds": [
       "export"
     ],
+    "operationAdmissionVersion": 1,
+    "operationAuditVersion": 1,
+    "operationIdempotencyVersion": 1,
     "editListSchemaVersion": 1,
     "editListOperations": [
       "move",
@@ -179,6 +182,18 @@
           {
             "kind": "capability",
             "capability": "projectIngestVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationAdmissionVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationAuditVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationIdempotencyVersion"
           }
         ]
       },
@@ -238,7 +253,20 @@
       },
       "cuts.set": {
         "public": true,
-        "features": []
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "operationAdmissionVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationAuditVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationIdempotencyVersion"
+          }
+        ]
       },
       "cuts.apply": {
         "public": true,
@@ -317,6 +345,18 @@
           {
             "kind": "durable-job",
             "jobKind": "export"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationAdmissionVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationAuditVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationIdempotencyVersion"
           }
         ]
       },
@@ -330,6 +370,18 @@
           {
             "kind": "durable-job",
             "jobKind": "export"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationAdmissionVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationAuditVersion"
+          },
+          {
+            "kind": "capability",
+            "capability": "operationIdempotencyVersion"
           }
         ]
       },

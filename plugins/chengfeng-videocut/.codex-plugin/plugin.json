@@ -1,6 +1,6 @@
 {
   "name": "chengfeng-videocut-local-development",
-  "version": "0.11.5-local.1",
+  "version": "0.11.6-local.1",
   "description": "Six task-facing chengfeng-videocut Skills plus a native offline MCP bootstrap for review confirmation and the managed Product Runtime.",
   "author": {
     "name": "Chengfeng",
