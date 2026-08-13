@@ -1,0 +1,365 @@
+{
+  "schemaVersion": 1,
+  "product": "chengfeng-videocut",
+  "runtimeVersion": "0.5.4",
+  "minimumRuntimeVersion": "0.5.4",
+  "capabilities": {
+    "runtimeApiVersion": 1,
+    "serviceApiVersion": 1,
+    "serviceOperations": [
+      "install",
+      "start",
+      "stop",
+      "restart",
+      "status",
+      "logs",
+      "ensure"
+    ],
+    "managedStudioService": true,
+    "serviceParentProcessIndependent": true,
+    "serviceCrashRestart": true,
+    "durableJobsApiVersion": 1,
+    "durableJobKinds": [
+      "export"
+    ],
+    "editListSchemaVersion": 1,
+    "editListOperations": [
+      "move",
+      "trim",
+      "split",
+      "delete",
+      "restore",
+      "delete-range",
+      "restore-snapshot"
+    ],
+    "managedArollProjection": true,
+    "expectedEditListRevision": true,
+    "projectIngestVersion": 1,
+    "transcriptPlaybackPagingVersion": 1,
+    "cloudTranscriptionProvider": "volcengine",
+    "cloudTranscriptionTaskLocalOnly": true
+  },
+  "studioCapabilities": {
+    "topLevelViews": [
+      "storyboard",
+      "preview",
+      "koubo"
+    ],
+    "legacyWorkbenchPanel": false,
+    "managedTimelineEditing": true,
+    "managedTimelineOperations": [
+      "move",
+      "trim",
+      "split",
+      "delete",
+      "restore",
+      "delete-range",
+      "restore-snapshot"
+    ]
+  },
+  "cli": {
+    "schemaVersion": 1,
+    "envelopeSchemaVersion": 1,
+    "commands": {
+      "help": {
+        "public": true,
+        "features": []
+      },
+      "version": {
+        "public": true,
+        "features": []
+      },
+      "start": {
+        "public": true,
+        "features": []
+      },
+      "service.install": {
+        "public": true,
+        "features": [
+          {
+            "kind": "service",
+            "operation": "install"
+          }
+        ]
+      },
+      "service.start": {
+        "public": true,
+        "features": [
+          {
+            "kind": "service",
+            "operation": "start"
+          }
+        ]
+      },
+      "service.stop": {
+        "public": true,
+        "features": [
+          {
+            "kind": "service",
+            "operation": "stop"
+          }
+        ]
+      },
+      "service.restart": {
+        "public": true,
+        "features": [
+          {
+            "kind": "service",
+            "operation": "restart"
+          }
+        ]
+      },
+      "service.status": {
+        "public": true,
+        "features": [
+          {
+            "kind": "service",
+            "operation": "status"
+          }
+        ]
+      },
+      "service.logs": {
+        "public": true,
+        "features": [
+          {
+            "kind": "service",
+            "operation": "logs"
+          }
+        ]
+      },
+      "service.ensure": {
+        "public": true,
+        "features": [
+          {
+            "kind": "service",
+            "operation": "ensure"
+          }
+        ]
+      },
+      "service.supervise": {
+        "public": false,
+        "features": []
+      },
+      "doctor": {
+        "public": true,
+        "features": []
+      },
+      "config.get": {
+        "public": true,
+        "features": []
+      },
+      "config.set": {
+        "public": true,
+        "features": []
+      },
+      "inspect": {
+        "public": true,
+        "features": []
+      },
+      "open": {
+        "public": true,
+        "features": []
+      },
+      "transcribe": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "cloudTranscriptionProvider"
+          },
+          {
+            "kind": "capability",
+            "capability": "cloudTranscriptionTaskLocalOnly"
+          }
+        ]
+      },
+      "project.ingest": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "projectIngestVersion"
+          }
+        ]
+      },
+      "project.create": {
+        "public": true,
+        "features": []
+      },
+      "project.prepare": {
+        "public": true,
+        "features": []
+      },
+      "artifact.put": {
+        "public": true,
+        "features": []
+      },
+      "cuts.get": {
+        "public": true,
+        "features": []
+      },
+      "transcript.playback": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "transcriptPlaybackPagingVersion"
+          }
+        ]
+      },
+      "transcript.retranscribe": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "cloudTranscriptionProvider"
+          },
+          {
+            "kind": "capability",
+            "capability": "cloudTranscriptionTaskLocalOnly"
+          }
+        ]
+      },
+      "transcript.align": {
+        "public": true,
+        "features": []
+      },
+      "transcript.dictionary": {
+        "public": true,
+        "features": []
+      },
+      "transcript.regroup": {
+        "public": true,
+        "features": []
+      },
+      "transcript.correct": {
+        "public": true,
+        "features": []
+      },
+      "cuts.set": {
+        "public": true,
+        "features": []
+      },
+      "cuts.apply": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "expectedEditListRevision"
+          },
+          {
+            "kind": "capability",
+            "capability": "editListSchemaVersion"
+          }
+        ]
+      },
+      "editList.get": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "editListSchemaVersion"
+          }
+        ]
+      },
+      "editList.patch": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "editListSchemaVersion"
+          }
+        ]
+      },
+      "subtitle.get": {
+        "public": true,
+        "features": []
+      },
+      "subtitle.build": {
+        "public": true,
+        "features": []
+      },
+      "subtitle.set": {
+        "public": true,
+        "features": []
+      },
+      "visual.get": {
+        "public": true,
+        "features": []
+      },
+      "visual.add": {
+        "public": true,
+        "features": []
+      },
+      "visual.remove": {
+        "public": true,
+        "features": []
+      },
+      "visual.frame": {
+        "public": true,
+        "features": []
+      },
+      "workflow.get": {
+        "public": true,
+        "features": []
+      },
+      "workflow.transition": {
+        "public": true,
+        "features": []
+      },
+      "render.run": {
+        "public": true,
+        "features": []
+      },
+      "export": {
+        "public": true,
+        "features": [
+          {
+            "kind": "durable-job",
+            "jobKind": "export"
+          }
+        ]
+      },
+      "job.start": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "durableJobsApiVersion"
+          },
+          {
+            "kind": "durable-job",
+            "jobKind": "export"
+          }
+        ]
+      },
+      "job.get": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "durableJobsApiVersion"
+          }
+        ]
+      },
+      "job.list": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "durableJobsApiVersion"
+          }
+        ]
+      },
+      "job.cancel": {
+        "public": true,
+        "features": [
+          {
+            "kind": "capability",
+            "capability": "durableJobsApiVersion"
+          }
+        ]
+      }
+    }
+  }
+}

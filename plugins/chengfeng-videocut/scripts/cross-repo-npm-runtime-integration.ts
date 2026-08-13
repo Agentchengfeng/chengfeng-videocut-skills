@@ -18,6 +18,16 @@ function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+function runtimeRevision(): string | null {
+  const result = spawnSync("git", ["rev-parse", "HEAD"], {
+    cwd: canonicalRuntimeRoot,
+    encoding: "utf8",
+  });
+  if (result.status !== 0) return null;
+  const revision = result.stdout.trim();
+  return /^[a-f0-9]{40}$/.test(revision) ? revision : null;
+}
+
 try {
   const runtimePackage = await import(pathToFileURL(join(canonicalRuntimeRoot, "scripts/npm-runtime-package.ts")).href);
   const version = JSON.parse(await readFile(join(canonicalRuntimeRoot, "package.json"), "utf8")).version as string;
@@ -90,7 +100,7 @@ try {
   process.stdout.write(goTest.stdout);
   process.stderr.write(goTest.stderr);
   if (goTest.status !== 0) throw new Error(`Plugin cross-repo Go test failed with exit ${goTest.status}`);
-  console.log(JSON.stringify({ ok: true, runtimeRevision: "c5247a51284de4bcab626bbcf5e09d82d22b9188", platformKey, packageName: receipts[0].manifest.npmPackage.name, tarball: report[0].filename, integrity: report[0].integrity, files: report[0].files.map((entry: { path: string }) => entry.path).sort() }));
+  console.log(JSON.stringify({ ok: true, runtimeRevision: runtimeRevision(), platformKey, packageName: receipts[0].manifest.npmPackage.name, tarball: report[0].filename, integrity: report[0].integrity, files: report[0].files.map((entry: { path: string }) => entry.path).sort() }));
 } finally {
   if (process.env.CHENGFENG_VIDEOCUT_KEEP_CROSS_REPO_FIXTURE !== "1") await rm(temporaryRoot, { recursive: true, force: true });
   else console.error(`cross-repo fixture retained at ${temporaryRoot}`);

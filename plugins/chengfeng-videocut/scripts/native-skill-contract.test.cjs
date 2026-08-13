@@ -75,6 +75,10 @@ assert.equal(runtimeRequirements.registry, "https://registry.npmjs.org");
 assert.equal(runtimeRequirements.requiredDistributionMode, "release-ready");
 assert.equal(runtimeRequirements.requiredLicenseStatus, "VERIFIED");
 assert.equal(runtimeRequirements.minimumRuntimeVersion, "0.5.4", "Runtime without atomic ingest and paginated playback must not pass");
+assert.deepEqual(runtimeRequirements.runtimeContract, {
+  snapshot: "runtime-contract.snapshot.json",
+  sha256: "95e1cf67cab2dd1f7204796f7ef29a4bd7fd2a39c3ad3d45713887e03fea93fc",
+}, "Plugin requirements must bind the exported Runtime contract snapshot");
 assert.equal(runtimeRequirements.capabilities.projectIngestVersion, 1, "atomic project ingest must be an exact Runtime capability");
 assert.equal(runtimeRequirements.capabilities.transcriptPlaybackPagingVersion, 1, "paginated transcript playback must be an exact Runtime capability");
 for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) {

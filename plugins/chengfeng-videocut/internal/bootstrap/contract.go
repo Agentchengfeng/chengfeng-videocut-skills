@@ -20,6 +20,7 @@ type Contract struct {
 	Product               string                    `json:"product"`
 	RuntimeVersion        string                    `json:"runtimeVersion"`
 	MinimumRuntimeVersion string                    `json:"minimumRuntimeVersion"`
+	RuntimeContract       RuntimeContractReference  `json:"runtimeContract"`
 	Registry              string                    `json:"registry"`
 	DistributionMode      string                    `json:"requiredDistributionMode"`
 	LicenseStatus         string                    `json:"requiredLicenseStatus"`
@@ -27,6 +28,11 @@ type Contract struct {
 	Platforms             map[string]PlatformAssets `json:"platforms"`
 	StudioCapabilities    map[string]any            `json:"studioCapabilities"`
 	Capabilities          map[string]any            `json:"capabilities"`
+}
+
+type RuntimeContractReference struct {
+	Snapshot string `json:"snapshot"`
+	SHA256   string `json:"sha256"`
 }
 
 type PlatformAssets struct {
@@ -73,6 +79,9 @@ func LoadContract() (Contract, error) {
 	}
 	if c.SchemaVersion != 4 || c.Product == "" || !exactVersionPattern.MatchString(c.RuntimeVersion) || c.MinimumRuntimeVersion == "" || c.Registry == "" || c.DistributionMode == "" || c.LicenseStatus == "" || c.DefaultTargetRoot == "" || len(c.Platforms) == 0 {
 		return c, fmt.Errorf("embedded runtime requirements are incomplete")
+	}
+	if !safeSnapshotPath(c.RuntimeContract.Snapshot) || !validSHA256(c.RuntimeContract.SHA256) {
+		return c, fmt.Errorf("embedded Runtime contract snapshot reference is invalid")
 	}
 	if !strings.HasPrefix(c.Registry, "https://") || strings.HasSuffix(c.Registry, "/") {
 		return c, fmt.Errorf("embedded npm registry must be an HTTPS origin without a trailing slash")
@@ -194,6 +203,14 @@ func safePackagePath(value string) bool {
 	}
 	clean := filepath.ToSlash(filepath.Clean(value))
 	return clean == value && clean != "." && clean != ".." && !strings.HasPrefix(clean, "../") && strings.HasPrefix(clean, "package/")
+}
+
+func safeSnapshotPath(value string) bool {
+	if value == "" || strings.Contains(value, "\\") || strings.HasPrefix(value, "/") {
+		return false
+	}
+	clean := filepath.ToSlash(filepath.Clean(value))
+	return clean == value && clean != "." && clean != ".." && !strings.Contains(clean, "/") && strings.HasSuffix(clean, ".json")
 }
 
 func launcherPath(c Contract) (string, error) {
