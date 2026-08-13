@@ -8,6 +8,15 @@ const { spawnSync } = require("node:child_process");
 const root = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(root, "..", "..");
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+const pluginManifest = JSON.parse(fs.readFileSync(path.join(root, ".codex-plugin", "plugin.json"), "utf8"));
+const localMarker = JSON.parse(fs.readFileSync(path.join(root, ".codex-plugin", "update-provenance.json"), "utf8"));
+
+assert.equal(localMarker.name, pluginManifest.name, "local marker name must match plugin.json");
+assert.equal(localMarker.version, pluginManifest.version, "local marker version must match plugin.json");
+assert.equal(localMarker.localDevelopment, true, "local marker must identify local development");
+assert.equal(localMarker.releaseReady, false, "local marker must not identify a release-ready build");
+assert.equal(Object.prototype.hasOwnProperty.call(localMarker, "immutableRef"), false, "local marker must not contain immutableRef");
+assert.equal(Object.prototype.hasOwnProperty.call(localMarker, "publisherChecksum"), false, "local marker must not contain publisherChecksum");
 
 function runHelper(channel) {
   const result = spawnSync(process.execPath, ["scripts/native-mcp-ldflags.cjs", channel], {
@@ -42,6 +51,7 @@ assert.match(windowsWorkflow, /verify-native-release-signing\.sh[\s\S]*CHENGFENG
 
 console.log(JSON.stringify({
   nativeBuildContract: true,
+  localProvenanceContract: true,
   sharedLdflags: true,
   windowsExactComparePreserved: true,
   releaseSigningGatesPreserved: true,
