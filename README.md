@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/agentchengfeng-chengfeng-videocut-skills-badge.png)](https://mseep.ai/app/agentchengfeng-chengfeng-videocut-skills)
+
 # chengfeng-videocut
 
 给 Codex 用的中文口播剪辑 Marketplace 插件。
