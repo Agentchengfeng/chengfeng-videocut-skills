@@ -118,7 +118,7 @@ Product open 返回项目 URL
 ## 当前 Runtime 兼容门禁
 
 - 低于 0.5.9 的 Runtime 不具备本 Plugin 发布所绑定的完整受管工具与当前 EDL / Studio compatibility contract，必须被版本门禁拒绝。
-- Runtime `0.5.9` Windows GitHub Release 安装包必须先于 Plugin `0.11.7-beta.1` 激活；该包内嵌 Runtime、Bun、FFmpeg 与 FFprobe。精确 release tag、资产名和 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
+- Runtime `0.5.9` Windows GitHub Release 安装包必须先于 Plugin `0.11.7-beta.2` 激活；该包内嵌 Runtime、Bun、FFmpeg 与 FFprobe。精确 release tag、资产名和 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
 - `v0.5.9` 必须提供正式原视频云端转录命令；缺少时以 `missing_cloud_transcription_adapter` 停止，禁止回退本地 ASR。
 - `v0.5.9` 必须提供可用 renderer manager；它仅在用户确认的实际 export 中确保固定锁定的
   Headless Shell，且新版 Skill 不得把旧 renderer 或系统浏览器重新打包、扫描或回退。
@@ -181,7 +181,7 @@ GitHub Release 预发布资产
 隔离环境首次安装 + doctor + Studio capability 验收
       |
       v
-Plugin 0.11.7-beta.1 内容提交
+Plugin 0.11.7-beta.2 内容提交
       |
       +------------------------------> contentRevision A
       |

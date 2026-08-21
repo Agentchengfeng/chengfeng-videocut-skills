@@ -171,6 +171,22 @@ func TestWindowsCommandLineQuotesSpecialArguments(t *testing.T) {
 	}
 }
 
+func TestRuntimeInstallerArgsOnlyAcknowledgeBoundWindowsPublicBeta(t *testing.T) {
+	base := InstallPlan{TargetRoot: `C:\\Users\\test\\.chengfeng-videocut`, Platform: "windows-amd64", DistributionMode: "public-beta", LicenseStatus: "UNVERIFIED"}
+	if want := []string{"--target-root", base.TargetRoot, "--ensure-service", "--accept-public-beta", "--json"}; !reflect.DeepEqual(runtimeInstallerArgs(base), want) {
+		t.Fatalf("public beta installer args=%q, want %q", runtimeInstallerArgs(base), want)
+	}
+	base.LicenseStatus = "VERIFIED"
+	if got := runtimeInstallerArgs(base); strings.Contains(strings.Join(got, " "), "--accept-public-beta") {
+		t.Fatalf("verified release must not receive beta acknowledgement: %q", got)
+	}
+	base.LicenseStatus = "UNVERIFIED"
+	base.Platform = "darwin-arm64"
+	if got := runtimeInstallerArgs(base); strings.Contains(strings.Join(got, " "), "--accept-public-beta") {
+		t.Fatalf("non-Windows platform must not receive beta acknowledgement: %q", got)
+	}
+}
+
 func TestCommandOutputKeepsBoundedTail(t *testing.T) {
 	w := &cappedBuffer{}
 	input := strings.Repeat("x", maxCommandOutput+100) + "TAIL"

@@ -166,7 +166,7 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if err := os.Chmod(installerPath, 0o700); err != nil {
 		return nil, err
 	}
-	args := []string{"--target-root", plan.TargetRoot, "--ensure-service", "--json"}
+	args := runtimeInstallerArgs(plan)
 	runInstaller := installerCommandFunc(runInstallerCommand)
 	if testOptions != nil && testOptions.RunInstaller != nil {
 		runInstaller = testOptions.RunInstaller
@@ -215,7 +215,7 @@ func installRuntimeFromGitHubRelease(ctx context.Context, c Contract, plan Insta
 	if err := os.Chmod(installerPath, 0o700); err != nil {
 		return nil, err
 	}
-	args := []string{"--target-root", plan.TargetRoot, "--ensure-service", "--json"}
+	args := runtimeInstallerArgs(plan)
 	runInstaller := installerCommandFunc(runInstallerCommand)
 	if testOptions != nil && testOptions.RunInstaller != nil {
 		runInstaller = testOptions.RunInstaller
@@ -232,6 +232,17 @@ func installRuntimeFromGitHubRelease(ctx context.Context, c Contract, plan Insta
 		return nil, fmt.Errorf("installer exited successfully but runtime is not ready: %s", status.Reason)
 	}
 	return map[string]any{"ok": true, "plan": plan, "installer": result, "runtime": status}, nil
+}
+
+func runtimeInstallerArgs(plan InstallPlan) []string {
+	args := []string{"--target-root", plan.TargetRoot, "--ensure-service"}
+	// The compiled Runtime installer intentionally refuses the unverified Windows
+	// public beta unless this explicit acknowledgement is present. It is safe to
+	// derive only after approvalDigest has bound platform, distribution and license.
+	if plan.Platform == "windows-amd64" && plan.DistributionMode == "public-beta" && plan.LicenseStatus == "UNVERIFIED" {
+		args = append(args, "--accept-public-beta")
+	}
+	return append(args, "--json")
 }
 
 func downloadGitHubReleaseAsset(ctx context.Context, sourceURL, destination string, maxBytes int64) error {

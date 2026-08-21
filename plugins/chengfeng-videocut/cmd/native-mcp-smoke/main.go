@@ -19,7 +19,7 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	client := mcp.NewClient(&mcp.Implementation{Name: "chengfeng-native-smoke", Version: "0.11.7-beta.1"}, nil)
+	client := mcp.NewClient(&mcp.Implementation{Name: "chengfeng-native-smoke", Version: "0.11.7-beta.2"}, nil)
 	cmd := exec.Command(os.Args[1])
 	cmd.Stderr = os.Stderr
 	session, err := client.Connect(ctx, &mcp.CommandTransport{Command: cmd}, nil)
@@ -37,7 +37,7 @@ func main() {
 	if expectedServer == "" {
 		expectedServer = "chengfeng-videocut"
 	}
-	if init.ServerInfo == nil || init.ServerInfo.Name != expectedServer || init.ServerInfo.Version != "0.11.7-beta.1" {
+	if init.ServerInfo == nil || init.ServerInfo.Name != expectedServer || init.ServerInfo.Version != "0.11.7-beta.2" {
 		fatal(fmt.Errorf("unexpected server info: %#v", init.ServerInfo))
 	}
 	listed, err := session.ListTools(ctx, nil)

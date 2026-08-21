@@ -14,7 +14,7 @@ import (
 
 const TemplateURI = "ui://chengfeng-videocut/workflow-confirm-v1.html"
 
-var Version = "0.11.7-beta.1"
+var Version = "0.11.7-beta.2"
 
 // BuildChannel is set only by the dedicated local-development build script.
 // The default and every release build stay fail-closed on release readiness.

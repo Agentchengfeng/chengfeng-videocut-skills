@@ -1,6 +1,6 @@
 # chengfeng-videocut Codex Plugin
 
-> **Windows public beta:** this bundle is `chengfeng-videocut@0.11.7-beta.1`.
+> **Windows public beta:** this bundle is `chengfeng-videocut@0.11.7-beta.2`.
 > It requires Runtime `0.5.9` and accepts only a healthy, Product-managed
 > `public-beta` Runtime from the exact GitHub Release Asset API endpoint and
 > SHA-256 named in `runtime-requirements.json`. It is not a signed macOS release.
@@ -53,6 +53,8 @@ compatibility contract `0.5.9`；MCP 以提交在包内的 macOS Universal 2 / W
 确认的 `approvalDigest` 同时绑定 GitHub repository、release tag、官方 Asset API URL、平台安装包名称、SHA-256、
 平台、目标目录、分发策略与写入影响。`runtime_install` 会重新计算并精确比较，由原生 MCP
 下载已构建安装包、复核 SHA-256，最后才在本地执行安装器；不要求系统 npm/Node，也不执行 lifecycle scripts。
+Windows x64 的 `public-beta / UNVERIFIED` 包只有在上述已绑定确认通过后才附带安装器
+`--accept-public-beta`；其他平台、已验证发行或漂移的分发策略都不会得到该参数。
 包内只包含 Runtime、受管 Bun、FFmpeg 与 FFprobe；浏览器引擎不属于安装包。只有用户确认实际
 export 后，Runtime 才按固定 platform/build/SHA-256 获取 Headless Shell、校验后缓存复用，绝不
 扫描或回退系统 Chrome/Chromium/Edge。GitHub Release 安装包的 SHA-256 尚未填入 requirements 时安装明确
