@@ -1,11 +1,11 @@
 {
-  "name": "chengfeng-videocut-local-development",
+  "name": "chengfeng-videocut",
   "interface": {
-    "displayName": "chengfeng-videocut local development"
+    "displayName": "chengfeng-videocut Windows Beta"
   },
   "plugins": [
     {
-      "name": "chengfeng-videocut-local-development",
+      "name": "chengfeng-videocut",
       "source": {
         "source": "local",
         "path": "./plugins/chengfeng-videocut"

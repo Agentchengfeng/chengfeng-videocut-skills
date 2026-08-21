@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -44,8 +45,8 @@ func main() {
 	defer os.RemoveAll(isolatedHome)
 
 	version := strings.TrimSpace(run(codexPath, isolatedHome, "--version"))
-	if version != "codex-cli 0.146.0" {
-		fatal(fmt.Errorf("Codex version=%q, want codex-cli 0.146.0", version))
+	if !supportsPluginMarketplace(version) {
+		fatal(fmt.Errorf("Codex version=%q, want codex-cli 0.146.0 or newer", version))
 	}
 	var added struct {
 		MarketplaceName string `json:"marketplaceName"`
@@ -86,6 +87,21 @@ func main() {
 		fatal(fmt.Errorf("unexpected installed fields: %#v", active))
 	}
 	fmt.Printf("PASS codex=%s isolatedHome=true candidate=%s installed=%v enabled=%v\n", version, active.Version, active.Installed, active.Enabled)
+}
+
+func supportsPluginMarketplace(version string) bool {
+	fields := strings.Fields(version)
+	if len(fields) != 2 || fields[0] != "codex-cli" {
+		return false
+	}
+	parts := strings.Split(fields[1], ".")
+	if len(parts) != 3 {
+		return false
+	}
+	major, firstErr := strconv.Atoi(parts[0])
+	minor, secondErr := strconv.Atoi(parts[1])
+	_, thirdErr := strconv.Atoi(parts[2])
+	return firstErr == nil && secondErr == nil && thirdErr == nil && (major > 0 || (major == 0 && minor >= 146))
 }
 
 func pathWithin(child, parent string) bool {
