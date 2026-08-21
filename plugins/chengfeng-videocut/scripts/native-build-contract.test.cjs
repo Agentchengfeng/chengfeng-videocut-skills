@@ -9,15 +9,14 @@ const root = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(root, "..", "..");
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const pluginManifest = JSON.parse(fs.readFileSync(path.join(root, ".codex-plugin", "plugin.json"), "utf8"));
-const publicBetaMarker = JSON.parse(fs.readFileSync(path.join(root, ".codex-plugin", "update-provenance.json"), "utf8"));
+const provenance = JSON.parse(fs.readFileSync(path.join(root, ".codex-plugin", "update-provenance.json"), "utf8"));
 
-assert.equal(publicBetaMarker.name, pluginManifest.name, "public beta marker name must match plugin.json");
-assert.equal(publicBetaMarker.version, pluginManifest.version, "public beta marker version must match plugin.json");
-assert.equal(publicBetaMarker.publicBeta, true, "marker must identify a public beta build");
-assert.equal(publicBetaMarker.releaseReady, false, "public beta must not identify as a release-ready build");
-assert.equal(Object.prototype.hasOwnProperty.call(publicBetaMarker, "localDevelopment"), false, "public beta must not be labelled as local development");
-assert.equal(Object.prototype.hasOwnProperty.call(publicBetaMarker, "immutableRef"), false, "pre-publication marker must not claim a nonexistent immutableRef");
-assert.equal(Object.prototype.hasOwnProperty.call(publicBetaMarker, "publisherChecksum"), false, "pre-publication marker must not claim a nonexistent publisher checksum");
+assert.equal(provenance.name, pluginManifest.name, "provenance name must match plugin.json");
+assert.equal(provenance.version, pluginManifest.version, "provenance version must match plugin.json");
+assert.match(provenance.immutableRef, /^[a-f0-9]{40}$/, "published Plugin must bind an immutable Git revision");
+assert.match(provenance.publisherChecksum, /^[a-f0-9]{64}$/, "published Plugin must bind its content checksum");
+assert.equal(Object.prototype.hasOwnProperty.call(provenance, "localDevelopment"), false, "public beta must not be labelled as local development");
+assert.equal(Object.prototype.hasOwnProperty.call(provenance, "publicBeta"), false, "the version suffix, not a mutable flag, identifies this beta");
 
 function runHelper(channel) {
   const result = spawnSync(process.execPath, ["scripts/native-mcp-ldflags.cjs", channel], {
@@ -52,7 +51,7 @@ assert.match(windowsWorkflow, /verify-native-release-signing\.sh[\s\S]*CHENGFENG
 
 console.log(JSON.stringify({
   nativeBuildContract: true,
-  publicBetaProvenanceContract: true,
+  publishedProvenanceContract: true,
   sharedLdflags: true,
   windowsExactComparePreserved: true,
   releaseSigningGatesPreserved: true,
