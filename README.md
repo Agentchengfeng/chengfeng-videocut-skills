@@ -26,21 +26,32 @@ Plugin 根名  -> 安装与 UI 群组名，不是同名 Skill
 
 ## 安装
 
-一行命令装插件（挂市场 + materialize 精确快照 + 安装，`&&` 串联，前一步成功才继续）。
-Product Runtime / Studio 不需要单独寻找安装包：第一次让 Agent 真正干活时，原生 MCP
+**公开入口会收敛成一条 `npx` 命令，和 Remotion / HyperFrames 一样。** `npx` 不是
+Windows 安装器；它只是让 Codex 取得并执行版本化的安装引导。第一次让 Agent 真正干活时，Product Runtime / Studio 不需要单独寻找安装包：原生 MCP
 先显示固定 npm Registry、平台包精确版本、integrity、目标与影响；用户确认同一
-`approvalDigest` 后才由原生 MCP 下载、安全解包、校验并执行包内安装器。用户不需要 npm/Node。
+`approvalDigest` 后才由原生 MCP 下载、安全解包、校验并执行包内安装器。剪辑 Runtime 不依赖系统 Node；**但首次使用 npx 安装 Plugin 需要 Node LTS**，由 Codex 按下列安装提示准备，而不是让用户手工找安装包。
 每个平台包还带固定法律材料与 SPDX 2.3 SBOM，均由 manifest 的 SHA-256 收据绑定并在安装前复核。
 
-**系统要求：macOS**（Apple Silicon / Intel）**或 Windows 10/11**。
-Windows 支持自 Runtime v0.4.2 起正式可用（真机验收：安装、常驻服务、崩溃自愈、
-重启自启、建档、导出成片全链通过）。虚拟机里试用 Windows 11 24H2+ 需先关 VBS：
-`bcdedit /set {default} hypervisorlaunchtype off`（物理机不受影响）。
+**当前测试范围是 Windows x64，以下 npm 包尚未发布。** 把下面这段发给 Codex 即可；它会先检查 Node，缺失时用 Windows 的 WinGet 安装官方 Node LTS，再用 `npx` 安装 Plugin。PowerShell 可能因执行策略拒绝 `npx.ps1`，所以 Windows 必须让 Codex 使用 `npx.cmd` / `cmd.exe`，不改用户的执行策略。
+
+```text
+请安装 chengfeng-videocut。
+先只读检查 Node 和 npx；Windows 请通过 cmd.exe 检查 node、npm.cmd、npx.cmd。
+若 Node 缺失，使用 winget install --id OpenJS.NodeJS.LTS --exact --scope user，接受包与源协议；安装后重新检查版本。
+Node 就绪后，用 npx.cmd --yes @chengfeng/videocut-skills install 安装 Codex Plugin，并读回 marketplace 和 plugin 的 installed/enabled 状态。
+不要要求我手工安装 Bun、FFmpeg、Chrome 或 Runtime；不要更改 PowerShell execution policy。
+```
+
+发布后，在 Windows 命令行等价为：
+
+```cmd
+npx.cmd --yes @chengfeng/videocut-skills install
+```
 
 正式新装机唯一入口是 Plugin `runtime_install`。单个 npm Runtime 平台包内嵌 Runtime、受管 Bun、
 FFmpeg 与 FFprobe，并装到 `~/.chengfeng-videocut`。Headless Shell 不属于安装期：只有用户确认
-实际 export 后，Product Runtime 才按固定版本和 SHA-256 获取、校验并缓存它。六个用户 Skill 都不要求系统
-Node、Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入 `PATH`。
+实际 export 后，Product Runtime 才按固定版本和 SHA-256 获取、校验并缓存它。六个用户 Skill 不要求系统
+Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入 `PATH`；Node 仅属于首次 `npx` 安装入口，不能作为 Runtime、导出或渲染的隐式依赖。
 历史 Desktop / 既有安装仅在已经指向同一 Product 受管根时兼容复用。
 
 | 依赖 | 用途 | 要求 |

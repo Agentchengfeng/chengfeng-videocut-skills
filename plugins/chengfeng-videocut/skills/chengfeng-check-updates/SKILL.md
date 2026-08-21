@@ -14,8 +14,10 @@ Skill 每次启动只走原生 MCP 的 Runtime 门禁，**不会把 Plugin 联�
 
 ## 一、检查 Plugin 版本
 
-只使用 Codex 0.146+ 的原生 Plugin 管理能力。不运行包内 Node 更新器，
-不要求用户安装 Node、Git 或其他系统 CLI。
+Plugin 已加载后的更新只使用 Codex 0.146+ 的原生 Plugin 管理能力，不运行包内 Node
+更新器，也不要求用户安装 Git 或其他系统 CLI。首次 NPM bootstrap 是例外：它需要 Node
+作为 `npx` 的公开启动器；Windows 缺失时由 Codex 用 WinGet 安装当前用户的 Node LTS，
+随后必须使用 `npm.cmd` / `npx.cmd`，不得要求用户改 PowerShell execution policy。
 
 ### 1. 读当前状态
 
@@ -96,9 +98,11 @@ Runtime 安装后再调用一次 `runtime_status`，必须读回 `ready=true`。
 
 ## 机器依赖边界
 
-用户只安装一个 `chengfeng-videocut` Codex Plugin。Plugin 包内预构建的原生 MCP
-自动识别平台，并把 npm Registry 当作内部 Runtime 依赖仓库；用户不运行 `npm install`，
-也不需要安装 npm/Node。支持的 macOS 或 Windows 10/11 上流程是：
+用户不手工安装媒体依赖。首次通过 `npx @chengfeng/videocut-skills` 安装 Plugin 时，
+Codex 需要 Node LTS；这只用于下载和启动 npm 包，不能成为 Runtime 的隐式依赖。Plugin
+包内预构建的原生 MCP 自动识别平台，并把 npm Registry 当作内部 Runtime 依赖仓库；
+用户不运行 `npm install`，也不需要安装 Bun、FFmpeg、FFprobe 或 Chrome。支持的 macOS
+或 Windows 10/11 上 Runtime 流程是：
 
 ```text
 Plugin runtime_install
@@ -113,8 +117,8 @@ Plugin runtime_install
   -> 后续实际导出复用缓存；绝不搜索、借用或回退系统 Chrome / Chromium
 ```
 
-用户流程不要求系统 Node、Bun、Git、`gh`、Chrome、Chromium、FFmpeg 或
-FFprobe，也不要求它们进入 `PATH`。`runtime_status`、doctor、安装和
+除首次 npx bootstrap 之外，用户流程不要求系统 Node、Bun、Git、`gh`、Chrome、Chromium、
+FFmpeg 或 FFprobe，也不要求它们进入 `PATH`。`runtime_status`、doctor、安装和
 `--dry-run` 均不下载 Headless Shell；它只在实际导出渲染时由 Product 取得。
 媒体能力缺失按 Runtime unhealthy/incompatible 停止；Headless Shell 的下载、
 校验或缓存失败则实际导出 fail-closed。两种情况都不把依赖转嫁给用户，也不让

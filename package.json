@@ -1,8 +1,7 @@
 {
-  "name": "chengfeng-videocut-skills-bootstrap",
-  "version": "0.5.1",
-  "private": true,
-  "description": "Thin GitHub npx bootstrap for the chengfeng-videocut Codex Plugin.",
+  "name": "@chengfeng/videocut-skills",
+  "version": "0.5.2",
+  "description": "Thin npm npx bootstrap for the chengfeng-videocut Codex Plugin.",
   "license": "Apache-2.0",
   "bin": {
     "chengfeng-videocut-skills": "bin/install.cjs"
@@ -18,5 +17,8 @@
   ],
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -10,7 +10,7 @@ const MANIFEST_PATH = path.join(ROOT, 'installer-manifest.json');
 const MARKETPLACE_INSTALL_METADATA = '.codex-marketplace-install.json';
 const HEX40 = /^[0-9a-f]{40}$/i;
 const EXPECTED = {
-  installerId: 'chengfeng-videocut-github-npx-bootstrap-v1',
+  installerId: 'chengfeng-videocut-npm-bootstrap-v2',
   source: 'Agentchengfeng/chengfeng-videocut-skills',
   marketplace: 'chengfeng-videocut',
   plugin: 'chengfeng-videocut'
@@ -521,9 +521,9 @@ function usage() {
     'chengfeng-videocut-skills bootstrap',
     '',
     'Usage:',
-    '  npx -y github:Agentchengfeng/chengfeng-videocut-skills#<published-40hex-bootstrap-commit> install',
-    '  npx -y github:Agentchengfeng/chengfeng-videocut-skills#<published-40hex-bootstrap-commit> doctor',
-    '  npx -y github:Agentchengfeng/chengfeng-videocut-skills#<published-40hex-bootstrap-commit> install --dry-run',
+    '  npx --yes @chengfeng/videocut-skills install',
+    '  npx --yes @chengfeng/videocut-skills doctor',
+    '  npx --yes @chengfeng/videocut-skills install --dry-run',
     '',
     'This bootstrap adds and materializes the Codex marketplace at the manifest-pinned exact 40-hex commit, then adds the plugin.',
     'Immediately after marketplace add and before upgrade, it checks for an orphan plugin that Codex may reveal only while the marketplace exists; such state is preserved and refused.',

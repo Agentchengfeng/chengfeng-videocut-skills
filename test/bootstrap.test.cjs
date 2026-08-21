@@ -37,7 +37,13 @@ function gitAtRoot(args) {
 }
 
 test('checked-in bootstrap remains pinned to released 0.10.8 while the current candidate is unreleased', () => {
+  const bootstrapPackage = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  assert.equal(bootstrapPackage.name, '@chengfeng/videocut-skills');
+  assert.equal(bootstrapPackage.private, undefined);
+  assert.deepEqual(bootstrapPackage.bin, { 'chengfeng-videocut-skills': 'bin/install.cjs' });
+  assert.deepEqual(bootstrapPackage.publishConfig, { access: 'public' });
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'installer-manifest.json'), 'utf8'));
+  assert.equal(manifest.installerId, 'chengfeng-videocut-npm-bootstrap-v2');
   assert.equal(manifest.pluginRef, RELEASE_SNAPSHOT_REF);
   assert.equal(manifest.marketplaceRef, RELEASE_SNAPSHOT_REF);
 
