@@ -22,6 +22,10 @@ type Contract struct {
 	MinimumRuntimeVersion string                    `json:"minimumRuntimeVersion"`
 	RuntimeContract       RuntimeContractReference  `json:"runtimeContract"`
 	RuntimeSnapshot       RuntimeContractSnapshot   `json:"-"`
+	Delivery              string                    `json:"delivery"`
+	Repository            string                    `json:"repository"`
+	ReleaseTag            string                    `json:"releaseTag"`
+	ReleaseVersion        string                    `json:"releaseVersion"`
 	Registry              string                    `json:"registry"`
 	DistributionMode      string                    `json:"requiredDistributionMode"`
 	LicenseStatus         string                    `json:"requiredLicenseStatus"`
@@ -67,40 +71,53 @@ type RuntimeCLICommandFeature struct {
 }
 
 type PlatformAssets struct {
-	NPMPackage        string  `json:"npmPackage"`
-	NPMPackageVersion string  `json:"npmPackageVersion"`
-	DistIntegrity     *string `json:"distIntegrity"`
-	TarballMaxBytes   int64   `json:"tarballMaxBytes"`
-	PackageManifest   string  `json:"packageManifest"`
-	InstallerPath     string  `json:"installerPath"`
-	InstallerSHA256   *string `json:"installerSHA256"`
-	RuntimeLauncher   string  `json:"runtimeLauncher"`
+	RuntimePackageAsset    string  `json:"runtimePackageAsset"`
+	RuntimePackageSHA256   *string `json:"runtimePackageSHA256"`
+	RuntimePackageMaxBytes int64   `json:"runtimePackageMaxBytes"`
+	NPMPackage             string  `json:"npmPackage"`
+	NPMPackageVersion      string  `json:"npmPackageVersion"`
+	DistIntegrity          *string `json:"distIntegrity"`
+	TarballMaxBytes        int64   `json:"tarballMaxBytes"`
+	PackageManifest        string  `json:"packageManifest"`
+	InstallerPath          string  `json:"installerPath"`
+	InstallerSHA256        *string `json:"installerSHA256"`
+	RuntimeLauncher        string  `json:"runtimeLauncher"`
 }
 
 type InstallPlan struct {
-	Product           string `json:"product"`
-	Action            string `json:"action"`
-	RuntimeVersion    string `json:"runtimeVersion"`
-	Registry          string `json:"registry"`
-	NPMPackage        string `json:"npmPackage"`
-	NPMPackageVersion string `json:"npmPackageVersion"`
-	DistIntegrity     string `json:"distIntegrity,omitempty"`
-	Platform          string `json:"platform"`
-	TarballMaxBytes   int64  `json:"tarballMaxBytes"`
-	PackageManifest   string `json:"packageManifest"`
-	InstallerPath     string `json:"installerPath"`
-	InstallerSHA256   string `json:"installerSHA256,omitempty"`
-	DistributionMode  string `json:"distributionMode"`
-	LicenseStatus     string `json:"licenseStatus"`
-	TargetRoot        string `json:"targetRoot"`
-	Impact            string `json:"impact"`
-	ApprovalDigest    string `json:"approvalDigest,omitempty"`
+	Product                string `json:"product"`
+	Action                 string `json:"action"`
+	RuntimeVersion         string `json:"runtimeVersion"`
+	Delivery               string `json:"delivery"`
+	Repository             string `json:"repository,omitempty"`
+	ReleaseTag             string `json:"releaseTag,omitempty"`
+	ReleaseVersion         string `json:"releaseVersion,omitempty"`
+	RuntimePackageAsset    string `json:"runtimePackageAsset,omitempty"`
+	RuntimePackageSHA256   string `json:"runtimePackageSHA256,omitempty"`
+	RuntimePackageMaxBytes int64  `json:"runtimePackageMaxBytes,omitempty"`
+	Registry               string `json:"registry"`
+	NPMPackage             string `json:"npmPackage"`
+	NPMPackageVersion      string `json:"npmPackageVersion"`
+	DistIntegrity          string `json:"distIntegrity,omitempty"`
+	Platform               string `json:"platform"`
+	TarballMaxBytes        int64  `json:"tarballMaxBytes"`
+	PackageManifest        string `json:"packageManifest"`
+	InstallerPath          string `json:"installerPath"`
+	InstallerSHA256        string `json:"installerSHA256,omitempty"`
+	DistributionMode       string `json:"distributionMode"`
+	LicenseStatus          string `json:"licenseStatus"`
+	TargetRoot             string `json:"targetRoot"`
+	Impact                 string `json:"impact"`
+	ApprovalDigest         string `json:"approvalDigest,omitempty"`
 }
 
 var npmPackagePattern = regexp.MustCompile(`^@[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$`)
+var assetNamePattern = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
 var exactVersionPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$`)
 var sriSHA512Pattern = regexp.MustCompile(`^sha512-[A-Za-z0-9+/]{86}==$`)
 var gitRevisionPattern = regexp.MustCompile(`^[a-f0-9]{40}$`)
+var githubRepositoryPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
+var releaseTagPattern = regexp.MustCompile(`^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$`)
 
 const runtimeContractRepository = "https://github.com/Agentchengfeng/chengfeng-videocut.git"
 
@@ -111,7 +128,7 @@ func LoadContract() (Contract, error) {
 	if err := decoder.Decode(&c); err != nil {
 		return c, fmt.Errorf("decode embedded runtime requirements: %w", err)
 	}
-	if c.SchemaVersion != 4 || c.Product == "" || !exactVersionPattern.MatchString(c.RuntimeVersion) || c.MinimumRuntimeVersion == "" || c.Registry == "" || c.DistributionMode == "" || c.LicenseStatus == "" || c.DefaultTargetRoot == "" || len(c.Platforms) == 0 {
+	if c.SchemaVersion != 5 || c.Product == "" || !exactVersionPattern.MatchString(c.RuntimeVersion) || c.MinimumRuntimeVersion == "" || c.Delivery != "github-release" || !githubRepositoryPattern.MatchString(c.Repository) || !releaseTagPattern.MatchString(c.ReleaseTag) || !exactVersionPattern.MatchString(c.ReleaseVersion) || c.DistributionMode == "" || c.LicenseStatus == "" || c.DefaultTargetRoot == "" || len(c.Platforms) == 0 {
 		return c, fmt.Errorf("embedded runtime requirements are incomplete")
 	}
 	if !safeSnapshotPath(c.RuntimeContract.Snapshot) || !validSHA256(c.RuntimeContract.SHA256) || c.RuntimeContract.Repository != runtimeContractRepository || !gitRevisionPattern.MatchString(c.RuntimeContract.Revision) {
@@ -121,18 +138,12 @@ func LoadContract() (Contract, error) {
 	if err != nil {
 		return c, err
 	}
-	if !strings.HasPrefix(c.Registry, "https://") || strings.HasSuffix(c.Registry, "/") {
-		return c, fmt.Errorf("embedded npm registry must be an HTTPS origin without a trailing slash")
-	}
 	for key, assets := range c.Platforms {
-		if !npmPackagePattern.MatchString(assets.NPMPackage) || !exactVersionPattern.MatchString(assets.NPMPackageVersion) || assets.NPMPackageVersion != c.RuntimeVersion || assets.TarballMaxBytes <= 0 || assets.TarballMaxBytes > runtimePackageDownloadLimit || !safePackagePath(assets.PackageManifest) || !safePackagePath(assets.InstallerPath) || assets.PackageManifest != "package/chengfeng-videocut-runtime-package.json" || !strings.HasPrefix(assets.InstallerPath, "package/payload/") || assets.RuntimeLauncher == "" || filepath.IsAbs(assets.RuntimeLauncher) || strings.Contains(strings.ReplaceAll(assets.RuntimeLauncher, "\\", "/"), "../") {
+		if !assetNamePattern.MatchString(assets.RuntimePackageAsset) || assets.RuntimePackageMaxBytes <= 0 || assets.RuntimePackageMaxBytes > runtimePackageDownloadLimit || assets.RuntimeLauncher == "" || filepath.IsAbs(assets.RuntimeLauncher) || strings.Contains(strings.ReplaceAll(assets.RuntimeLauncher, "\\", "/"), "../") {
 			return c, fmt.Errorf("embedded platform contract %s is invalid", key)
 		}
-		if assets.DistIntegrity != nil && !validSHA512SRI(strings.TrimSpace(*assets.DistIntegrity)) {
-			return c, fmt.Errorf("embedded npm integrity %s is invalid", key)
-		}
-		if assets.InstallerSHA256 != nil && !validSHA256(strings.TrimSpace(*assets.InstallerSHA256)) {
-			return c, fmt.Errorf("embedded installer digest %s is invalid", key)
+		if assets.RuntimePackageSHA256 != nil && !validSHA256(strings.TrimSpace(*assets.RuntimePackageSHA256)) {
+			return c, fmt.Errorf("embedded release asset digest %s is invalid", key)
 		}
 	}
 	c.RuntimeSnapshot = snapshot
@@ -335,8 +346,11 @@ func BuildInstallPlan(c Contract) (InstallPlan, error) {
 }
 
 type installTestOptions struct {
-	RunInstaller      installerCommandFunc
-	AllowLocalFixture bool
+	RunInstaller         installerCommandFunc
+	AllowLocalFixture    bool
+	RuntimePackageFile   string
+	RuntimePackageSHA256 string
+	AllowNPMFixture      bool
 }
 
 func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan, error) {
@@ -348,6 +362,29 @@ func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan,
 	root, err := runtimeRoot(c)
 	if err != nil {
 		return InstallPlan{}, err
+	}
+	if c.Delivery == "github-release" {
+		digest := ""
+		if assets.RuntimePackageSHA256 != nil {
+			digest = strings.ToLower(strings.TrimSpace(*assets.RuntimePackageSHA256))
+		}
+		if testOptions != nil && testOptions.RuntimePackageSHA256 != "" {
+			digest = strings.ToLower(strings.TrimSpace(testOptions.RuntimePackageSHA256))
+		}
+		plan := InstallPlan{
+			Product: c.Product, Action: "runtime_install", RuntimeVersion: c.RuntimeVersion,
+			Delivery: c.Delivery, Repository: c.Repository, ReleaseTag: c.ReleaseTag, ReleaseVersion: c.ReleaseVersion,
+			Platform: key, RuntimePackageAsset: assets.RuntimePackageAsset, RuntimePackageSHA256: digest,
+			RuntimePackageMaxBytes: assets.RuntimePackageMaxBytes, DistributionMode: c.DistributionMode,
+			LicenseStatus: c.LicenseStatus, TargetRoot: root,
+			Impact: "从固定 GitHub Release 下载一个精确版本且锁定 SHA-256 的平台 Product Runtime 安装包；安装器离线安装 Runtime、受管 Bun、FFmpeg 和 FFprobe。Headless Shell 仍只在用户确认实际导出时由 Runtime 按固定版本和摘要获取并缓存。写入 Product Runtime 目录，可能替换 current 版本。",
+		}
+		if !validSHA256(plan.RuntimePackageSHA256) {
+			return plan, nil
+		}
+		var planErr error
+		plan.ApprovalDigest, planErr = approvalDigest(plan)
+		return plan, planErr
 	}
 	integrity := ""
 	if assets.DistIntegrity != nil {

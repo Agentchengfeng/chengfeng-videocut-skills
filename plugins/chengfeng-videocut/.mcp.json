@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "chengfeng-videocut-local-development": {
+    "chengfeng-videocut": {
       "command": "./bin/chengfeng-videocut-mcp",
       "args": [],
       "cwd": ".",

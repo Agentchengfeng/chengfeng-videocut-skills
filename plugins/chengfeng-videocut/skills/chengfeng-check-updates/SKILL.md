@@ -14,10 +14,8 @@ Skill 每次启动只走原生 MCP 的 Runtime 门禁，**不会把 Plugin 联�
 
 ## 一、检查 Plugin 版本
 
-Plugin 已加载后的更新只使用 Codex 0.146+ 的原生 Plugin 管理能力，不运行包内 Node
-更新器，也不要求用户安装 Git 或其他系统 CLI。首次 NPM bootstrap 是例外：它需要 Node
-作为 `npx` 的公开启动器；Windows 缺失时由 Codex 用 WinGet 安装当前用户的 Node LTS，
-随后必须使用 `npm.cmd` / `npx.cmd`，不得要求用户改 PowerShell execution policy。
+Plugin 的首次安装和后续更新都只使用 Codex 0.146+ 的原生 GitHub Marketplace 管理能力，
+不运行包内 Node 更新器，也不要求用户安装 Git、Node、npm、npx 或其他系统 CLI。
 
 ### 1. 读当前状态
 
@@ -98,16 +96,15 @@ Runtime 安装后再调用一次 `runtime_status`，必须读回 `ready=true`。
 
 ## 机器依赖边界
 
-用户不手工安装媒体依赖。首次通过 `npx @chengfeng/videocut-skills` 安装 Plugin 时，
-Codex 需要 Node LTS；这只用于下载和启动 npm 包，不能成为 Runtime 的隐式依赖。Plugin
-包内预构建的原生 MCP 自动识别平台，并把 npm Registry 当作内部 Runtime 依赖仓库；
-用户不运行 `npm install`，也不需要安装 Bun、FFmpeg、FFprobe 或 Chrome。支持的 macOS
-或 Windows 10/11 上 Runtime 流程是：
+用户不手工安装媒体依赖，也不需要 Node、npm 或 npx。Codex 从 GitHub Marketplace 安装
+Plugin；包内预构建的原生 MCP 自动识别平台，并把 GitHub Release 当作内部 Runtime
+发行库。用户不运行 `npm install`，也不需要安装 Bun、FFmpeg、FFprobe 或 Chrome。当前
+公测范围是 Windows x64；Runtime 流程是：
 
 ```text
 Plugin runtime_install
-  -> 从固定 npm Registry 下载 requirements 锁定名称、精确版本和 sha512 integrity 的一个平台 Runtime 包
-  -> 原生 MCP 安全解包并校验 package manifest、法律材料、SBOM 和 installer SHA-256
+  -> 从固定 GitHub Release 下载 requirements 锁定 tag、精确资产名和 SHA-256 的一个平台 Runtime 安装包
+  -> 原生 MCP 校验安装包 SHA-256，拒绝摘要不符或未锁定的下载
   -> 安装 Runtime 与受管媒体工具；不内嵌、下载或预检 Headless Shell
   -> Runtime 统一管理服务与媒体工具；Skill 只通过受管稳定启动器调用
 
@@ -117,8 +114,8 @@ Plugin runtime_install
   -> 后续实际导出复用缓存；绝不搜索、借用或回退系统 Chrome / Chromium
 ```
 
-除首次 npx bootstrap 之外，用户流程不要求系统 Node、Bun、Git、`gh`、Chrome、Chromium、
-FFmpeg 或 FFprobe，也不要求它们进入 `PATH`。`runtime_status`、doctor、安装和
+用户流程不要求系统 Node、npm、npx、Bun、Git、`gh`、Chrome、Chromium、FFmpeg 或
+FFprobe，也不要求它们进入 `PATH`。`runtime_status`、doctor、安装和
 `--dry-run` 均不下载 Headless Shell；它只在实际导出渲染时由 Product 取得。
 媒体能力缺失按 Runtime unhealthy/incompatible 停止；Headless Shell 的下载、
 校验或缓存失败则实际导出 fail-closed。两种情况都不把依赖转嫁给用户，也不让
@@ -136,7 +133,7 @@ FFmpeg 或 FFprobe，也不要求它们进入 `PATH`。`runtime_status`、doctor
   兼容验证工具，不属于用户更新流程。
 - Plugin 与 Runtime 版本相互独立；最低 Runtime 和 capability 合同只由
   `runtime-requirements.json` 控制。
-- requirements 中平台 Runtime 包的 `distIntegrity` 或 `installerSHA256` 为 `null` 时，安装卡只能暂停，
+- requirements 中平台 Runtime 安装包的 `runtimePackageSHA256` 为 `null` 时，安装卡只能暂停，
   `runtime_install` 必须 fail-closed。
 - 更新 Plugin 只改 Codex 的 Marketplace/Plugin 状态；Runtime 安装只改受管
   Runtime 根。两者都不得改项目、媒体、EDL 或 Studio 状态。

@@ -117,6 +117,9 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if err != nil {
 		return nil, err
 	}
+	if plan.Delivery == "github-release" {
+		return installRuntimeFromGitHubRelease(callCtx, c, plan, approval, testOptions)
+	}
 	if !validSHA512SRI(plan.DistIntegrity) || !validSHA256(plan.InstallerSHA256) || plan.ApprovalDigest == "" {
 		return nil, fmt.Errorf("Runtime %s npm package is not locked: dist.integrity or installer digest is unpublished; installation is unavailable", plan.RuntimeVersion)
 	}
@@ -180,6 +183,117 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 		return nil, fmt.Errorf("installer exited successfully but runtime is not ready: %s", status.Reason)
 	}
 	return map[string]any{"ok": true, "plan": plan, "packageManifest": manifest, "installer": result, "runtime": status}, nil
+}
+
+func installRuntimeFromGitHubRelease(ctx context.Context, c Contract, plan InstallPlan, approval string, testOptions *installTestOptions) (map[string]any, error) {
+	if !validSHA256(plan.RuntimePackageSHA256) || plan.ApprovalDigest == "" {
+		return nil, fmt.Errorf("Runtime %s GitHub Release asset is not locked: package SHA-256 is unpublished; installation is unavailable", plan.ReleaseVersion)
+	}
+	if !validSHA256(approval) || approval != plan.ApprovalDigest {
+		return nil, fmt.Errorf("approvalDigest does not match the current GitHub Release, platform, package digest, target, distribution policy, and impact")
+	}
+	temp, err := os.MkdirTemp("", "chengfeng-videocut-release-runtime-")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(temp)
+	installerPath := filepath.Join(temp, plan.RuntimePackageAsset)
+	if testOptions != nil && testOptions.RuntimePackageFile != "" {
+		if err := copyFile(testOptions.RuntimePackageFile, installerPath, 0o700); err != nil {
+			return nil, err
+		}
+	} else if err := downloadGitHubReleaseAsset(ctx, releaseURL(c, plan.RuntimePackageAsset), installerPath, plan.RuntimePackageMaxBytes); err != nil {
+		return nil, fmt.Errorf("download GitHub Release Runtime package: %w", err)
+	}
+	actual, err := fileSHA256(installerPath)
+	if err != nil {
+		return nil, err
+	}
+	if actual != plan.RuntimePackageSHA256 {
+		return nil, fmt.Errorf("GitHub Release Runtime package SHA-256 mismatch")
+	}
+	if err := os.Chmod(installerPath, 0o700); err != nil {
+		return nil, err
+	}
+	args := []string{"--target-root", plan.TargetRoot, "--ensure-service", "--json"}
+	runInstaller := installerCommandFunc(runInstallerCommand)
+	if testOptions != nil && testOptions.RunInstaller != nil {
+		runInstaller = testOptions.RunInstaller
+	}
+	result := runInstaller(ctx, installerPath, args, temp, runtimeInstallerTimeout)
+	if !result.OK {
+		return nil, fmt.Errorf("GitHub Release Runtime installer failed with exit %d: %s", result.ExitCode, strings.TrimSpace(result.Stderr))
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("runtime install call exceeded its bounded deadline before final readback: %w", err)
+	}
+	status := inspectRuntime(ctx, c)
+	if !status.Ready {
+		return nil, fmt.Errorf("installer exited successfully but runtime is not ready: %s", status.Reason)
+	}
+	return map[string]any{"ok": true, "plan": plan, "installer": result, "runtime": status}, nil
+}
+
+func releaseURL(c Contract, asset string) string {
+	return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", c.Repository, c.ReleaseTag, asset)
+}
+
+func downloadGitHubReleaseAsset(ctx context.Context, sourceURL, destination string, maxBytes int64) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sourceURL, nil)
+	if err != nil {
+		return err
+	}
+	client := &http.Client{
+		Timeout: 5 * time.Minute,
+		CheckRedirect: func(request *http.Request, _ []*http.Request) error {
+			if request.URL.Scheme != "https" || request.URL.User != nil {
+				return fmt.Errorf("GitHub Release redirect must remain an anonymous HTTPS URL")
+			}
+			return nil
+		},
+	}
+	response, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP status %s", response.Status)
+	}
+	file, err := os.OpenFile(destination, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
+	}
+	written, copyErr := io.Copy(file, io.LimitReader(response.Body, maxBytes+1))
+	closeErr := file.Close()
+	if copyErr != nil {
+		return copyErr
+	}
+	if closeErr != nil {
+		return closeErr
+	}
+	if written > maxBytes {
+		return fmt.Errorf("download exceeds size limit")
+	}
+	return nil
+}
+
+func copyFile(source, destination string, mode os.FileMode) error {
+	in, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.OpenFile(destination, os.O_CREATE|os.O_EXCL|os.O_WRONLY, mode)
+	if err != nil {
+		return err
+	}
+	_, copyErr := io.Copy(out, in)
+	closeErr := out.Close()
+	if copyErr != nil {
+		return copyErr
+	}
+	return closeErr
 }
 
 func fetchNPMVersionMetadata(ctx context.Context, plan InstallPlan) (npmVersionMetadata, error) {

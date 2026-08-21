@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const pluginID = "chengfeng-videocut-local-development@chengfeng-videocut-local-development"
+const pluginID = "chengfeng-videocut@chengfeng-videocut"
 
 type pluginList struct {
 	Installed []pluginRow `json:"installed"`
@@ -52,7 +52,7 @@ func main() {
 		InstalledRoot   string `json:"installedRoot"`
 	}
 	decode(run(codexPath, isolatedHome, "plugin", "marketplace", "add", marketplaceRoot, "--json"), &added)
-	if added.MarketplaceName != "chengfeng-videocut-local-development" || filepath.Clean(added.InstalledRoot) != filepath.Clean(marketplaceRoot) {
+	if added.MarketplaceName != "chengfeng-videocut" || filepath.Clean(added.InstalledRoot) != filepath.Clean(marketplaceRoot) {
 		fatal(fmt.Errorf("unexpected marketplace add result: %#v", added))
 	}
 
@@ -62,7 +62,7 @@ func main() {
 		fatal(fmt.Errorf("unexpected available inventory: %#v", available))
 	}
 	candidate := available.Available[0]
-	if candidate.PluginID != pluginID || candidate.Version != "0.11.6-local.1" || candidate.Installed || candidate.Enabled {
+	if candidate.PluginID != pluginID || candidate.Version != "0.11.7-beta.1" || candidate.Installed || candidate.Enabled {
 		fatal(fmt.Errorf("unexpected candidate fields: %#v", candidate))
 	}
 

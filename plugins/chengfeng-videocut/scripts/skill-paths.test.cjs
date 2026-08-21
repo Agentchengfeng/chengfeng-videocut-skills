@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
-const pluginName = "chengfeng-videocut-local-development";
+const pluginName = "chengfeng-videocut";
 const publicSkills = [
   "chengfeng-cut",
   "chengfeng-subtitle",
@@ -49,7 +49,7 @@ for (const name of publicSkills) {
 
 const runtimeContract = fs.readFileSync(path.join(root, "references", "runtime-and-product-contract.md"), "utf8");
 const readiness = fs.readFileSync(path.join(root, "skills", "chengfeng-check-updates", "SKILL.md"), "utf8");
-assert.match(readiness, /Codex 0\.146\+ 的原生 Plugin 管理能力/);
+assert.match(readiness, /Codex 0\.146\+ 的原生 GitHub Marketplace 管理能力/);
 assert.match(readiness, /marketplace upgrade chengfeng-videocut --json/);
 assert.match(readiness, /plugin add chengfeng-videocut@chengfeng-videocut --json/);
 assert.doesNotMatch(readiness, /node\s+"?<插件根>/, "the user update path must not execute Node helpers");

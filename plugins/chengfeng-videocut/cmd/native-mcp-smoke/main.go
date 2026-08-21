@@ -19,7 +19,7 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	client := mcp.NewClient(&mcp.Implementation{Name: "chengfeng-native-smoke", Version: "0.11.6-local.1"}, nil)
+	client := mcp.NewClient(&mcp.Implementation{Name: "chengfeng-native-smoke", Version: "0.11.7-beta.1"}, nil)
 	cmd := exec.Command(os.Args[1])
 	cmd.Stderr = os.Stderr
 	session, err := client.Connect(ctx, &mcp.CommandTransport{Command: cmd}, nil)
@@ -35,9 +35,9 @@ func main() {
 	init := session.InitializeResult()
 	expectedServer := strings.TrimSpace(os.Getenv("CHENGFENG_VIDEOCUT_EXPECT_SERVER"))
 	if expectedServer == "" {
-		expectedServer = "chengfeng-videocut-local-development"
+		expectedServer = "chengfeng-videocut"
 	}
-	if init.ServerInfo == nil || init.ServerInfo.Name != expectedServer || init.ServerInfo.Version != "0.11.6-local.1" {
+	if init.ServerInfo == nil || init.ServerInfo.Name != expectedServer || init.ServerInfo.Version != "0.11.7-beta.1" {
 		fatal(fmt.Errorf("unexpected server info: %#v", init.ServerInfo))
 	}
 	listed, err := session.ListTools(ctx, nil)
@@ -85,7 +85,7 @@ func main() {
 		fatal(err)
 	}
 	installJSON, _ := json.Marshal(install.StructuredContent)
-	if strings.Contains(string(installJSON), `"approvalDigest":"`) || !strings.Contains(string(installJSON), "npm 平台包 integrity 或安装器摘要尚未发布") {
+	if strings.Contains(string(installJSON), `"approvalDigest":"`) || !strings.Contains(string(installJSON), "GitHub Release 平台包 SHA-256 尚未发布") {
 		fatal(fmt.Errorf("unpublished install plan did not fail closed: %s", installJSON))
 	}
 	status, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "runtime_status", Arguments: map[string]any{}})

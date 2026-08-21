@@ -14,7 +14,7 @@ import (
 
 const TemplateURI = "ui://chengfeng-videocut/workflow-confirm-v1.html"
 
-var Version = "0.11.6-local.1"
+var Version = "0.11.7-beta.1"
 
 // BuildChannel is set only by the dedicated local-development build script.
 // The default and every release build stay fail-closed on release readiness.
@@ -79,7 +79,7 @@ func NewServer(c Contract) *mcp.Server {
 		status := inspectRuntime(ctx, c)
 		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Runtime 状态：%s", status.State)}}}, status, nil
 	})
-	mcp.AddTool(server, &mcp.Tool{Name: "runtime_install", Title: "安装 Product Runtime", Description: "仅接受确认卡片返回的 approvalDigest；重新计算 npm Registry、平台包精确版本、sha512 integrity、目标与分发策略，精确匹配后由原生 MCP 下载和安全解包，不调用 npm、Node 或 lifecycle scripts。再校验包内 manifest 与安装器 SHA-256 并执行。此门防误操作，不构成身份认证。", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(true), IdempotentHint: false}}, func(ctx context.Context, req *mcp.CallToolRequest, input RuntimeInstallInput) (*mcp.CallToolResult, map[string]any, error) {
+	mcp.AddTool(server, &mcp.Tool{Name: "runtime_install", Title: "安装 Product Runtime", Description: "仅接受确认卡片返回的 approvalDigest；重新计算 GitHub Release、平台包精确版本、SHA-256、目标与分发策略，精确匹配后由原生 MCP 下载并执行已构建安装器，不调用 npm、Node 或 lifecycle scripts。再回读 Runtime doctor。此门防误操作，不构成身份认证。", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(true), IdempotentHint: false}}, func(ctx context.Context, req *mcp.CallToolRequest, input RuntimeInstallInput) (*mcp.CallToolResult, map[string]any, error) {
 		output, err := installRuntime(ctx, c, strings.ToLower(strings.TrimSpace(input.ApprovalDigest)))
 		if err != nil {
 			return nil, nil, err
@@ -115,15 +115,15 @@ func confirmationOutput(c Contract, input ConfirmationInput) (map[string]any, er
 		if err != nil {
 			return nil, err
 		}
-		availability := "npm 平台包、分发策略与影响已固定"
-		options := []map[string]any{{"id": "confirm", "action": "install_runtime", "label": "确认安装", "badge": "会写入", "description": plan.Impact, "nextStep": "原生下载一个精确 npm Runtime 包、校验并本地安装（不要求 npm/Node）"}, {"id": "pause", "action": "pause_workflow", "label": "暂不安装", "badge": "不写入", "description": "保留当前环境，本次不下载或执行任何内容。", "nextStep": "暂停任务"}}
+		availability := "GitHub Release 平台包、分发策略与影响已固定"
+		options := []map[string]any{{"id": "confirm", "action": "install_runtime", "label": "确认安装", "badge": "会写入", "description": plan.Impact, "nextStep": "原生下载一个精确 GitHub Release Runtime 包、校验并本地安装（不要求 npm/Node）"}, {"id": "pause", "action": "pause_workflow", "label": "暂不安装", "badge": "不写入", "description": "保留当前环境，本次不下载或执行任何内容。", "nextStep": "暂停任务"}}
 		selected := "confirm"
 		prompt := "确认后 Agent 可把 approvalDigest 原样交给 runtime_install。此确认门防误操作，不是身份认证。"
-		if !validSHA512SRI(plan.DistIntegrity) || !validSHA256(plan.InstallerSHA256) {
-			availability = fmt.Sprintf("Runtime %s npm 平台包 integrity 或安装器摘要尚未发布；执行会 fail-closed", plan.RuntimeVersion)
+		if !validSHA256(plan.RuntimePackageSHA256) {
+			availability = fmt.Sprintf("Runtime %s GitHub Release 平台包 SHA-256 尚未发布；执行会 fail-closed", plan.ReleaseVersion)
 			options = options[1:]
 			selected = "pause"
-			prompt = "npm 包摘要尚未锁定，本卡片只展示计划并允许暂停；不会生成可执行 approvalDigest。"
+			prompt = "GitHub Release 包摘要尚未锁定，本卡片只展示计划并允许暂停；不会生成可执行 approvalDigest。"
 		}
 		output := map[string]any{
 			"kind": "runtime_install", "title": "安装 Product Runtime", "prompt": prompt,

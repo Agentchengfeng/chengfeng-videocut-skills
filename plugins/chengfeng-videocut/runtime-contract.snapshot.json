@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "product": "chengfeng-videocut",
-  "runtimeVersion": "0.5.8",
-  "minimumRuntimeVersion": "0.5.8",
+  "runtimeVersion": "0.5.9",
+  "minimumRuntimeVersion": "0.5.9",
   "capabilities": {
     "runtimeApiVersion": 1,
     "serviceApiVersion": 1,

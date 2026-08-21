@@ -251,6 +251,9 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 	status.ReleaseReady = boolPath(status.Doctor, "data", "releaseReady")
 	readinessMode := stringPath(status.Doctor, "data", "readinessMode")
 	readinessCompatible := status.ReleaseReady && !status.DevelopmentMode && readinessMode == "release-ready"
+	if c.DistributionMode == "public-beta" && c.LicenseStatus == "UNVERIFIED" {
+		readinessCompatible = healthy && !status.DevelopmentMode && !status.ReleaseReady && readinessMode == "public-beta"
+	}
 	if localDevelopmentBuild {
 		readinessCompatible = healthy && status.DevelopmentMode && !status.ReleaseReady && readinessMode == "local-development"
 	}

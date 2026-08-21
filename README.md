@@ -1,11 +1,9 @@
 # chengfeng-videocut
 
-> **Local-development candidate only:** this branch contains Plugin
-> `0.11.6-local.1`, marketplace/plugin id
-> `chengfeng-videocut-local-development`, and requires Runtime `0.5.8` with an
-> exact machine-local authorization. It must not be published, promoted to
-> `stable`, or installed over the public `chengfeng-videocut` Plugin. The
-> release documentation below remains the fail-closed public baseline.
+> **Windows public beta:** this branch contains Plugin `0.11.7-beta.1` with
+> marketplace/plugin id `chengfeng-videocut`. It accepts only the separately
+> pinned `0.5.9` Windows Runtime GitHub Release, whose package checksum is part
+> of the Plugin contract. This is not a signed, release-ready macOS build.
 
 给 Codex 用的中文口播剪辑 Marketplace 插件。
 
@@ -26,37 +24,31 @@ Plugin 根名  -> 安装与 UI 群组名，不是同名 Skill
 
 ## 安装
 
-**公开入口会收敛成一条 `npx` 命令，和 Remotion / HyperFrames 一样。** `npx` 不是
-Windows 安装器；它只是让 Codex 取得并执行版本化的安装引导。第一次让 Agent 真正干活时，Product Runtime / Studio 不需要单独寻找安装包：原生 MCP
-先显示固定 npm Registry、平台包精确版本、integrity、目标与影响；用户确认同一
-`approvalDigest` 后才由原生 MCP 下载、安全解包、校验并执行包内安装器。剪辑 Runtime 不依赖系统 Node；**但首次使用 npx 安装 Plugin 需要 Node LTS**，由 Codex 按下列安装提示准备，而不是让用户手工找安装包。
-每个平台包还带固定法律材料与 SPDX 2.3 SBOM，均由 manifest 的 SHA-256 收据绑定并在安装前复核。
+**公开入口是 Codex Plugin + GitHub Release，不走 npm。** 用户先由 Codex 从 GitHub
+Marketplace 安装 Plugin；第一次需要 Runtime 时，原生 MCP 先显示固定 GitHub Release
+tag、平台安装包、SHA-256、目标与影响。用户确认同一 `approvalDigest` 后才下载、校验并
+执行安装器。剪辑 Runtime 和 Plugin 都不依赖用户系统的 Node、npm 或 npx。
 
-**当前测试范围是 Windows x64，以下 npm 包尚未发布。** 把下面这段发给 Codex 即可；它会先检查 Node，缺失时用 Windows 的 WinGet 安装官方 Node LTS，再用 `npx` 安装 Plugin。PowerShell 可能因执行策略拒绝 `npx.ps1`，所以 Windows 必须让 Codex 使用 `npx.cmd` / `cmd.exe`，不改用户的执行策略。
+**当前公测范围是 Windows x64。** 把下面这段发给 Codex 即可；它会通过 GitHub
+Marketplace 安装固定 Plugin 快照，并在需要 Runtime 时使用固定 GitHub Release，不改
+PowerShell execution policy，也不要求用户手工找安装包。
 
 ```text
 请安装 chengfeng-videocut。
-先只读检查 Node 和 npx；Windows 请通过 cmd.exe 检查 node、npm.cmd、npx.cmd。
-若 Node 缺失，使用 winget install --id OpenJS.NodeJS.LTS --exact --scope user，接受包与源协议；安装后重新检查版本。
-Node 就绪后，用 npx.cmd --yes @chengfeng/videocut-skills install 安装 Codex Plugin，并读回 marketplace 和 plugin 的 installed/enabled 状态。
-不要要求我手工安装 Bun、FFmpeg、Chrome 或 Runtime；不要更改 PowerShell execution policy。
+请从 Agentchengfeng/chengfeng-videocut-skills 的固定 GitHub commit 安装 chengfeng-videocut Plugin，并读回 marketplace 和 plugin 的 installed/enabled 状态。
+需要 Product Runtime 时，先显示 runtime_install 确认卡；只从 requirements 锁定的 GitHub Release 下载本机平台安装包，校验 SHA-256 后安装并读回 doctor。
+不要要求我手工安装 Node、npm、npx、Bun、FFmpeg、Chrome 或 Runtime；不要更改 PowerShell execution policy。
 ```
 
-发布后，在 Windows 命令行等价为：
-
-```cmd
-npx.cmd --yes @chengfeng/videocut-skills install
-```
-
-正式新装机唯一入口是 Plugin `runtime_install`。单个 npm Runtime 平台包内嵌 Runtime、受管 Bun、
+正式新装机唯一入口是 Plugin `runtime_install`。单个 GitHub Release Runtime 安装包内嵌 Runtime、受管 Bun、
 FFmpeg 与 FFprobe，并装到 `~/.chengfeng-videocut`。Headless Shell 不属于安装期：只有用户确认
 实际 export 后，Product Runtime 才按固定版本和 SHA-256 获取、校验并缓存它。六个用户 Skill 不要求系统
-Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入 `PATH`；Node 仅属于首次 `npx` 安装入口，不能作为 Runtime、导出或渲染的隐式依赖。
+Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入 `PATH`；Node、npm、npx 都不能成为 Runtime、导出或渲染的隐式依赖。
 历史 Desktop / 既有安装仅在已经指向同一 Product 受管根时兼容复用。
 
 | 依赖 | 用途 | 要求 |
 | --- | --- | --- |
-| Product Runtime npm 平台包 | Runtime、Bun、FFmpeg、FFprobe | 原生 MCP 精确下载和本地安装，不调用用户 npm/Node |
+| Product Runtime GitHub Release 安装包 | Runtime、Bun、FFmpeg、FFprobe | 原生 MCP 精确下载、SHA-256 校验和本地安装，不调用用户 npm/Node |
 | Product renderer manager | Headless Shell | 仅确认的实际 export 按锁下载、校验、缓存复用 |
 | Codex Plugin 管理 | Marketplace 刷新、Plugin 安装/启用 | Codex 0.146+ 原生能力 |
 
@@ -64,15 +56,11 @@ Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入 `PATH`
 Skill 合同的行为（真实发生过：Runtime 缺失时 Agent 手搓了一个"审片台"，产出与产品
 完全不兼容）。遇到这种情况，把 Agent 的报错原文发 Issue。
 
-本分支候选 Plugin 是 `0.11.6-local.1`。原始 `0.11.1` 候选曾产生内容 A 和 provenance B；
-本轮追加修复已改变 Plugin 字节，因此集成后必须重新产生最终内容提交与
-provenance 快照，不得沿用旧 A/B 宣称可发布。Runtime 0.5.8 各 npm 平台包的 pinned
-sha512 integrity 与包内安装器 SHA-256 回填之前，同样不得发布或把候选说成可安装。
-当前公开的 0.10.8 快照仅是历史稳定入口：
-
-```bash
-codex plugin marketplace add Agentchengfeng/chengfeng-videocut-skills --ref 1487e02b1c0c39ea74d079e8ce45da56bf59bc32 && codex plugin marketplace upgrade chengfeng-videocut --json && codex plugin add chengfeng-videocut@chengfeng-videocut
-```
+本分支是 `0.11.7-beta.1` Windows 公测候选。发布时会给出一个不可变 Git commit；
+用户只应从该 commit 安装，不应使用分支名或历史 `0.10.8` 入口。Windows 安装器尚未
+签名，因此 Windows 可能显示未知发布者/SmartScreen 提示；这不是 Runtime 校验的替代，
+用户须自行决定是否继续。没有 Runtime GitHub Release、匹配 SHA-256 和真实 Windows
+安装回读时，不得把候选表述为可安装。
 
 三段必须分开是 Codex 官方 CLI 的机制：`marketplace add --ref <SHA>` 先挂市场，
 `marketplace upgrade` materialize 该精确快照及安装 metadata，`plugin add` 再从
@@ -109,8 +97,7 @@ runtime_status
   +-- missing
   |      |
   |      +--> 安装确认卡 + approvalDigest
-  |      +--> npm Registry 精确版本元数据
-  |      +--> sha512 integrity + 包内 manifest/installer SHA-256 校验
+  |      +--> GitHub Release 固定 tag + 安装包 SHA-256 校验
   |      +--> 安装后 doctor
   |      +--> 继续当前 Skill
   |
@@ -123,9 +110,8 @@ Runtime 默认安装到：
 ~/.chengfeng-videocut
 ```
 
-Plugin 0.11.6-local.1 的合同固定为 Runtime `0.5.8`。requirements 每个平台只列一个精确
-npm package/version、`distIntegrity`、包内 installer SHA-256 和稳定启动器；原生 MCP 不调用
-npm、Node 或 lifecycle scripts。任一 pinned 摘要未发布时，确认卡
+Plugin 0.11.7-beta.1 的合同固定为 Runtime `0.5.9`。requirements 每个平台只列一个精确
+GitHub Release tag、安装包 SHA-256 和稳定启动器；原生 MCP 不调用 npm、Node 或 lifecycle scripts。任一 pinned 摘要未发布时，确认卡
 不生成可执行摘要，安装 fail-closed。Runtime 健康还不够：semver 必须达到最低版本并覆盖完整 capability 集。
 
 每个业务流程在第一次产品 API 前、每次人工审核恢复前都经 MCP `runtime_cli` 执行：
@@ -241,24 +227,23 @@ chengfeng-videocut-skills/
 
 ## 发布边界
 
-Plugin 0.11.6-local.1 依赖 Runtime 0.5.8 的 npm 平台包、managed tools、用户服务与当前 EDL / Studio 合同。稳定发布顺序是：
+Plugin 0.11.7-beta.1 依赖 Runtime 0.5.9 的 GitHub Release 安装包、managed tools、用户服务与当前 EDL / Studio 合同。发布顺序是：
 
 ```text
-Runtime 0.5.8 npm platform packages
-  -> GitHub Actions 通过 npm Trusted Publishing 发布各平台包
-  -> 每个平台一个内嵌 Runtime、Bun、FFmpeg、FFprobe 的包
-  -> 把各平台 pinned sha512 integrity 与 installer SHA-256 回填 requirements
-  -> 从公开 Registry 在 Windows / macOS 隔离环境安装并执行 doctor
+Runtime 0.5.9 GitHub Release 安装包
+  -> GitHub Actions 构建每个平台一个内嵌 Runtime、Bun、FFmpeg、FFprobe 的包
+  -> 上传到不可变 GitHub Release，并把 tag、资产名和 SHA-256 回填 requirements
+  -> 从公开 GitHub Release 在 Windows / macOS 隔离环境安装并执行 doctor
   -> Plugin 内容提交 A
   -> 只增加 provenance 的 Marketplace 快照 B
   -> 根 Bootstrap 提交 C（只改 manifest / README，Plugin 子树仍等于 B）
   -> stable 指向 B，main 指向 C，Bootstrap manifest 固定 B
-  -> 从公开入口验证干净安装与 0.10.5 更新
+  -> 从公开 GitHub commit 验证干净 Plugin 安装和 Runtime 安装
 ```
 
-Plugin 运行时只直连 requirements 固定的 npm Registry，不从 GitHub Release 下载 Runtime；
-GitHub 仅作为源码、Actions 构建与 Trusted Publishing 的发布来源。任何一步未通过都停止推进
-下一项；本地候选测试不能代替公开 Registry 资产下载后的复验。
+Plugin 运行时只直连 requirements 固定的 GitHub Release 资产；GitHub 同时是源码、构建与
+Runtime 发布来源。任何一步未通过都停止推进下一项；本地候选测试不能代替公开 Release
+资产下载后的复验。
 
 ## 开发验证
 

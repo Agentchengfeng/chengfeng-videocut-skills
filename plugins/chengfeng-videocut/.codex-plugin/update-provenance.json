@@ -1,6 +1,6 @@
 {
-  "name": "chengfeng-videocut-local-development",
-  "version": "0.11.6-local.1",
-  "localDevelopment": true,
+  "name": "chengfeng-videocut",
+  "version": "0.11.7-beta.1",
+  "publicBeta": true,
   "releaseReady": false
 }

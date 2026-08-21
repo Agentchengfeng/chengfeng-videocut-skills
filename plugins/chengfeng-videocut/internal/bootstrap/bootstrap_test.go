@@ -35,7 +35,7 @@ func TestProductionInstallPlanFailsClosedWithoutPinnedDigest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if plan.DistIntegrity != "" || plan.InstallerSHA256 != "" || plan.ApprovalDigest != "" {
+	if plan.RuntimePackageSHA256 != "" || plan.ApprovalDigest != "" {
 		t.Fatalf("unlocked plan became approvable: %#v", plan)
 	}
 	if _, err := installRuntime(context.Background(), c, strings.Repeat("a", 64)); err == nil || !strings.Contains(err.Error(), "not locked") {
@@ -43,20 +43,20 @@ func TestProductionInstallPlanFailsClosedWithoutPinnedDigest(t *testing.T) {
 	}
 }
 
-func TestRuntimePackageContractPinsExactNPMPackagePerPlatform(t *testing.T) {
+func TestRuntimePackageContractPinsExactGitHubReleaseAssetPerPlatform(t *testing.T) {
 	c, err := LoadContract()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.SchemaVersion != 4 {
-		t.Fatalf("schema version=%d, want 4", c.SchemaVersion)
+	if c.SchemaVersion != 5 || c.Delivery != "github-release" || c.Repository != "Agentchengfeng/chengfeng-videocut" {
+		t.Fatalf("GitHub Release contract is not exact: %#v", c)
 	}
 	for platform, assets := range c.Platforms {
-		if !npmPackagePattern.MatchString(assets.NPMPackage) || !exactVersionPattern.MatchString(assets.NPMPackageVersion) || assets.RuntimeLauncher == "" {
-			t.Fatalf("platform %s is missing the exact npm package contract: %#v", platform, assets)
+		if !assetNamePattern.MatchString(assets.RuntimePackageAsset) || assets.RuntimePackageMaxBytes <= 0 || assets.RuntimeLauncher == "" {
+			t.Fatalf("platform %s is missing the exact GitHub Release asset contract: %#v", platform, assets)
 		}
-		if assets.DistIntegrity != nil || assets.InstallerSHA256 != nil {
-			t.Fatalf("formal package digests must remain unpublished in this candidate: %#v", assets)
+		if platform == "windows-amd64" && (assets.RuntimePackageSHA256 == nil || !validSHA256(*assets.RuntimePackageSHA256)) {
+			t.Fatalf("Windows public-beta installer digest must be pinned: %#v", assets)
 		}
 	}
 }
@@ -108,13 +108,12 @@ func TestRuntimeContractSnapshotDrivesOperativeCompatibility(t *testing.T) {
 	}
 }
 
-func TestApprovalDigestBindsRegistryPackageVersionIntegrityPlatformTargetAndPolicy(t *testing.T) {
+func TestApprovalDigestBindsGitHubReleaseAssetPlatformTargetAndPolicy(t *testing.T) {
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", filepath.Join(t.TempDir(), "home one"))
 	c, _ := LoadContract()
 	assets := c.Platforms[platformKey()]
-	integrity := "sha512-" + base64.StdEncoding.EncodeToString(make([]byte, sha512.Size))
-	installerDigest := strings.Repeat("a", 64)
-	assets.DistIntegrity, assets.InstallerSHA256 = &integrity, &installerDigest
+	packageDigest := strings.Repeat("a", 64)
+	assets.RuntimePackageSHA256 = &packageDigest
 	c.Platforms[platformKey()] = assets
 	first, err := buildInstallPlan(c, nil)
 	if err != nil {
@@ -133,12 +132,12 @@ func TestApprovalDigestBindsRegistryPackageVersionIntegrityPlatformTargetAndPoli
 	if second.ApprovalDigest == first.ApprovalDigest {
 		t.Fatal("target was not bound")
 	}
-	first.Registry += "/changed"
+	first.ReleaseTag += "-changed"
 	changed, _ = approvalDigest(first)
 	if changed == first.ApprovalDigest {
-		t.Fatal("registry was not bound")
+		t.Fatal("release tag was not bound")
 	}
-	first.Registry = c.Registry
+	first.ReleaseTag = c.ReleaseTag
 	first.DistributionMode = "changed"
 	changed, _ = approvalDigest(first)
 	if changed == first.ApprovalDigest {
@@ -258,7 +257,7 @@ func TestRuntimeStatusAndCLIUseManagedLauncher(t *testing.T) {
 		t.Fatal(err)
 	}
 	caps, _ := jsonMarshal(c.Capabilities)
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.8'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":false,\"releaseReady\":true,\"readinessMode\":\"release-ready\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nprintf '%s\\n' \"$@\"\n"
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.9'; exit 0; fi\nif [ \"$1\" = \"doctor\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":false,\"releaseReady\":false,\"readinessMode\":\"public-beta\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nprintf '%s\\n' \"$@\"\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -289,8 +288,8 @@ func TestRuntimeStatusRejectsRuntime053(t *testing.T) {
 		t.Fatal(err)
 	}
 	status := inspectRuntime(context.Background(), c)
-	if status.Ready || status.State != "incompatible" || status.RuntimeVersion != "0.5.3" || status.RequiredVersion != "0.5.8" {
-		t.Fatalf("Runtime 0.5.3 must be incompatible with the 0.5.8 contract: %#v", status)
+	if status.Ready || status.RuntimeVersion != "0.5.3" || status.RequiredVersion != "0.5.9" {
+		t.Fatalf("Runtime 0.5.3 must be incompatible with the 0.5.9 contract: %#v", status)
 	}
 }
 
@@ -334,7 +333,7 @@ func TestRuntimeStatusRejectsMissingOrWrongRequiredCapabilities(t *testing.T) {
 			if marshalErr != nil {
 				t.Fatal(marshalErr)
 			}
-			script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.8'; exit 0; fi\nif [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--local-development\" ] && [ \"$3\" = \"--json\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":true,\"releaseReady\":false,\"readinessMode\":\"local-development\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nexit 2\n"
+			script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.9'; exit 0; fi\nif [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--local-development\" ] && [ \"$3\" = \"--json\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":true,\"releaseReady\":false,\"readinessMode\":\"local-development\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nexit 2\n"
 			if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 				t.Fatal(err)
 			}
@@ -354,8 +353,8 @@ func TestLocalDevelopmentBuildAcceptsOnlyExactDevelopmentReadiness(t *testing.T)
 	BuildChannel = "local-development"
 	t.Cleanup(func() { BuildChannel = originalChannel })
 	c, _ := LoadContract()
-	if c.MinimumRuntimeVersion != "0.5.8" {
-		t.Fatalf("local development ingest contract must require Runtime 0.5.8, got %s", c.MinimumRuntimeVersion)
+	if c.MinimumRuntimeVersion != "0.5.9" {
+		t.Fatalf("local development ingest contract must require Runtime 0.5.9, got %s", c.MinimumRuntimeVersion)
 	}
 	caps, _ := jsonMarshal(c.Capabilities)
 	for _, scenario := range []struct {
@@ -378,7 +377,7 @@ func TestLocalDevelopmentBuildAcceptsOnlyExactDevelopmentReadiness(t *testing.T)
 			}
 			doctorJSON := fmt.Sprintf(`{"ok":true,"data":{%s,"capabilities":%s}}`, scenario.fields, caps)
 			script := "#!/bin/sh\n" +
-				"if [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.8'; exit 0; fi\n" +
+				"if [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.9'; exit 0; fi\n" +
 				"if [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--local-development\" ] && [ \"$3\" = \"--json\" ]; then echo '" + doctorJSON + "'; exit 0; fi\n" +
 				"exit 3\n"
 			if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
@@ -414,7 +413,7 @@ func TestReleaseBuildRejectsDevelopmentDoctorResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 	caps, _ := jsonMarshal(c.Capabilities)
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.8'; exit 0; fi\n" +
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'chengfeng-videocut 0.5.9'; exit 0; fi\n" +
 		"if [ \"$1\" = \"doctor\" ] && [ \"$2\" = \"--json\" ]; then echo '{\"ok\":true,\"data\":{\"healthy\":true,\"developmentMode\":true,\"releaseReady\":false,\"readinessMode\":\"local-development\",\"capabilities\":" + string(caps) + "}}'; exit 0; fi\nexit 3\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
@@ -481,7 +480,7 @@ func TestRuntimeStatusRejectsLauncherTamper(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(launcher), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.8'; exit 0; fi\nexit 2\n"
+	script := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo '# tampered' >> \"$0\"; echo 'chengfeng-videocut 0.5.9'; exit 0; fi\nexit 2\n"
 	if err := os.WriteFile(launcher, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -534,8 +533,8 @@ test -n "$target"
 mkdir -p "$target/bin"
 cat > "$target/bin/chengfeng-videocut" <<'EOF'
 #!/bin/sh
-if [ "$1" = "--version" ]; then echo 'chengfeng-videocut 0.5.8'; exit 0; fi
-if [ "$1" = "doctor" ]; then echo '{"ok":true,"data":{"healthy":true,"developmentMode":false,"releaseReady":true,"readinessMode":"release-ready","capabilities":%s}}'; exit 0; fi
+if [ "$1" = "--version" ]; then echo 'chengfeng-videocut 0.5.9'; exit 0; fi
+	if [ "$1" = "doctor" ]; then echo '{"ok":true,"data":{"healthy":true,"developmentMode":false,"releaseReady":false,"readinessMode":"public-beta","capabilities":%s}}'; exit 0; fi
 exit 2
 EOF
 chmod 0755 "$target/bin/chengfeng-videocut"
@@ -708,6 +707,7 @@ func serveNPMFixture(t *testing.T, c Contract, tarball []byte, integrity string,
 
 func lockContractToFixture(t *testing.T, c Contract, registry, integrity, installerDigest string) Contract {
 	t.Helper()
+	c.Delivery = "npm-fixture"
 	c.Registry = registry
 	assets := c.Platforms[platformKey()]
 	assets.DistIntegrity, assets.InstallerSHA256 = &integrity, &installerDigest
@@ -844,6 +844,7 @@ func TestExtractRuntimePackageRejectsTraversalLinksSpecialsAndExtraFiles(t *test
 
 func TestRuntimePackageRejectsTamperedLegalReceipt(t *testing.T) {
 	c, _ := LoadContract()
+	c.Delivery = "npm-fixture"
 	tarball, integrity, installerDigest := makeRuntimeNPMTarball(t, c, []byte("#!/bin/sh\nexit 0\n"), nil)
 	assets := c.Platforms[platformKey()]
 	assets.DistIntegrity, assets.InstallerSHA256 = &integrity, &installerDigest
@@ -867,6 +868,7 @@ func TestRuntimePackageRejectsTamperedLegalReceipt(t *testing.T) {
 
 func TestRuntimePackageRequiresExactRepositoryProvenance(t *testing.T) {
 	c, _ := LoadContract()
+	c.Delivery = "npm-fixture"
 	tarball, integrity, installerDigest := makeRuntimeNPMTarball(t, c, []byte("#!/bin/sh\nexit 0\n"), nil)
 	assets := c.Platforms[platformKey()]
 	assets.DistIntegrity, assets.InstallerSHA256 = &integrity, &installerDigest

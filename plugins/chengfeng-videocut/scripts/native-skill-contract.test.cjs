@@ -60,26 +60,29 @@ const updateMetadata = read("skills/chengfeng-check-updates/agents/openai.yaml")
 assert.match(updateMetadata, /Plugin 更新与 Product Runtime 就绪/, "update metadata must describe both Plugin and Runtime checks");
 
 const readme = read("README.md");
-assert.match(readme, /六个用户 Skill 都不要求系统 Node\/Bun\/Git/);
+assert.match(readme, /六个用户 Skill 都不要求系统 Node、npm、npx、Bun、Git/);
 assert.match(readme, /持久[\s\S]*只声明 `export`/);
 
-const mcp = JSON.parse(read(".mcp.json")).mcpServers["chengfeng-videocut-local-development"];
+const mcp = JSON.parse(read(".mcp.json")).mcpServers["chengfeng-videocut"];
 assert.equal(mcp.command, "./bin/chengfeng-videocut-mcp");
 assert.equal(mcp.cwd, ".");
 assert.equal(mcp.tool_timeout_sec, 1201);
 
 const runtimeRequirements = JSON.parse(read("runtime-requirements.json"));
-assert.equal(runtimeRequirements.schemaVersion, 4, "Runtime contract must use the exact npm package schema");
-assert.equal(runtimeRequirements.runtimeVersion, "0.5.8", "local candidate must require the ingest and paginated playback contract");
-assert.equal(runtimeRequirements.registry, "https://registry.npmjs.org");
-assert.equal(runtimeRequirements.requiredDistributionMode, "release-ready");
-assert.equal(runtimeRequirements.requiredLicenseStatus, "VERIFIED");
-assert.equal(runtimeRequirements.minimumRuntimeVersion, "0.5.8", "Runtime without atomic ingest and paginated playback must not pass");
+assert.equal(runtimeRequirements.schemaVersion, 5, "Runtime contract must use the GitHub Release schema");
+assert.equal(runtimeRequirements.delivery, "github-release");
+assert.equal(runtimeRequirements.repository, "Agentchengfeng/chengfeng-videocut");
+assert.equal(runtimeRequirements.releaseTag, "v0.5.9-windows-beta.1");
+assert.equal(runtimeRequirements.releaseVersion, "0.5.9");
+assert.equal(runtimeRequirements.runtimeVersion, "0.5.9", "candidate must require the ingest and paginated playback contract");
+assert.equal(runtimeRequirements.requiredDistributionMode, "public-beta");
+assert.equal(runtimeRequirements.requiredLicenseStatus, "UNVERIFIED");
+assert.equal(runtimeRequirements.minimumRuntimeVersion, "0.5.9", "Runtime without atomic ingest and paginated playback must not pass");
 assert.deepEqual(runtimeRequirements.runtimeContract, {
   snapshot: "runtime-contract.snapshot.json",
-  sha256: "59380261238ddc614d8c2e472e96408612dc3c1d31dec4893a2cd84d6025d01b",
+  sha256: "560b5d5901aeaf4906ec19cadd980e1658269081867ddae129f837420a57c6e9",
   repository: "https://github.com/Agentchengfeng/chengfeng-videocut.git",
-  revision: "5cef824dd991995ab9b46b43b4a25d257c2af505",
+  revision: "8a4ccfa2f76615b2c7a42fb5b12241d658d9ed06",
 }, "Plugin requirements must bind the exported Runtime contract snapshot");
 assert.equal(runtimeRequirements.capabilities.projectIngestVersion, 1, "atomic project ingest must be an exact Runtime capability");
 assert.equal(runtimeRequirements.capabilities.transcriptPlaybackPagingVersion, 1, "paginated transcript playback must be an exact Runtime capability");
@@ -89,13 +92,16 @@ assert.equal(runtimeRequirements.capabilities.operationIdempotencyVersion, 1, "o
 for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) {
   assert.deepEqual(
     Object.keys(assets).sort(),
-    ["distIntegrity", "installerPath", "installerSHA256", "npmPackage", "npmPackageVersion", "packageManifest", "runtimeLauncher", "tarballMaxBytes"],
-    `${platform} must expose exactly one npm Runtime package and its launcher`,
+    ["distIntegrity", "installerPath", "installerSHA256", "npmPackage", "npmPackageVersion", "packageManifest", "runtimeLauncher", "runtimePackageAsset", "runtimePackageMaxBytes", "runtimePackageSHA256", "tarballMaxBytes"],
+    `${platform} must expose exactly one GitHub Release Runtime asset and its launcher`,
   );
-  assert.match(assets.npmPackage, /^@chengfeng\/videocut-runtime-/);
-  assert.equal(assets.npmPackageVersion, "0.5.8");
-  assert.equal(assets.distIntegrity, null, `${platform} must fail closed before dist.integrity is published`);
-  assert.equal(assets.installerSHA256, null, `${platform} must fail closed before the inner installer digest is published`);
+  assert.match(assets.runtimePackageAsset, /^[A-Za-z0-9._-]+$/);
+  assert.ok(assets.runtimePackageMaxBytes > 0);
+  if (platform === "windows-amd64") {
+    assert.match(assets.runtimePackageSHA256, /^[a-f0-9]{64}$/, "Windows public beta must pin its GitHub Release asset");
+  } else {
+    assert.equal(assets.runtimePackageSHA256, null, `${platform} must fail closed until its Release asset is published`);
+  }
 }
 
 const runtimeContract = read("references/runtime-and-product-contract.md");
@@ -103,9 +109,9 @@ assert.match(runtimeContract, /内嵌 Runtime、Bun、FFmpeg 与 FFprobe/, "Runt
 assert.match(runtimeContract, /Headless Shell 继续只由确认后的实际 export 受管获取/, "Headless Shell must not be described as an installer payload");
 
 const confirmationCard = read("public/review-confirm.html");
-assert.match(confirmationCard, /npmPackage/);
-assert.match(confirmationCard, /distIntegrity/);
-assert.match(confirmationCard, /installerSHA256/);
-assert.doesNotMatch(confirmationCard, /installerAsset|installManifestAsset|installManifestSHA256/);
+assert.match(confirmationCard, /releaseTag/);
+assert.match(confirmationCard, /runtimePackageAsset/);
+assert.match(confirmationCard, /runtimePackageSHA256/);
+assert.doesNotMatch(confirmationCard, /npmPackage|distIntegrity|installerSHA256/);
 
 console.log(JSON.stringify({ coreSkillsUseNativeMCP: true, persistentExportJobs: true, userSystemDependenciesRemoved: true, singleRuntimePackageContract: true }));
