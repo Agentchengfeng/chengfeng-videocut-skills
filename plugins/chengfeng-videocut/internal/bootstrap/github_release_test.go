@@ -51,7 +51,7 @@ chmod 0755 "$target/bin/chengfeng-videocut"
 	sum := sha256.Sum256([]byte(installer))
 	digest := hex.EncodeToString(sum[:])
 	t.Setenv("CHENGFENG_VIDEOCUT_HOME", root)
-	options := &installTestOptions{RuntimePackageFile: installerPath, RuntimePackageSHA256: digest}
+	options := &installTestOptions{RuntimePackageFile: installerPath, RuntimePackageURL: "https://api.github.com/repos/Agentchengfeng/chengfeng-videocut/releases/assets/1", RuntimePackageSHA256: digest}
 	plan, err := buildInstallPlan(c, options)
 	if err != nil {
 		t.Fatal(err)
@@ -91,6 +91,7 @@ func TestGitHubReleaseInstallRejectsDigestMismatchBeforeExecution(t *testing.T) 
 	digest := strings.Repeat("a", 64)
 	options := &installTestOptions{
 		RuntimePackageFile:   asset,
+		RuntimePackageURL:    "https://api.github.com/repos/Agentchengfeng/chengfeng-videocut/releases/assets/1",
 		RuntimePackageSHA256: digest,
 		RunInstaller: func(context.Context, string, []string, string, time.Duration) CommandResult {
 			t.Fatal("installer must not run when the GitHub Release asset digest mismatches")
@@ -112,7 +113,7 @@ func TestGitHubReleaseApprovalBindsReleaseIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 	digest := strings.Repeat("b", 64)
-	first, err := buildInstallPlan(c, &installTestOptions{RuntimePackageSHA256: digest})
+	first, err := buildInstallPlan(c, &installTestOptions{RuntimePackageURL: "https://api.github.com/repos/Agentchengfeng/chengfeng-videocut/releases/assets/1", RuntimePackageSHA256: digest})
 	if err != nil {
 		t.Fatal(err)
 	}

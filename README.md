@@ -2,8 +2,9 @@
 
 > **Windows public beta:** this branch contains Plugin `0.11.7-beta.1` with
 > marketplace/plugin id `chengfeng-videocut`. It accepts only the separately
-> pinned `0.5.9` Windows Runtime GitHub Release, whose package checksum is part
-> of the Plugin contract. This is not a signed, release-ready macOS build.
+> pinned `0.5.9` Windows Runtime GitHub Release Asset API endpoint, whose
+> package checksum is part of the Plugin contract. This is not a signed,
+> release-ready macOS build.
 
 给 Codex 用的中文口播剪辑 Marketplace 插件。
 
@@ -26,7 +27,7 @@ Plugin 根名  -> 安装与 UI 群组名，不是同名 Skill
 
 **公开入口是 Codex Plugin + GitHub Release，不走 npm。** 用户先由 Codex 从 GitHub
 Marketplace 安装 Plugin；第一次需要 Runtime 时，原生 MCP 先显示固定 GitHub Release
-tag、平台安装包、SHA-256、目标与影响。用户确认同一 `approvalDigest` 后才下载、校验并
+tag、官方 Asset API URL、平台安装包、SHA-256、目标与影响。用户确认同一 `approvalDigest` 后才下载、校验并
 执行安装器。剪辑 Runtime 和 Plugin 都不依赖用户系统的 Node、npm 或 npx。
 
 **当前公测范围是 Windows x64。** 把下面这段发给 Codex 即可；它会通过 GitHub
@@ -36,7 +37,7 @@ PowerShell execution policy，也不要求用户手工找安装包。
 ```text
 请安装 chengfeng-videocut。
 请从 Agentchengfeng/chengfeng-videocut-skills 的固定 GitHub commit 安装 chengfeng-videocut Plugin，并读回 marketplace 和 plugin 的 installed/enabled 状态。
-需要 Product Runtime 时，先显示 runtime_install 确认卡；只从 requirements 锁定的 GitHub Release 下载本机平台安装包，校验 SHA-256 后安装并读回 doctor。
+需要 Product Runtime 时，先显示 runtime_install 确认卡；只从 requirements 锁定的 GitHub Release Asset API 下载本机平台安装包，校验 SHA-256 后安装并读回 doctor。
 不要要求我手工安装 Node、npm、npx、Bun、FFmpeg、Chrome 或 Runtime；不要更改 PowerShell execution policy。
 ```
 
@@ -97,7 +98,7 @@ runtime_status
   +-- missing
   |      |
   |      +--> 安装确认卡 + approvalDigest
-  |      +--> GitHub Release 固定 tag + 安装包 SHA-256 校验
+  |      +--> GitHub Release 固定 tag + Asset API URL + 安装包 SHA-256 校验
   |      +--> 安装后 doctor
   |      +--> 继续当前 Skill
   |

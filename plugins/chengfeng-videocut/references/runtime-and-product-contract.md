@@ -30,8 +30,8 @@ runtime_status
 ```
 
 - Plugin package 消费 `runtime-requirements.json` 的 Runtime `0.5.9` 合同；最低 Runtime 为 `0.5.9`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。
-- 缺失时只从固定 GitHub Release 下载**一个**平台对应的精确 Runtime 安装包。requirements 必须预先锁定 repository、release tag、资产名、SHA-256、最大尺寸、目标分发模式与许可状态；任一为空或不符时，不生成可执行 `approvalDigest`。
-- 下载只接受由固定 GitHub Release URL 起始的匿名 HTTPS 重定向，写入后必须以 requirements 中的 SHA-256 复核；超出最大尺寸、摘要不符、未锁定或 HTTP 状态非 200 时拒绝执行。
+- 缺失时只从固定 GitHub Release **Asset API** 下载**一个**平台对应的精确 Runtime 安装包。requirements 必须预先锁定 repository、release tag、资产名、Asset API URL、SHA-256、最大尺寸、目标分发模式与许可状态；任一为空或不符时，不生成可执行 `approvalDigest`。
+- 下载以 `api.github.com/repos/<owner>/<repo>/releases/assets/<id>` 和 `Accept: application/octet-stream` 起始，只接受匿名 HTTPS 重定向，写入后必须以 requirements 中的 SHA-256 复核；超出最大尺寸、摘要不符、未锁定或 HTTP 状态非 200 时拒绝执行。
 - 正式新装机只经唯一 Codex Plugin 的 `runtime_install`；原生 MCP 自动选择的 GitHub Release Runtime 安装包内嵌 Runtime、受管 Bun、FFmpeg
   与 FFprobe。Plugin 只下载并校验这一包，安装器只在本地解包、安装并执行同一个 `service ensure`，
   不再从上游下载这些依赖。Headless Shell 不属于安装包或预检：只有用户确认实际 export 后，

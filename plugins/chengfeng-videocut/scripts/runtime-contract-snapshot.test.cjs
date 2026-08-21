@@ -65,7 +65,7 @@ function assertFeature(command, feature, label) {
 }
 
 const requirements = readJson("runtime-requirements.json");
-assert.equal(requirements.schemaVersion, 5, "Plugin requirements schema must remain v5");
+assert.equal(requirements.schemaVersion, 6, "Plugin requirements schema must remain v6");
 assert.equal(requirements.delivery, "github-release", "Runtime delivery must use GitHub Release");
 assert.equal(requirements.repository, "Agentchengfeng/chengfeng-videocut", "Runtime release repository is not exact");
 assert.match(requirements.releaseTag, /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, "Runtime release tag is invalid");
@@ -73,6 +73,11 @@ assert.match(requirements.releaseVersion, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/,
 for (const [platform, asset] of Object.entries(requirements.platforms)) {
   assert.match(asset.runtimePackageAsset, /^[A-Za-z0-9._-]+$/, `${platform} release asset name is invalid`);
   assert.ok(Number.isSafeInteger(asset.runtimePackageMaxBytes) && asset.runtimePackageMaxBytes > 0, `${platform} release asset size limit is invalid`);
+	if (platform === "windows-amd64") {
+		assert.equal(asset.runtimePackageURL, "https://api.github.com/repos/Agentchengfeng/chengfeng-videocut/releases/assets/524020018", "Windows release must use the pinned GitHub Asset API endpoint");
+	} else {
+		assert.equal(asset.runtimePackageURL, null, `${platform} unshipped release must have no asset API endpoint`);
+	}
 }
 assert.ok(requirements.runtimeContract, "Plugin requirements must bind a Runtime contract snapshot");
 assertSafeSnapshotPath(requirements.runtimeContract.snapshot);

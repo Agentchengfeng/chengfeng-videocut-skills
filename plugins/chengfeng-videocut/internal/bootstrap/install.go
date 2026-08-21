@@ -202,7 +202,7 @@ func installRuntimeFromGitHubRelease(ctx context.Context, c Contract, plan Insta
 		if err := copyFile(testOptions.RuntimePackageFile, installerPath, 0o700); err != nil {
 			return nil, err
 		}
-	} else if err := downloadGitHubReleaseAsset(ctx, releaseURL(c, plan.RuntimePackageAsset), installerPath, plan.RuntimePackageMaxBytes); err != nil {
+	} else if err := downloadGitHubReleaseAsset(ctx, plan.RuntimePackageURL, installerPath, plan.RuntimePackageMaxBytes); err != nil {
 		return nil, fmt.Errorf("download GitHub Release Runtime package: %w", err)
 	}
 	actual, err := fileSHA256(installerPath)
@@ -234,15 +234,12 @@ func installRuntimeFromGitHubRelease(ctx context.Context, c Contract, plan Insta
 	return map[string]any{"ok": true, "plan": plan, "installer": result, "runtime": status}, nil
 }
 
-func releaseURL(c Contract, asset string) string {
-	return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", c.Repository, c.ReleaseTag, asset)
-}
-
 func downloadGitHubReleaseAsset(ctx context.Context, sourceURL, destination string, maxBytes int64) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sourceURL, nil)
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Accept", "application/octet-stream")
 	client := &http.Client{
 		Timeout: 5 * time.Minute,
 		CheckRedirect: func(request *http.Request, _ []*http.Request) error {

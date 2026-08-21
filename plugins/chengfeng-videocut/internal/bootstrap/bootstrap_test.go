@@ -48,7 +48,7 @@ func TestRuntimePackageContractPinsExactGitHubReleaseAssetPerPlatform(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.SchemaVersion != 5 || c.Delivery != "github-release" || c.Repository != "Agentchengfeng/chengfeng-videocut" {
+	if c.SchemaVersion != 6 || c.Delivery != "github-release" || c.Repository != "Agentchengfeng/chengfeng-videocut" {
 		t.Fatalf("GitHub Release contract is not exact: %#v", c)
 	}
 	for platform, assets := range c.Platforms {
@@ -57,6 +57,9 @@ func TestRuntimePackageContractPinsExactGitHubReleaseAssetPerPlatform(t *testing
 		}
 		if platform == "windows-amd64" && (assets.RuntimePackageSHA256 == nil || !validSHA256(*assets.RuntimePackageSHA256)) {
 			t.Fatalf("Windows public-beta installer digest must be pinned: %#v", assets)
+		}
+		if platform == "windows-amd64" && (assets.RuntimePackageURL == nil || !validGitHubReleaseAssetURL(c.Repository, *assets.RuntimePackageURL)) {
+			t.Fatalf("Windows public-beta installer must pin the GitHub Asset API endpoint: %#v", assets)
 		}
 	}
 }
@@ -113,7 +116,9 @@ func TestApprovalDigestBindsGitHubReleaseAssetPlatformTargetAndPolicy(t *testing
 	c, _ := LoadContract()
 	assets := c.Platforms[platformKey()]
 	packageDigest := strings.Repeat("a", 64)
+	packageURL := "https://api.github.com/repos/Agentchengfeng/chengfeng-videocut/releases/assets/1"
 	assets.RuntimePackageSHA256 = &packageDigest
+	assets.RuntimePackageURL = &packageURL
 	c.Platforms[platformKey()] = assets
 	first, err := buildInstallPlan(c, nil)
 	if err != nil {
@@ -138,6 +143,12 @@ func TestApprovalDigestBindsGitHubReleaseAssetPlatformTargetAndPolicy(t *testing
 		t.Fatal("release tag was not bound")
 	}
 	first.ReleaseTag = c.ReleaseTag
+	first.RuntimePackageURL += "1"
+	changed, _ = approvalDigest(first)
+	if changed == first.ApprovalDigest {
+		t.Fatal("GitHub Asset API URL was not bound")
+	}
+	first.RuntimePackageURL = packageURL
 	first.DistributionMode = "changed"
 	changed, _ = approvalDigest(first)
 	if changed == first.ApprovalDigest {

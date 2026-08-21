@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "product": "chengfeng-videocut",
   "runtimeVersion": "0.5.9",
   "minimumRuntimeVersion": "0.5.9",
@@ -19,6 +19,7 @@
   "platforms": {
     "darwin-arm64": {
       "runtimePackageAsset": "chengfeng-videocut-installer-macos-arm64",
+      "runtimePackageURL": null,
       "runtimePackageSHA256": null,
       "runtimePackageMaxBytes": 536870912,
       "npmPackage": "@fixture/videocut-runtime-darwin-arm64",
@@ -32,6 +33,7 @@
     },
     "darwin-amd64": {
       "runtimePackageAsset": "chengfeng-videocut-installer-macos-x64",
+      "runtimePackageURL": null,
       "runtimePackageSHA256": null,
       "runtimePackageMaxBytes": 536870912,
       "npmPackage": "@fixture/videocut-runtime-darwin-x64",
@@ -45,6 +47,7 @@
     },
     "windows-amd64": {
       "runtimePackageAsset": "chengfeng-videocut-installer-windows-x64.exe",
+      "runtimePackageURL": "https://api.github.com/repos/Agentchengfeng/chengfeng-videocut/releases/assets/524020018",
       "runtimePackageSHA256": "eb565ffbec98620161e3f69a3db92510c01d8f5846f54a1afc91613895412ded",
       "runtimePackageMaxBytes": 536870912,
       "npmPackage": "@fixture/videocut-runtime-win32-x64",

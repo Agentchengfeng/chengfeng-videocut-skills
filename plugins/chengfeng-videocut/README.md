@@ -2,8 +2,8 @@
 
 > **Windows public beta:** this bundle is `chengfeng-videocut@0.11.7-beta.1`.
 > It requires Runtime `0.5.9` and accepts only a healthy, Product-managed
-> `public-beta` Runtime from the exact GitHub Release package and SHA-256 named
-> in `runtime-requirements.json`. It is not a signed macOS release.
+> `public-beta` Runtime from the exact GitHub Release Asset API endpoint and
+> SHA-256 named in `runtime-requirements.json`. It is not a signed macOS release.
 
 `chengfeng-videocut` 是安装和 Plugin 群组名称，不是一个同名的业务 Skill。
 
@@ -50,7 +50,7 @@ $chengfeng-videocut:chengfeng-check-updates
 compatibility contract `0.5.9`；MCP 以提交在包内的 macOS Universal 2 / Windows x64
 二进制离线启动，不需要系统 Node.js 或 Bun。`runtime_cli` 只接受结构化 `argv`，并且
 只调用 Product 受管目录中的唯一稳定 launcher。Runtime 缺失时先显示安装卡片；用户
-确认的 `approvalDigest` 同时绑定 GitHub repository、release tag、平台安装包名称、SHA-256、
+确认的 `approvalDigest` 同时绑定 GitHub repository、release tag、官方 Asset API URL、平台安装包名称、SHA-256、
 平台、目标目录、分发策略与写入影响。`runtime_install` 会重新计算并精确比较，由原生 MCP
 下载已构建安装包、复核 SHA-256，最后才在本地执行安装器；不要求系统 npm/Node，也不执行 lifecycle scripts。
 包内只包含 Runtime、受管 Bun、FFmpeg 与 FFprobe；浏览器引擎不属于安装包。只有用户确认实际

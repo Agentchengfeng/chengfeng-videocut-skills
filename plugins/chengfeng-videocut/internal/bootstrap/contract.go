@@ -6,10 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 
 	pluginassets "github.com/Agentchengfeng/chengfeng-videocut-skills/plugins/chengfeng-videocut"
@@ -72,6 +74,7 @@ type RuntimeCLICommandFeature struct {
 
 type PlatformAssets struct {
 	RuntimePackageAsset    string  `json:"runtimePackageAsset"`
+	RuntimePackageURL      *string `json:"runtimePackageURL"`
 	RuntimePackageSHA256   *string `json:"runtimePackageSHA256"`
 	RuntimePackageMaxBytes int64   `json:"runtimePackageMaxBytes"`
 	NPMPackage             string  `json:"npmPackage"`
@@ -93,6 +96,7 @@ type InstallPlan struct {
 	ReleaseTag             string `json:"releaseTag,omitempty"`
 	ReleaseVersion         string `json:"releaseVersion,omitempty"`
 	RuntimePackageAsset    string `json:"runtimePackageAsset,omitempty"`
+	RuntimePackageURL      string `json:"runtimePackageURL,omitempty"`
 	RuntimePackageSHA256   string `json:"runtimePackageSHA256,omitempty"`
 	RuntimePackageMaxBytes int64  `json:"runtimePackageMaxBytes,omitempty"`
 	Registry               string `json:"registry"`
@@ -128,7 +132,7 @@ func LoadContract() (Contract, error) {
 	if err := decoder.Decode(&c); err != nil {
 		return c, fmt.Errorf("decode embedded runtime requirements: %w", err)
 	}
-	if c.SchemaVersion != 5 || c.Product == "" || !exactVersionPattern.MatchString(c.RuntimeVersion) || c.MinimumRuntimeVersion == "" || c.Delivery != "github-release" || !githubRepositoryPattern.MatchString(c.Repository) || !releaseTagPattern.MatchString(c.ReleaseTag) || !exactVersionPattern.MatchString(c.ReleaseVersion) || c.DistributionMode == "" || c.LicenseStatus == "" || c.DefaultTargetRoot == "" || len(c.Platforms) == 0 {
+	if c.SchemaVersion != 6 || c.Product == "" || !exactVersionPattern.MatchString(c.RuntimeVersion) || c.MinimumRuntimeVersion == "" || c.Delivery != "github-release" || !githubRepositoryPattern.MatchString(c.Repository) || !releaseTagPattern.MatchString(c.ReleaseTag) || !exactVersionPattern.MatchString(c.ReleaseVersion) || c.DistributionMode == "" || c.LicenseStatus == "" || c.DefaultTargetRoot == "" || len(c.Platforms) == 0 {
 		return c, fmt.Errorf("embedded runtime requirements are incomplete")
 	}
 	if !safeSnapshotPath(c.RuntimeContract.Snapshot) || !validSHA256(c.RuntimeContract.SHA256) || c.RuntimeContract.Repository != runtimeContractRepository || !gitRevisionPattern.MatchString(c.RuntimeContract.Revision) {
@@ -145,11 +149,34 @@ func LoadContract() (Contract, error) {
 		if assets.RuntimePackageSHA256 != nil && !validSHA256(strings.TrimSpace(*assets.RuntimePackageSHA256)) {
 			return c, fmt.Errorf("embedded release asset digest %s is invalid", key)
 		}
+		if assets.RuntimePackageSHA256 != nil && (assets.RuntimePackageURL == nil || !validGitHubReleaseAssetURL(c.Repository, *assets.RuntimePackageURL)) {
+			return c, fmt.Errorf("embedded GitHub Release asset API URL %s is invalid", key)
+		}
+		if assets.RuntimePackageSHA256 == nil && assets.RuntimePackageURL != nil {
+			return c, fmt.Errorf("embedded GitHub Release asset URL %s is unlocked", key)
+		}
 	}
 	c.RuntimeSnapshot = snapshot
 	c.Capabilities = snapshot.Capabilities
 	c.StudioCapabilities = snapshot.StudioCapabilities
 	return c, nil
+}
+
+func validGitHubReleaseAssetURL(repository, candidate string) bool {
+	parsed, err := url.Parse(candidate)
+	if err != nil || parsed.Scheme != "https" || !strings.EqualFold(parsed.Host, "api.github.com") || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return false
+	}
+	prefix := "/repos/" + repository + "/releases/assets/"
+	if !strings.HasPrefix(parsed.EscapedPath(), prefix) {
+		return false
+	}
+	id := strings.TrimPrefix(parsed.EscapedPath(), prefix)
+	if id == "" || strings.Contains(id, "/") {
+		return false
+	}
+	parsedID, err := strconv.ParseInt(id, 10, 64)
+	return err == nil && parsedID > 0
 }
 
 func loadRuntimeContractSnapshot(requirements Contract) (RuntimeContractSnapshot, error) {
@@ -349,6 +376,7 @@ type installTestOptions struct {
 	RunInstaller         installerCommandFunc
 	AllowLocalFixture    bool
 	RuntimePackageFile   string
+	RuntimePackageURL    string
 	RuntimePackageSHA256 string
 	AllowNPMFixture      bool
 }
@@ -365,8 +393,15 @@ func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan,
 	}
 	if c.Delivery == "github-release" {
 		digest := ""
+		assetURL := ""
 		if assets.RuntimePackageSHA256 != nil {
 			digest = strings.ToLower(strings.TrimSpace(*assets.RuntimePackageSHA256))
+		}
+		if assets.RuntimePackageURL != nil {
+			assetURL = strings.TrimSpace(*assets.RuntimePackageURL)
+		}
+		if testOptions != nil && testOptions.RuntimePackageURL != "" {
+			assetURL = strings.TrimSpace(testOptions.RuntimePackageURL)
 		}
 		if testOptions != nil && testOptions.RuntimePackageSHA256 != "" {
 			digest = strings.ToLower(strings.TrimSpace(testOptions.RuntimePackageSHA256))
@@ -374,12 +409,12 @@ func buildInstallPlan(c Contract, testOptions *installTestOptions) (InstallPlan,
 		plan := InstallPlan{
 			Product: c.Product, Action: "runtime_install", RuntimeVersion: c.RuntimeVersion,
 			Delivery: c.Delivery, Repository: c.Repository, ReleaseTag: c.ReleaseTag, ReleaseVersion: c.ReleaseVersion,
-			Platform: key, RuntimePackageAsset: assets.RuntimePackageAsset, RuntimePackageSHA256: digest,
+			Platform: key, RuntimePackageAsset: assets.RuntimePackageAsset, RuntimePackageURL: assetURL, RuntimePackageSHA256: digest,
 			RuntimePackageMaxBytes: assets.RuntimePackageMaxBytes, DistributionMode: c.DistributionMode,
 			LicenseStatus: c.LicenseStatus, TargetRoot: root,
 			Impact: "从固定 GitHub Release 下载一个精确版本且锁定 SHA-256 的平台 Product Runtime 安装包；安装器离线安装 Runtime、受管 Bun、FFmpeg 和 FFprobe。Headless Shell 仍只在用户确认实际导出时由 Runtime 按固定版本和摘要获取并缓存。写入 Product Runtime 目录，可能替换 current 版本。",
 		}
-		if !validSHA256(plan.RuntimePackageSHA256) {
+		if !validSHA256(plan.RuntimePackageSHA256) || !validGitHubReleaseAssetURL(c.Repository, plan.RuntimePackageURL) {
 			return plan, nil
 		}
 		var planErr error

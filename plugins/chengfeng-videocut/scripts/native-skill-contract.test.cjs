@@ -69,7 +69,7 @@ assert.equal(mcp.cwd, ".");
 assert.equal(mcp.tool_timeout_sec, 1201);
 
 const runtimeRequirements = JSON.parse(read("runtime-requirements.json"));
-assert.equal(runtimeRequirements.schemaVersion, 5, "Runtime contract must use the GitHub Release schema");
+assert.equal(runtimeRequirements.schemaVersion, 6, "Runtime contract must use the GitHub Release asset API schema");
 assert.equal(runtimeRequirements.delivery, "github-release");
 assert.equal(runtimeRequirements.repository, "Agentchengfeng/chengfeng-videocut");
 assert.equal(runtimeRequirements.releaseTag, "v0.5.9-windows-beta.1");
@@ -92,15 +92,17 @@ assert.equal(runtimeRequirements.capabilities.operationIdempotencyVersion, 1, "o
 for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) {
   assert.deepEqual(
     Object.keys(assets).sort(),
-    ["distIntegrity", "installerPath", "installerSHA256", "npmPackage", "npmPackageVersion", "packageManifest", "runtimeLauncher", "runtimePackageAsset", "runtimePackageMaxBytes", "runtimePackageSHA256", "tarballMaxBytes"],
+    ["distIntegrity", "installerPath", "installerSHA256", "npmPackage", "npmPackageVersion", "packageManifest", "runtimeLauncher", "runtimePackageAsset", "runtimePackageMaxBytes", "runtimePackageSHA256", "runtimePackageURL", "tarballMaxBytes"],
     `${platform} must expose exactly one GitHub Release Runtime asset and its launcher`,
   );
   assert.match(assets.runtimePackageAsset, /^[A-Za-z0-9._-]+$/);
   assert.ok(assets.runtimePackageMaxBytes > 0);
   if (platform === "windows-amd64") {
     assert.match(assets.runtimePackageSHA256, /^[a-f0-9]{64}$/, "Windows public beta must pin its GitHub Release asset");
+	assert.equal(assets.runtimePackageURL, "https://api.github.com/repos/Agentchengfeng/chengfeng-videocut/releases/assets/524020018", "Windows public beta must use the pinned GitHub Asset API endpoint");
   } else {
     assert.equal(assets.runtimePackageSHA256, null, `${platform} must fail closed until its Release asset is published`);
+	assert.equal(assets.runtimePackageURL, null, `${platform} must fail closed until its GitHub Asset API endpoint is published`);
   }
 }
 
@@ -111,6 +113,7 @@ assert.match(runtimeContract, /Headless Shell 继续只由确认后的实际 exp
 const confirmationCard = read("public/review-confirm.html");
 assert.match(confirmationCard, /releaseTag/);
 assert.match(confirmationCard, /runtimePackageAsset/);
+assert.match(confirmationCard, /runtimePackageURL/);
 assert.match(confirmationCard, /runtimePackageSHA256/);
 assert.doesNotMatch(confirmationCard, /npmPackage|distIntegrity|installerSHA256/);
 

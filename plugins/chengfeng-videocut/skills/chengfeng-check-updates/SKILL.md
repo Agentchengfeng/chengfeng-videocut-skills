@@ -103,7 +103,7 @@ Plugin；包内预构建的原生 MCP 自动识别平台，并把 GitHub Release
 
 ```text
 Plugin runtime_install
-  -> 从固定 GitHub Release 下载 requirements 锁定 tag、精确资产名和 SHA-256 的一个平台 Runtime 安装包
+  -> 从固定 GitHub Release Asset API 下载 requirements 锁定 tag、精确资产名、Asset API URL 和 SHA-256 的一个平台 Runtime 安装包
   -> 原生 MCP 校验安装包 SHA-256，拒绝摘要不符或未锁定的下载
   -> 安装 Runtime 与受管媒体工具；不内嵌、下载或预检 Headless Shell
   -> Runtime 统一管理服务与媒体工具；Skill 只通过受管稳定启动器调用
