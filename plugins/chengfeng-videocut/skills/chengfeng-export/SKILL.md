@@ -44,11 +44,28 @@ Product 绝不搜索、借用或回退系统 Chrome / Chromium；受管引擎取
 ```json
 {"argv":["service","ensure","--json"]}
 {"argv":["export","<project>","--dry-run","--json"]}
+{"argv":["export","<project>","--profile","fast","--dry-run","--json"]}
 {"argv":["job","start","export","<project>","--json"]}
+{"argv":["job","start","export","<project>","--profile","fast","--out","/path/成片-快速审核.mp4","--json"]}
 {"argv":["job","start","export","<project>","--out","/path/成片.mp4","--json"]}
 {"argv":["job","start","export","<project>","--scale","1","--json"]}
 {"argv":["job","start","export","<project>","--keep-work","--json"]}
 ```
+
+### 两个档位怎么选
+
+```text
+先看 / 审核 / 试跑 / 送入二次编辑   → --profile fast
+最终高清 / 母版 / 正式发布           → --profile master（默认）
+```
+
+`fast` 默认不超过 1440×1080、30fps，使用快速编码；剪辑段、字幕和 HTML 画面层都不减少。
+它产出的是已经烧好画面的 MP4，**不是剪映原生可编辑工程**。`master` 保留源分辨率和源帧率，
+用于最终质量交付。不得把快速审核档称为母版，也不得为了省时间在用户明确要求最终母版时
+静默降档。
+
+同一次导出的 `--dry-run` 和 `job start` 必须携带同一个 `--profile`。快速档和母版使用不同
+的 `--out` 文件名，避免 Product 的不覆盖门禁让第二次导出冲突，也避免用户把两档认错。
 
 `job start` 返回持久 `jobId` 后，用 `runtime_cli` 的结构化 argv 调用
 `["job","get","<jobId>","--json"]` 或 `["job","list","--json"]` 追踪；只有用户明确
