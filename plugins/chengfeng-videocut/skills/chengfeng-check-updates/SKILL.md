@@ -80,12 +80,20 @@ codex plugin add chengfeng-videocut@chengfeng-videocut --json
 - `state=missing`：调用 `show_workflow_confirmation`，参数
   `{"kind":"runtime_install"}`。只有用户明确确认同一张卡片后，才把返回的
   `approvalDigest` 原样交给 `runtime_install`。
+- `state=runtime_channel_mismatch`：先展示 `observedChannel / expectedChannel /
+  runtimeVersion / targetRoot`。若 `repairable=true`，调用
+  `show_workflow_confirmation`，参数 `{"kind":"runtime_repair"}`；只有用户明确
+  确认同一张卡片后，才把返回的 `approvalDigest` 原样交给 `runtime_repair`。
+  修复只原子替换受管 `app / tools / launcher / service`，必须保留 `projects`、
+  `config.json` 和原媒体。若 `repairable=false`，停止并要求改用匹配通道的 Plugin，
+  不得拿正式包覆盖开发通道。
 - `state=unhealthy`：停止，报告结构化 `reason`。禁止自制审核页、播放器、
   时间线或任何替代界面。
 - `state=incompatible`：停止，报告当前版本、最低版本和 capability
   差异；不回退旧剪辑链。
 
-Runtime 安装后再调用一次 `runtime_status`，必须读回 `ready=true`。用户说
+Runtime 安装或修复后再调用一次 `runtime_status`，必须读回 `ready=true`，且
+`observedChannel=expectedChannel`。用户说
 「安装剪辑环境 / 装播放器 / 检查环境」时，就绪后还要调用：
 
 ```json
@@ -120,6 +128,13 @@ FFprobe，也不要求它们进入 `PATH`。`runtime_status`、doctor、安装�
 媒体能力缺失按 Runtime unhealthy/incompatible 停止；Headless Shell 的下载、
 校验或缓存失败则实际导出 fail-closed。两种情况都不把依赖转嫁给用户，也不让
 用户安装或指定系统浏览器。
+
+正式版/公测版默认只使用 `~/.chengfeng-videocut`；本地开发版默认只使用
+`~/.chengfeng-videocut-dev`。除非测试显式设置 `CHENGFENG_VIDEOCUT_HOME`，两个
+通道不得共享受管根。5190 仍是 Product 托管服务的唯一端口；开发者若显式以前台
+`start --port 15190` 运行隔离 Studio，不能把它冒充托管服务。doctor 已发现受管二进制但
+`dependencyMode` 不匹配时，Bun/FFmpeg/FFprobe 必须报告 `blocked`，不得误报为
+系统 `PATH` 缺失。
 
 云端转录凭证通过 MCP 结构化调用配置：
 

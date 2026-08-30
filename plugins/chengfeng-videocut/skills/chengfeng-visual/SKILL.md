@@ -24,7 +24,8 @@ user-invocable: true
 ## 0. Runtime 门禁
 
 直接调用原生 MCP `runtime_status`；不在每个画面任务中检查 Plugin 更新。
-`ready=true` 才继续。其他状态按 [检查更新](../chengfeng-check-updates/SKILL.md)
+`ready=true` 才继续。`runtime_channel_mismatch` 与其他非 ready 状态按
+[检查更新](../chengfeng-check-updates/SKILL.md)
 「检查 Runtime 就绪」处置；没有 ready 读回就停止，禁止自制替代界面。
 不搜索 Electron 路径、不起第二个 Runtime，不要求用户另装系统依赖。
 

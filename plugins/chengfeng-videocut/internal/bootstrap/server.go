@@ -14,7 +14,7 @@ import (
 
 const TemplateURI = "ui://chengfeng-videocut/workflow-confirm-v1.html"
 
-var Version = "0.11.7-beta.2"
+var Version = "0.11.7-beta.3"
 
 // BuildChannel is set only by the dedicated local-development build script.
 // The default and every release build stay fail-closed on release readiness.
@@ -22,7 +22,7 @@ var BuildChannel = "release"
 var revisionPattern = regexp.MustCompile(`^[a-f0-9]{64}$`)
 
 type ConfirmationInput struct {
-	Kind                     string   `json:"kind,omitempty" jsonschema:"workflow or runtime_install"`
+	Kind                     string   `json:"kind,omitempty" jsonschema:"workflow, runtime_install, or runtime_repair"`
 	ProjectID                string   `json:"projectId,omitempty"`
 	Stage                    string   `json:"stage,omitempty"`
 	ExpectedProjectRevision  string   `json:"expectedProjectRevision,omitempty"`
@@ -86,6 +86,13 @@ func NewServer(c Contract) *mcp.Server {
 		}
 		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: "Product Runtime 已通过摘要校验并安装完成。"}}}, output, nil
 	})
+	mcp.AddTool(server, &mcp.Tool{Name: "runtime_repair", Title: "修复 Product Runtime 通道", Description: "仅用于 runtime_channel_mismatch，并只接受修复确认卡片返回的 approvalDigest。重新绑定当前 Runtime 版本与通道、目标通道、平台包摘要、受管目录和保留路径后，调用 Product installer 原子替换受管程序与工具；保留 projects、config.json 和原媒体，失败时由安装器回滚。", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(true), IdempotentHint: false}}, func(ctx context.Context, req *mcp.CallToolRequest, input RuntimeInstallInput) (*mcp.CallToolResult, map[string]any, error) {
+		output, err := repairRuntime(ctx, c, strings.ToLower(strings.TrimSpace(input.ApprovalDigest)))
+		if err != nil {
+			return nil, nil, err
+		}
+		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: "Product Runtime 通道已修复并通过 doctor 回读。"}}}, output, nil
+	})
 	mcp.AddTool(server, &mcp.Tool{Name: "runtime_cli", Title: "调用 Product Runtime CLI", Description: "仅接收结构化 argv，并通过唯一受管启动器直接传参；不接受 shell 字符串、cwd、环境变量或 stdin。", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(true), IdempotentHint: false}}, func(ctx context.Context, req *mcp.CallToolRequest, input RuntimeCLIInput) (*mcp.CallToolResult, CommandResult, error) {
 		if err := validateArgv(input.Argv); err != nil {
 			return nil, CommandResult{}, err
@@ -110,6 +117,35 @@ func NewServer(c Contract) *mcp.Server {
 }
 
 func confirmationOutput(c Contract, input ConfirmationInput) (map[string]any, error) {
+	if input.Kind == "runtime_repair" {
+		current := inspectRuntime(context.Background(), c)
+		if current.State != "runtime_channel_mismatch" || !current.Repairable {
+			return nil, fmt.Errorf("Runtime repair requires a repairable runtime_channel_mismatch, got %s", current.State)
+		}
+		plan, err := BuildRepairPlan(c, current)
+		if err != nil {
+			return nil, err
+		}
+		availability := fmt.Sprintf("检测到 %s 通道 Runtime；目标通道为 %s", current.ObservedChannel, current.ExpectedChannel)
+		options := []map[string]any{{"id": "confirm", "action": "repair_runtime", "label": "确认修复", "badge": "会替换受管程序", "description": plan.Impact, "nextStep": "校验固定平台包后原子替换受管 Runtime，并执行 doctor 回读"}, {"id": "pause", "action": "pause_workflow", "label": "暂不修复", "badge": "不写入", "description": "保留当前 Runtime、项目、配置和媒体，本次不下载或执行任何内容。", "nextStep": "暂停任务"}}
+		selected := "confirm"
+		prompt := "确认后 Agent 可把 approvalDigest 原样交给 runtime_repair。摘要同时绑定当前通道、目标通道、平台包和保留路径。"
+		if plan.ApprovalDigest == "" {
+			availability += "；目标平台包尚未发布，修复会 fail-closed"
+			options = options[1:]
+			selected = "pause"
+			prompt = "目标平台包摘要尚未锁定，本卡片只展示修复计划并允许暂停；不会生成可执行 approvalDigest。"
+		}
+		output := map[string]any{
+			"kind": "runtime_repair", "title": "修复 Product Runtime 通道", "prompt": prompt,
+			"projectId": "runtime", "stage": "runtime_repair_ready", "selectedId": selected, "reviewSummary": availability,
+			"runtimeStatus": current, "installPlan": plan, "options": options,
+		}
+		if plan.ApprovalDigest != "" {
+			output["approvalDigest"] = plan.ApprovalDigest
+		}
+		return output, nil
+	}
 	if input.Kind == "runtime_install" {
 		plan, err := BuildInstallPlan(c)
 		if err != nil {

@@ -1,6 +1,6 @@
 # chengfeng-videocut
 
-> **Windows public beta:** this branch contains Plugin `0.11.7-beta.2` with
+> **Windows public beta:** this branch contains Plugin `0.11.7-beta.3` with
 > marketplace/plugin id `chengfeng-videocut`. It accepts only the separately
 > pinned `0.5.9` Windows Runtime GitHub Release Asset API endpoint, whose
 > package checksum is part of the Plugin contract. This is not a signed,
@@ -57,7 +57,7 @@ Bun、Git、`gh`、Chrome、FFmpeg 或 FFprobe，也不要求它们进入 `PATH`
 Skill 合同的行为（真实发生过：Runtime 缺失时 Agent 手搓了一个"审片台"，产出与产品
 完全不兼容）。遇到这种情况，把 Agent 的报错原文发 Issue。
 
-本分支是 `0.11.7-beta.2` Windows 公测候选。发布时会给出一个不可变 Git commit；
+本分支是 `0.11.7-beta.3` Windows 公测候选。发布时会给出一个不可变 Git commit；
 用户只应从该 commit 安装，不应使用分支名或历史 `0.10.8` 入口。Windows 安装器尚未
 签名，因此 Windows 可能显示未知发布者/SmartScreen 提示；这不是 Runtime 校验的替代，
 用户须自行决定是否继续。没有 Runtime GitHub Release、匹配 SHA-256 和真实 Windows
@@ -111,7 +111,7 @@ Runtime 默认安装到：
 ~/.chengfeng-videocut
 ```
 
-Plugin 0.11.7-beta.2 的合同固定为 Runtime `0.5.9`。requirements 每个平台只列一个精确
+Plugin 0.11.7-beta.3 的合同固定为 Runtime `0.5.9`。requirements 每个平台只列一个精确
 GitHub Release tag、安装包 SHA-256 和稳定启动器；原生 MCP 不调用 npm、Node 或 lifecycle scripts。任一 pinned 摘要未发布时，确认卡
 不生成可执行摘要，安装 fail-closed。Runtime 健康还不够：semver 必须达到最低版本并覆盖完整 capability 集。
 
@@ -228,7 +228,7 @@ chengfeng-videocut-skills/
 
 ## 发布边界
 
-Plugin 0.11.7-beta.2 依赖 Runtime 0.5.9 的 GitHub Release 安装包、managed tools、用户服务与当前 EDL / Studio 合同。发布顺序是：
+Plugin 0.11.7-beta.3 依赖 Runtime 0.5.9 的 GitHub Release 安装包、managed tools、用户服务与当前 EDL / Studio 合同。发布顺序是：
 
 ```text
 Runtime 0.5.9 GitHub Release 安装包

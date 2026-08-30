@@ -186,18 +186,24 @@ func validateArgv(args []string) error {
 }
 
 type RuntimeStatus struct {
-	State           string                `json:"state"`
-	Ready           bool                  `json:"ready"`
-	RuntimeVersion  string                `json:"runtimeVersion,omitempty"`
-	RequiredVersion string                `json:"requiredVersion"`
-	Platform        string                `json:"platform"`
-	TargetRoot      string                `json:"targetRoot"`
-	Launcher        string                `json:"launcher"`
-	Doctor          map[string]any        `json:"doctor,omitempty"`
-	Compatibility   *RuntimeCompatibility `json:"compatibility,omitempty"`
-	DevelopmentMode bool                  `json:"developmentMode"`
-	ReleaseReady    bool                  `json:"releaseReady"`
-	Reason          string                `json:"reason,omitempty"`
+	State            string                `json:"state"`
+	Ready            bool                  `json:"ready"`
+	RuntimeVersion   string                `json:"runtimeVersion,omitempty"`
+	RequiredVersion  string                `json:"requiredVersion"`
+	Platform         string                `json:"platform"`
+	TargetRoot       string                `json:"targetRoot"`
+	Launcher         string                `json:"launcher"`
+	Doctor           map[string]any        `json:"doctor,omitempty"`
+	Compatibility    *RuntimeCompatibility `json:"compatibility,omitempty"`
+	DevelopmentMode  bool                  `json:"developmentMode"`
+	ReleaseReady     bool                  `json:"releaseReady"`
+	PublicBeta       bool                  `json:"publicBeta"`
+	ExpectedChannel  string                `json:"expectedChannel"`
+	ObservedChannel  string                `json:"observedChannel,omitempty"`
+	DistributionMode string                `json:"distributionMode,omitempty"`
+	LicenseStatus    string                `json:"licenseStatus,omitempty"`
+	Repairable       bool                  `json:"repairable"`
+	Reason           string                `json:"reason,omitempty"`
 }
 
 type RuntimeCompatibility struct {
@@ -208,7 +214,8 @@ type RuntimeCompatibility struct {
 func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 	root, _ := runtimeRoot(c)
 	launcher, err := launcherPath(c)
-	status := RuntimeStatus{State: "missing", RequiredVersion: c.MinimumRuntimeVersion, Platform: platformKey(), TargetRoot: root, Launcher: launcher}
+	expectedChannel := expectedRuntimeChannel(c)
+	status := RuntimeStatus{State: "missing", RequiredVersion: c.MinimumRuntimeVersion, Platform: platformKey(), TargetRoot: root, Launcher: launcher, ExpectedChannel: expectedChannel}
 	if err != nil {
 		status.State, status.Reason = "unsupported", err.Error()
 		return status
@@ -249,7 +256,34 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 	healthy := doctor.OK && boolPath(status.Doctor, "ok") && boolPath(status.Doctor, "data", "healthy")
 	status.DevelopmentMode = boolPath(status.Doctor, "data", "developmentMode")
 	status.ReleaseReady = boolPath(status.Doctor, "data", "releaseReady")
+	status.PublicBeta = boolPath(status.Doctor, "data", "publicBeta")
+	status.DistributionMode = stringPath(status.Doctor, "data", "distributionMode")
+	status.LicenseStatus = stringPath(status.Doctor, "data", "licenseStatus")
 	readinessMode := stringPath(status.Doctor, "data", "readinessMode")
+	status.ObservedChannel = stringPath(status.Doctor, "data", "distributionChannel")
+	if status.ObservedChannel == "" {
+		status.ObservedChannel = observedChannelFromReadiness(readinessMode, status)
+	}
+	if status.ObservedChannel == "" && expectedChannel != "local-development" {
+		diagnostic := runRuntimeProbe(ctx, launcher, []string{"doctor", "--local-development", "--json"})
+		if parsed := lastJSONObject(diagnostic.Stdout); parsed != nil && diagnostic.OK &&
+			boolPath(parsed, "ok") && boolPath(parsed, "data", "healthy") &&
+			stringPath(parsed, "data", "readinessMode") == "local-development" {
+			status.ObservedChannel = "local-development"
+			status.DistributionMode = stringPath(parsed, "data", "distributionMode")
+			status.LicenseStatus = stringPath(parsed, "data", "licenseStatus")
+		}
+	}
+	if status.ObservedChannel != "" && status.ObservedChannel != expectedChannel {
+		status.State = "runtime_channel_mismatch"
+		status.Repairable = expectedChannel != "local-development"
+		status.Reason = fmt.Sprintf(
+			"installed Runtime channel %s does not match Plugin channel %s",
+			status.ObservedChannel,
+			expectedChannel,
+		)
+		return status
+	}
 	readinessCompatible := status.ReleaseReady && !status.DevelopmentMode && readinessMode == "release-ready"
 	if c.DistributionMode == "public-beta" && c.LicenseStatus == "UNVERIFIED" {
 		readinessCompatible = healthy && !status.DevelopmentMode && !status.ReleaseReady && readinessMode == "public-beta"
@@ -284,6 +318,37 @@ func inspectRuntime(ctx context.Context, c Contract) RuntimeStatus {
 		}
 	}
 	return status
+}
+
+func expectedRuntimeChannel(c Contract) string {
+	if BuildChannel == "local-development" {
+		return "local-development"
+	}
+	if c.DistributionMode == "public-beta" {
+		return "public-beta"
+	}
+	return "stable"
+}
+
+func observedChannelFromReadiness(readinessMode string, status RuntimeStatus) string {
+	switch readinessMode {
+	case "release-ready":
+		return "stable"
+	case "public-beta":
+		return "public-beta"
+	case "local-development":
+		return "local-development"
+	}
+	if status.ReleaseReady {
+		return "stable"
+	}
+	if status.PublicBeta {
+		return "public-beta"
+	}
+	if status.DevelopmentMode {
+		return "local-development"
+	}
+	return ""
 }
 
 func semverAtLeast(actual, minimum string) bool {

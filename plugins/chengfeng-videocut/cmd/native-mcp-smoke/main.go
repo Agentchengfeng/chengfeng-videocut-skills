@@ -19,7 +19,7 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	client := mcp.NewClient(&mcp.Implementation{Name: "chengfeng-native-smoke", Version: "0.11.7-beta.2"}, nil)
+	client := mcp.NewClient(&mcp.Implementation{Name: "chengfeng-native-smoke", Version: "0.11.7-beta.3"}, nil)
 	cmd := exec.Command(os.Args[1])
 	cmd.Stderr = os.Stderr
 	session, err := client.Connect(ctx, &mcp.CommandTransport{Command: cmd}, nil)
@@ -37,7 +37,7 @@ func main() {
 	if expectedServer == "" {
 		expectedServer = "chengfeng-videocut"
 	}
-	if init.ServerInfo == nil || init.ServerInfo.Name != expectedServer || init.ServerInfo.Version != "0.11.7-beta.2" {
+	if init.ServerInfo == nil || init.ServerInfo.Name != expectedServer || init.ServerInfo.Version != "0.11.7-beta.3" {
 		fatal(fmt.Errorf("unexpected server info: %#v", init.ServerInfo))
 	}
 	listed, err := session.ListTools(ctx, nil)
@@ -51,12 +51,15 @@ func main() {
 		byName[tool.Name] = tool
 	}
 	sort.Strings(names)
-	want := []string{"runtime_cli", "runtime_install", "runtime_status", "show_workflow_confirmation"}
+	want := []string{"runtime_cli", "runtime_install", "runtime_repair", "runtime_status", "show_workflow_confirmation"}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		fatal(fmt.Errorf("tools=%v", names))
 	}
 	if byName["runtime_install"].Annotations == nil || byName["runtime_install"].Annotations.ReadOnlyHint {
 		fatal(fmt.Errorf("runtime_install annotations are not write-impacting"))
+	}
+	if byName["runtime_repair"].Annotations == nil || byName["runtime_repair"].Annotations.ReadOnlyHint || byName["runtime_repair"].Annotations.DestructiveHint == nil || !*byName["runtime_repair"].Annotations.DestructiveHint {
+		fatal(fmt.Errorf("runtime_repair annotations are not write-impacting"))
 	}
 	if byName["runtime_cli"].Annotations == nil || byName["runtime_cli"].Annotations.OpenWorldHint == nil || !*byName["runtime_cli"].Annotations.OpenWorldHint {
 		fatal(fmt.Errorf("runtime_cli must explicitly declare openWorldHint=true"))

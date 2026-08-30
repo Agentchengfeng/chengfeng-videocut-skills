@@ -77,6 +77,7 @@ func main() {
 		"show_workflow_confirmation": {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
 		"runtime_status":             {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
 		"runtime_install":            {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": true, "idempotentHint": false},
+		"runtime_repair":             {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": true, "idempotentHint": false},
 		"runtime_cli":                {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": true, "idempotentHint": false},
 	}
 	seen := make([]string, 0, len(toolsResult.Tools))
@@ -98,7 +99,7 @@ func main() {
 		fatal(fmt.Errorf("tools=%v, want %d tools", seen, len(want)))
 	}
 	sort.Strings(seen)
-	fmt.Printf("PASS raw_protocol=%s explicit_annotation_boole=16 tools=%v\n", initialized.ProtocolVersion, seen)
+	fmt.Printf("PASS raw_protocol=%s explicit_annotation_boole=20 tools=%v\n", initialized.ProtocolVersion, seen)
 }
 
 func request(enc *json.Encoder, id int, method string, params map[string]any) {

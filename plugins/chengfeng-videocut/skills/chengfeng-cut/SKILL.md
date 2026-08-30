@@ -34,8 +34,8 @@ Studio 状态的唯一写入者。
 ## 0. Runtime 门禁
 
 直接调用原生 MCP `runtime_status`；每个剪辑任务不运行 Plugin 更新脚本，也不
-联网刷新 Marketplace。`ready=true` 才继续。`missing / unhealthy /
-incompatible` 按 [检查更新](../chengfeng-check-updates/SKILL.md)「检查 Runtime
+联网刷新 Marketplace。`ready=true` 才继续。`missing / runtime_channel_mismatch /
+unhealthy / incompatible` 按 [检查更新](../chengfeng-check-updates/SKILL.md)「检查 Runtime
 就绪」处置；没有 ready 读回就停止，禁止自制替代界面。
 
 从本 Skill 实际源文件路径向上两级定位 `<插件根>`，只用于读包内词典。

@@ -21,6 +21,12 @@ runtime_status
       |
       +-- missing --> show confirmation --> runtime_install --> doctor --> 继续当前 Skill
       |
+      +-- runtime_channel_mismatch
+      |        |
+      |        +-- repairable --> show confirmation --> runtime_repair --> doctor --> 继续
+      |        |
+      |        +-- not repairable -------------------------------> 停止，切换匹配 Plugin
+      |
       +-- unhealthy / install failed ---> 停止，不打开 Studio
       |
       +-- incompatible -----------------> runtime_capability_missing
@@ -41,8 +47,18 @@ runtime_status
 - GitHub Release 缺失、release tag / 资产名漂移、安装包摘要未锁定或哈希不符时，以 `install_failed` 停止；不得转装公开旧版、源码 clone、npx 或 bunx，也不得调用用户系统的 npm/Node。
 - Runtime 冷安装的单包下载、安装器执行与最终 readback 共用 19 分钟
   内部 context；MCP host `tool_timeout_sec=1201` 留出有界终止和响应收尾窗口。
-- 安装位置是 `CHENGFENG_VIDEOCUT_HOME` 或 `~/.chengfeng-videocut`。
+- 正式版/公测版安装位置是 `CHENGFENG_VIDEOCUT_HOME` 或
+  `~/.chengfeng-videocut`；本地开发版默认是 `~/.chengfeng-videocut-dev`。测试可以
+  显式覆盖根，发布路径不得让开发和正式通道共享目录。5190 仍是托管服务的唯一端口；
+  15190 只属于开发者显式运行的隔离 foreground Studio，不得通过 `service ensure`
+  或健康字段伪装成托管服务。
 - CLI 已存在但 doctor 失败时不自动覆盖或循环重装；已有 Runtime 低于 0.5.9 时也不静默覆盖。
+  唯一的覆盖式恢复入口是已识别的 `runtime_channel_mismatch`：确认卡与
+  `runtime_repair` 必须把当前版本/通道、目标版本/通道、平台包摘要、目标根和
+  `projects / config.json` 保留路径全部绑定进同一个 approval digest。Product installer
+  原子替换受管 `app / tools / launcher / service`，失败回滚，项目与原媒体不进入替换集。
+- `dependencyMode` 失败是上游信任/通道门禁；若受管 Bun/FFmpeg/FFprobe 已存在，doctor
+  下游项标为 `blockedBy=dependencyMode`，不能再输出“PATH 未安装”这种错误根因。
 - CLI doctor 健康但 semver 低于 0.5.9，或缺少合同 capability 时，以 `runtime_capability_missing` 停止；不把“健康”误当“兼容”。
 - MCP 只认 `CHENGFENG_VIDEOCUT_HOME` 或默认受管根内的 stable launcher；逐级 `Lstat` 拒绝 symlink、目录与越界路径，启动器必须是单硬链普通文件。健康检查和 CLI 调用前后的指纹发生改变时以 `unhealthy / launcher_integrity_changed` 停止；不回退 PATH、源码或显式任意 binary。
 - Plugin 不搜索 Electron `.app`、NSIS 目录或 resources；只有经过摘要确认的 Runtime
@@ -118,7 +134,7 @@ Product open 返回项目 URL
 ## 当前 Runtime 兼容门禁
 
 - 低于 0.5.9 的 Runtime 不具备本 Plugin 发布所绑定的完整受管工具与当前 EDL / Studio compatibility contract，必须被版本门禁拒绝。
-- Runtime `0.5.9` Windows GitHub Release 安装包必须先于 Plugin `0.11.7-beta.2` 激活；该包内嵌 Runtime、Bun、FFmpeg 与 FFprobe。精确 release tag、资产名和 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
+- Runtime `0.5.9` Windows GitHub Release 安装包必须先于 Plugin `0.11.7-beta.3` 激活；该包内嵌 Runtime、Bun、FFmpeg 与 FFprobe。精确 release tag、资产名和 SHA-256 必须预先写入 Plugin requirements。Headless Shell 继续只由确认后的实际 export 受管获取，不属于该安装包。
 - `v0.5.9` 必须提供正式原视频云端转录命令；缺少时以 `missing_cloud_transcription_adapter` 停止，禁止回退本地 ASR。
 - `v0.5.9` 必须提供可用 renderer manager；它仅在用户确认的实际 export 中确保固定锁定的
   Headless Shell，且新版 Skill 不得把旧 renderer 或系统浏览器重新打包、扫描或回退。
@@ -181,7 +197,7 @@ GitHub Release 预发布资产
 隔离环境首次安装 + doctor + Studio capability 验收
       |
       v
-Plugin 0.11.7-beta.2 内容提交
+Plugin 0.11.7-beta.3 内容提交
       |
       +------------------------------> contentRevision A
       |

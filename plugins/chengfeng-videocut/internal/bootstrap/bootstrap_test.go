@@ -449,6 +449,85 @@ func TestReleaseBuildRejectsDevelopmentDoctorResponse(t *testing.T) {
 	if status.Ready || status.State == "development_ready" || !status.DevelopmentMode || status.ReleaseReady {
 		t.Fatalf("release build accepted or hid development response: %#v", status)
 	}
+	if status.State != "runtime_channel_mismatch" || status.ObservedChannel != "local-development" || status.ExpectedChannel != "public-beta" || !status.Repairable {
+		t.Fatalf("release build did not preserve the channel mismatch root cause: %#v", status)
+	}
+	confirmation, err := confirmationOutput(c, ConfirmationInput{Kind: "runtime_repair"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if confirmation["kind"] != "runtime_repair" || confirmation["stage"] != "runtime_repair_ready" {
+		t.Fatalf("repair confirmation returned the wrong identity: %#v", confirmation)
+	}
+	plan := confirmation["installPlan"].(InstallPlan)
+	if plan.Action != "runtime_repair" || plan.CurrentChannel != "local-development" || plan.CurrentRuntimeVersion != "0.5.9" {
+		t.Fatalf("repair confirmation did not bind the detected Runtime: %#v", plan)
+	}
+}
+
+func TestRepairApprovalBindsCurrentChannelVersionAndPreservedPaths(t *testing.T) {
+	c, err := LoadContract()
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err := buildInstallPlan(c, &installTestOptions{
+		RuntimePackageURL:    "https://api.github.com/repos/Agentchengfeng/chengfeng-videocut/releases/assets/1",
+		RuntimePackageSHA256: strings.Repeat("a", 64),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	current := RuntimeStatus{
+		State: "runtime_channel_mismatch", RuntimeVersion: "0.5.7",
+		ObservedChannel: "local-development", ExpectedChannel: "public-beta", Repairable: true,
+	}
+	repair, err := bindRepairPlan(plan, current)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repair.Action != "runtime_repair" || repair.CurrentRuntimeVersion != "0.5.7" || repair.CurrentChannel != "local-development" || !validSHA256(repair.ApprovalDigest) {
+		t.Fatalf("repair plan did not bind current identity: %#v", repair)
+	}
+	if !reflect.DeepEqual(repair.PreservedPaths, []string{"projects", "config.json"}) {
+		t.Fatalf("unexpected preserved paths: %q", repair.PreservedPaths)
+	}
+	changed := current
+	changed.ObservedChannel = "stable"
+	changedRepair, err := bindRepairPlan(plan, changed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if changedRepair.ApprovalDigest == repair.ApprovalDigest {
+		t.Fatal("repair approval did not bind the observed channel")
+	}
+}
+
+func TestLocalDevelopmentUsesAnIsolatedDefaultRuntimeRoot(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("CHENGFENG_VIDEOCUT_HOME", "")
+	c, err := LoadContract()
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalChannel := BuildChannel
+	t.Cleanup(func() { BuildChannel = originalChannel })
+	BuildChannel = "local-development"
+	developmentRoot, err := runtimeRoot(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	BuildChannel = "release"
+	releaseRoot, err := runtimeRoot(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if developmentRoot != filepath.Join(home, ".chengfeng-videocut-dev") {
+		t.Fatalf("development root=%q", developmentRoot)
+	}
+	if releaseRoot != filepath.Join(home, ".chengfeng-videocut") || releaseRoot == developmentRoot {
+		t.Fatalf("release root=%q development root=%q", releaseRoot, developmentRoot)
+	}
 }
 
 func TestManagedLauncherRejectsSymlink(t *testing.T) {

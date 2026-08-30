@@ -88,31 +88,34 @@ type PlatformAssets struct {
 }
 
 type InstallPlan struct {
-	Product                string `json:"product"`
-	Action                 string `json:"action"`
-	RuntimeVersion         string `json:"runtimeVersion"`
-	Delivery               string `json:"delivery"`
-	Repository             string `json:"repository,omitempty"`
-	ReleaseTag             string `json:"releaseTag,omitempty"`
-	ReleaseVersion         string `json:"releaseVersion,omitempty"`
-	RuntimePackageAsset    string `json:"runtimePackageAsset,omitempty"`
-	RuntimePackageURL      string `json:"runtimePackageURL,omitempty"`
-	RuntimePackageSHA256   string `json:"runtimePackageSHA256,omitempty"`
-	RuntimePackageMaxBytes int64  `json:"runtimePackageMaxBytes,omitempty"`
-	Registry               string `json:"registry"`
-	NPMPackage             string `json:"npmPackage"`
-	NPMPackageVersion      string `json:"npmPackageVersion"`
-	DistIntegrity          string `json:"distIntegrity,omitempty"`
-	Platform               string `json:"platform"`
-	TarballMaxBytes        int64  `json:"tarballMaxBytes"`
-	PackageManifest        string `json:"packageManifest"`
-	InstallerPath          string `json:"installerPath"`
-	InstallerSHA256        string `json:"installerSHA256,omitempty"`
-	DistributionMode       string `json:"distributionMode"`
-	LicenseStatus          string `json:"licenseStatus"`
-	TargetRoot             string `json:"targetRoot"`
-	Impact                 string `json:"impact"`
-	ApprovalDigest         string `json:"approvalDigest,omitempty"`
+	Product                string   `json:"product"`
+	Action                 string   `json:"action"`
+	RuntimeVersion         string   `json:"runtimeVersion"`
+	Delivery               string   `json:"delivery"`
+	Repository             string   `json:"repository,omitempty"`
+	ReleaseTag             string   `json:"releaseTag,omitempty"`
+	ReleaseVersion         string   `json:"releaseVersion,omitempty"`
+	RuntimePackageAsset    string   `json:"runtimePackageAsset,omitempty"`
+	RuntimePackageURL      string   `json:"runtimePackageURL,omitempty"`
+	RuntimePackageSHA256   string   `json:"runtimePackageSHA256,omitempty"`
+	RuntimePackageMaxBytes int64    `json:"runtimePackageMaxBytes,omitempty"`
+	Registry               string   `json:"registry"`
+	NPMPackage             string   `json:"npmPackage"`
+	NPMPackageVersion      string   `json:"npmPackageVersion"`
+	DistIntegrity          string   `json:"distIntegrity,omitempty"`
+	Platform               string   `json:"platform"`
+	TarballMaxBytes        int64    `json:"tarballMaxBytes"`
+	PackageManifest        string   `json:"packageManifest"`
+	InstallerPath          string   `json:"installerPath"`
+	InstallerSHA256        string   `json:"installerSHA256,omitempty"`
+	DistributionMode       string   `json:"distributionMode"`
+	LicenseStatus          string   `json:"licenseStatus"`
+	TargetRoot             string   `json:"targetRoot"`
+	CurrentRuntimeVersion  string   `json:"currentRuntimeVersion,omitempty"`
+	CurrentChannel         string   `json:"currentChannel,omitempty"`
+	PreservedPaths         []string `json:"preservedPaths,omitempty"`
+	Impact                 string   `json:"impact"`
+	ApprovalDigest         string   `json:"approvalDigest,omitempty"`
 }
 
 var npmPackagePattern = regexp.MustCompile(`^@[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$`)
@@ -359,6 +362,9 @@ func runtimeRoot(c Contract) (string, error) {
 		return "", fmt.Errorf("resolve user home: %w", err)
 	}
 	target := strings.TrimSpace(c.DefaultTargetRoot)
+	if BuildChannel == "local-development" && target == "~/.chengfeng-videocut" {
+		target = "~/.chengfeng-videocut-dev"
+	}
 	if strings.HasPrefix(target, "~/") {
 		return filepath.Join(home, filepath.FromSlash(strings.TrimPrefix(target, "~/"))), nil
 	}
@@ -370,6 +376,41 @@ func runtimeRoot(c Contract) (string, error) {
 
 func BuildInstallPlan(c Contract) (InstallPlan, error) {
 	return buildInstallPlan(c, nil)
+}
+
+func BuildRepairPlan(c Contract, current RuntimeStatus) (InstallPlan, error) {
+	if current.State != "runtime_channel_mismatch" {
+		return InstallPlan{}, fmt.Errorf("Runtime repair requires runtime_channel_mismatch, got %s", current.State)
+	}
+	plan, err := buildInstallPlan(c, nil)
+	if err != nil {
+		return InstallPlan{}, err
+	}
+	return bindRepairPlan(plan, current)
+}
+
+func bindRepairPlan(plan InstallPlan, current RuntimeStatus) (InstallPlan, error) {
+	plan.Action = "runtime_repair"
+	plan.CurrentRuntimeVersion = current.RuntimeVersion
+	plan.CurrentChannel = current.ObservedChannel
+	plan.PreservedPaths = []string{"projects", "config.json"}
+	plan.Impact = "原子替换当前通道不匹配的受管 Runtime、Bun、FFmpeg、FFprobe 与服务登记；保留 projects、config.json 和原媒体。失败时由 Product installer 回滚 app/tools、launcher 与服务状态。"
+	plan.ApprovalDigest = ""
+	locked := plan.Delivery == "github-release" &&
+		validSHA256(plan.RuntimePackageSHA256) &&
+		validGitHubReleaseAssetURL(plan.Repository, plan.RuntimePackageURL)
+	if plan.Delivery != "github-release" {
+		locked = validSHA512SRI(plan.DistIntegrity) && validSHA256(plan.InstallerSHA256)
+	}
+	if !locked {
+		return plan, nil
+	}
+	digest, err := approvalDigest(plan)
+	if err != nil {
+		return InstallPlan{}, err
+	}
+	plan.ApprovalDigest = digest
+	return plan, nil
 }
 
 type installTestOptions struct {

@@ -52,10 +52,13 @@ const readiness = fs.readFileSync(path.join(root, "skills", "chengfeng-check-upd
 assert.match(readiness, /Codex 0\.146\+ 的原生 GitHub Marketplace 管理能力/);
 assert.match(readiness, /marketplace upgrade chengfeng-videocut --json/);
 assert.match(readiness, /plugin add chengfeng-videocut@chengfeng-videocut --json/);
+assert.match(readiness, /runtime_channel_mismatch/);
+assert.match(readiness, /runtime_repair/);
 assert.doesNotMatch(readiness, /node\s+"?<插件根>/, "the user update path must not execute Node helpers");
 for (const name of ["chengfeng-cut", "chengfeng-subtitle", "chengfeng-visual", "chengfeng-export"]) {
   const text = fs.readFileSync(path.join(root, "skills", name, "SKILL.md"), "utf8");
   assert.match(text, /runtime_status/, `${name} must perform only the native Runtime gate per task`);
+  assert.match(text, /runtime_channel_mismatch/, `${name} must route an installed channel mismatch explicitly`);
   assert.doesNotMatch(text, /check-plugin-update\.cjs/, `${name} must not refresh Plugin state per task`);
 }
 const businessContract = fs.readFileSync(path.join(root, "references", "business-workflow-contract.md"), "utf8");

@@ -1,6 +1,6 @@
 # chengfeng-videocut Codex Plugin
 
-> **Windows public beta:** this bundle is `chengfeng-videocut@0.11.7-beta.2`.
+> **Windows public beta:** this bundle is `chengfeng-videocut@0.11.7-beta.3`.
 > It requires Runtime `0.5.9` and accepts only a healthy, Product-managed
 > `public-beta` Runtime from the exact GitHub Release Asset API endpoint and
 > SHA-256 named in `runtime-requirements.json`. It is not a signed macOS release.

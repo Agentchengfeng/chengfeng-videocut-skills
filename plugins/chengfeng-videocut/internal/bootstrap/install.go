@@ -117,8 +117,34 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if err != nil {
 		return nil, err
 	}
+	return executeRuntimePlanWithOptions(callCtx, c, plan, approval, testOptions)
+}
+
+func repairRuntime(ctx context.Context, c Contract, approval string) (map[string]any, error) {
+	return repairRuntimeWithOptions(ctx, c, approval, nil)
+}
+
+func repairRuntimeWithOptions(ctx context.Context, c Contract, approval string, testOptions *installTestOptions) (map[string]any, error) {
+	callCtx, cancel := context.WithTimeout(ctx, runtimeInstallCallTimeout)
+	defer cancel()
+	current := inspectRuntime(callCtx, c)
+	if current.State != "runtime_channel_mismatch" || !current.Repairable {
+		return nil, fmt.Errorf("Runtime repair requires a repairable runtime_channel_mismatch, got %s", current.State)
+	}
+	plan, err := buildInstallPlan(c, testOptions)
+	if err != nil {
+		return nil, err
+	}
+	plan, err = bindRepairPlan(plan, current)
+	if err != nil {
+		return nil, err
+	}
+	return executeRuntimePlanWithOptions(callCtx, c, plan, approval, testOptions)
+}
+
+func executeRuntimePlanWithOptions(ctx context.Context, c Contract, plan InstallPlan, approval string, testOptions *installTestOptions) (map[string]any, error) {
 	if plan.Delivery == "github-release" {
-		return installRuntimeFromGitHubRelease(callCtx, c, plan, approval, testOptions)
+		return installRuntimeFromGitHubRelease(ctx, c, plan, approval, testOptions)
 	}
 	if !validSHA512SRI(plan.DistIntegrity) || !validSHA256(plan.InstallerSHA256) || plan.ApprovalDigest == "" {
 		return nil, fmt.Errorf("Runtime %s npm package is not locked: dist.integrity or installer digest is unpublished; installation is unavailable", plan.RuntimeVersion)
@@ -132,7 +158,7 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	}
 	defer os.RemoveAll(temp)
 
-	metadata, err := fetchNPMVersionMetadata(callCtx, plan)
+	metadata, err := fetchNPMVersionMetadata(ctx, plan)
 	if err != nil {
 		return nil, fmt.Errorf("fetch exact npm package metadata: %w", err)
 	}
@@ -144,7 +170,7 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 		return nil, err
 	}
 	tarballPath := filepath.Join(temp, "runtime-package.tgz")
-	if err := download(callCtx, tarballURL, tarballPath, plan.TarballMaxBytes); err != nil {
+	if err := download(ctx, tarballURL, tarballPath, plan.TarballMaxBytes); err != nil {
 		return nil, fmt.Errorf("download npm Runtime tarball: %w", err)
 	}
 	if err := verifySHA512SRI(tarballPath, plan.DistIntegrity); err != nil {
@@ -171,14 +197,14 @@ func installRuntimeWithOptions(ctx context.Context, c Contract, approval string,
 	if testOptions != nil && testOptions.RunInstaller != nil {
 		runInstaller = testOptions.RunInstaller
 	}
-	result := runInstaller(callCtx, installerPath, args, extractRoot, runtimeInstallerTimeout)
+	result := runInstaller(ctx, installerPath, args, extractRoot, runtimeInstallerTimeout)
 	if !result.OK {
 		return nil, fmt.Errorf("Runtime package installer failed with exit %d: %s", result.ExitCode, strings.TrimSpace(result.Stderr))
 	}
-	if err := callCtx.Err(); err != nil {
+	if err := ctx.Err(); err != nil {
 		return nil, fmt.Errorf("runtime install call exceeded its bounded deadline before final readback: %w", err)
 	}
-	status := inspectRuntime(callCtx, c)
+	status := inspectRuntime(ctx, c)
 	if !status.Ready {
 		return nil, fmt.Errorf("installer exited successfully but runtime is not ready: %s", status.Reason)
 	}

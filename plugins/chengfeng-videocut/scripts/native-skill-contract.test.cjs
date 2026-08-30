@@ -48,6 +48,11 @@ const updates = read("skills/chengfeng-check-updates/SKILL.md");
 assert.match(updates, /show_workflow_confirmation/);
 assert.match(updates, /approvalDigest/);
 assert.match(updates, /runtime_install/);
+assert.match(updates, /runtime_channel_mismatch/);
+assert.match(updates, /runtime_repair/);
+assert.match(updates, /observedChannel=expectedChannel/);
+assert.match(updates, /`projects`、[\s\S]*`config\.json` 和原媒体/, "Runtime repair must preserve user state");
+assert.match(updates, /~\/\.chengfeng-videocut-dev[\s\S]*start --port 15190/, "local development must isolate its root and label foreground 15190 honestly");
 assert.match(updates, /plugin marketplace upgrade chengfeng-videocut --json/);
 assert.match(updates, /plugin add chengfeng-videocut@chengfeng-videocut --json/);
 assert.match(updates, /不内嵌、下载或预检 Headless Shell/, "Runtime installation must not claim to contain Headless Shell");
@@ -109,6 +114,8 @@ for (const [platform, assets] of Object.entries(runtimeRequirements.platforms)) 
 const runtimeContract = read("references/runtime-and-product-contract.md");
 assert.match(runtimeContract, /内嵌 Runtime、Bun、FFmpeg 与 FFprobe/, "Runtime installer contents must stay explicit");
 assert.match(runtimeContract, /Headless Shell 继续只由确认后的实际 export 受管获取/, "Headless Shell must not be described as an installer payload");
+assert.match(runtimeContract, /runtime_channel_mismatch[\s\S]*runtime_repair/, "the Runtime contract must define an explicit channel repair path");
+assert.match(runtimeContract, /blockedBy=dependencyMode/, "downstream dependency checks must preserve the upstream block reason");
 
 const confirmationCard = read("public/review-confirm.html");
 assert.match(confirmationCard, /releaseTag/);
