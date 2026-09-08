@@ -1,6 +1,0 @@
-interface:
-  display_name: "chengfeng · 字幕"
-  short_description: "按账本与逐词稿生成字幕，校对分屏并在字幕样式选择全片样式"
-  default_prompt: "使用 $chengfeng-videocut:chengfeng-subtitle 基于已有账本和逐词稿做字幕：校对专名与分屏；在 Studio 的「字幕」改字分屏，在「字幕样式」选择全片样式。"
-policy:
-  allow_implicit_invocation: true

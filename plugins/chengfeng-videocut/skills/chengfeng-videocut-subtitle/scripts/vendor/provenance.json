@@ -1,0 +1,20 @@
+{
+  "generator": "subtitle-candidate-pilot-1",
+  "license": "Apache-2.0",
+  "sourceRepository": "chengfeng-videocut Runtime",
+  "sourceCommit": "6a610713433d0f44ddc42a2d0c2fb2597865fcaf",
+  "bundler": "1.3.5",
+  "sources": {
+    "packages/core/src/subtitles.ts": "9f2d06ae09c73ae44c4d88ca514680cb2b92474383cf6de453d2e883d3823a29",
+    "packages/core/src/cuts.ts": "c70ce963907804d0632e4fce186e0867db3f80749c8f765bfb56c18ef7957349",
+    "packages/core/src/editList.ts": "cf380cb4b6b28c8410748574d9bb7717cb3866205bdf7985b3c5e1a2742d6606",
+    "packages/core/src/errors.ts": "555a60407a93635ca0d75dcd85c93dd5c6a85a83bbf06d087af5353f0a0dd252",
+    "packages/contracts/src/index.ts": "1a8fca98006819b1f89148770f250fc73bd3fc462f0fc53ba7af410d46a4fdce",
+    "LICENSE": "4259155fb06f127687ee7b0a8a3682d45132db0f2da26cbc0b7a2d1e796436b8"
+  },
+  "bundles": {
+    "subtitles.mjs": "1d609eb32d4d55a25aae00306597b813492ce661003cfe0eab28ccaea6d317af",
+    "cuts.mjs": "a7294f7de00dfc7c815497bdb8ea69c99aed1a5e1f09246b8435e854076d198a",
+    "editList.mjs": "b59cca95fce43fd007ab71dc18ce1da151a6b835f8d5316f0c45941da60c46cf"
+  }
+}

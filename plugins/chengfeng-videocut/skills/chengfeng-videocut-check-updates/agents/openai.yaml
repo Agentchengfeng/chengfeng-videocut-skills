@@ -1,0 +1,4 @@
+interface:
+  display_name: "chengfeng-videocut · 检查更新"
+  short_description: "检查 Plugin 更新与 Product Runtime 就绪，按确认卡安全安装"
+  default_prompt: "使用 $chengfeng-videocut:chengfeng-videocut-check-updates 检查 chengfeng-videocut Plugin 更新和 Product Runtime 是否就绪；先报告状态，未经确认不要激活或安装。"

@@ -7,7 +7,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const root = path.resolve(__dirname, "..");
-const report = path.join(root, "skills", "chengfeng-report-bug", "scripts", "report-bug.cjs");
+const report = path.join(root, "skills", "chengfeng-videocut-report-bug", "scripts", "report-bug.cjs");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "videocut-bug-report-test-"));
 const input = path.join(tmp, "report.json");
 const ghDriver = path.join(tmp, "fake-gh-driver.cjs");

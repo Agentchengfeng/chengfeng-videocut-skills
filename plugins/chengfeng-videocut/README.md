@@ -10,12 +10,12 @@
 ```text
 [Plugin: chengfeng-videocut]
        |
-       +-- 剪口播 ----> chengfeng-cut
-       +-- 字幕 ------> chengfeng-subtitle
-       +-- 画面 ------> chengfeng-visual
-       +-- 导出 ------> chengfeng-export
-       +-- 上报 Bug --> chengfeng-report-bug
-       +-- 检查更新 --> chengfeng-check-updates
+       +-- 剪口播 ----> chengfeng-videocut-cut
+       +-- 字幕 ------> chengfeng-videocut-subtitle
+       +-- 画面 ------> chengfeng-videocut-visual
+       +-- 导出 ------> chengfeng-videocut-export
+       +-- 上报 Bug --> chengfeng-videocut-report-bug
+       +-- 检查更新 --> chengfeng-videocut-check-updates
        |
        +-- references/（内部合同，不注册为 Skill）
 ```
@@ -23,9 +23,9 @@
 Plugin 根入口不被同名 router 或公共说明 Skill 覆盖。每个用户可执行能力都有一个不同的、完整的公开 ID：
 
 ```text
-$chengfeng-videocut:chengfeng-cut
-$chengfeng-videocut:chengfeng-report-bug
-$chengfeng-videocut:chengfeng-check-updates
+$chengfeng-videocut:chengfeng-videocut-cut
+$chengfeng-videocut:chengfeng-videocut-report-bug
+$chengfeng-videocut:chengfeng-videocut-check-updates
 ```
 
 静态元数据、`agents/openai.yaml`、Plugin 首页 starter prompt 和 CLI 的 `$plugin:skill` 调用，不能单独证明 Desktop Slash/Plugin 群组已经在界面中展示；那一项必须由实际 Desktop UI 单独验收。
@@ -36,7 +36,7 @@ $chengfeng-videocut:chengfeng-check-updates
 
 ```text
 剪口播      -> 已复核的删词账本（不产媒体）
-画面        -> visuals.json + HTML 模块（风格库在 chengfeng-visual/animation-styles/）
+画面        -> visuals.json + HTML 模块（风格库在 chengfeng-videocut-visual/animation-styles/）
 导出        -> 成片.mp4（剪辑+推近+字幕+画面层一次烧成）
 字幕        -> subtitles.json（按账本算时间，不再发布 SRT）
 上报 Bug    -> 脱敏草稿 -> 用户确认 -> GitHub Issue URL
@@ -66,14 +66,14 @@ fail-closed。Studio 只在人工审核状态、浏览器真实读取同一服�
 同一个稳定 launcher 执行 `service ensure`。历史 Desktop / 既有安装若已经写入同一
 Product 受管根，可以被兼容复用，但 Desktop 不再是正式新装入口。Plugin 不搜索
 Electron 资源目录，也不接受 foreground 进程冒充正式服务；
-`chengfeng-report-bug` 对任何既有安装都保持只读。
+`chengfeng-videocut-report-bug` 对任何既有安装都保持只读。
 
-`chengfeng-report-bug` 不安装 Runtime、不启动 Studio，也不改项目。Agent 直接
+`chengfeng-videocut-report-bug` 不安装 Runtime、不启动 Studio，也不改项目。Agent 直接
 生成和通读脱敏 Issue 草稿；用户确认同一份 repo/title/body 后，只使用
 当前 Agent 已有的 GitHub Issue 能力提交。能力不可用时返回草稿并明确写
 「未提交」；没有明确 Issue URL 就不宣称成功。
 
-`chengfeng-check-updates` 委托给 Codex 0.146+ 原生 Plugin 管理：用户要求检查
+`chengfeng-videocut-check-updates` 委托给 Codex 0.146+ 原生 Plugin 管理：用户要求检查
 时执行 `plugin marketplace upgrade chengfeng-videocut`，再用
 `plugin list --available --json` 展示 candidate；用户确认后执行
 `plugin add chengfeng-videocut@chengfeng-videocut`，并以 `plugin list --json` 复读

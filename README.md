@@ -132,9 +132,9 @@ Skill -> Product service ensure -> managed user service ready -> 继续当前流
 Plugin `chengfeng-videocut` 保留给安装和可能的 Desktop 群组展示，不能被同名 raw Skill 或公共说明 Skill 覆盖。Plugin namespace 必须保留，不能用裸 `$chengfeng` 代替：
 
 ```text
-chengfeng-videocut:chengfeng-cut
-chengfeng-videocut:chengfeng-report-bug
-chengfeng-videocut:chengfeng-check-updates
+chengfeng-videocut:chengfeng-videocut-cut
+chengfeng-videocut:chengfeng-videocut-report-bug
+chengfeng-videocut:chengfeng-videocut-check-updates
 ```
 
 Plugin 首页 starter prompt 最多三条；它不是 Skill 数量表。`SKILL.md` 的 `name` / `description` 与 `agents/openai.yaml` 提供发现元数据，但不能单独证明 Desktop Slash/Plugin 群组已经显示；后者须单独实测。
@@ -145,7 +145,7 @@ Plugin 首页 starter prompt 最多三条；它不是 Skill 数量表。`SKILL.m
 使用“剪口播”处理这条视频。识别口误，等我审核后再物理剪切，并生成剪后字幕。
 ```
 
-技术 ID：`chengfeng-videocut:chengfeng-cut`。
+技术 ID：`chengfeng-videocut:chengfeng-videocut-cut`。
 
 上报 Bug：
 
@@ -153,7 +153,7 @@ Plugin 首页 starter prompt 最多三条；它不是 Skill 数量表。`SKILL.m
 使用“上报 Bug”整理刚才的问题。先给我看脱敏后的 GitHub Issue 草稿，确认后再提交。
 ```
 
-技术 ID：`chengfeng-videocut:chengfeng-report-bug`。它会固定路由到产品或 Skills 仓库、
+技术 ID：`chengfeng-videocut:chengfeng-videocut-report-bug`。它会固定路由到产品或 Skills 仓库、
 清理常见密钥与本地路径，并且只在用户确认同一份草稿后使用 Agent
 已有 GitHub Issue 能力提交。该能力不可用时只返回草稿和「未提交」原因。
 
@@ -163,7 +163,7 @@ Plugin 首页 starter prompt 最多三条；它不是 Skill 数量表。`SKILL.m
 使用“检查更新”检查 chengfeng-videocut Skills 的可信 Marketplace 更新；先报告状态，不要直接激活。
 ```
 
-技术 ID：`chengfeng-videocut:chengfeng-check-updates`。
+技术 ID：`chengfeng-videocut:chengfeng-videocut-check-updates`。
 
 ## 架构
 
@@ -171,12 +171,12 @@ Plugin 首页 starter prompt 最多三条；它不是 Skill 数量表。`SKILL.m
 Codex
   |
   +-- Plugin: chengfeng-videocut（根名称）
-  +-- chengfeng-cut
-  +-- chengfeng-subtitle
-  +-- chengfeng-visual
-  +-- chengfeng-export
-  +-- chengfeng-report-bug (支持入口)
-  +-- chengfeng-check-updates (支持入口)
+  +-- chengfeng-videocut-cut
+  +-- chengfeng-videocut-subtitle
+  +-- chengfeng-videocut-visual
+  +-- chengfeng-videocut-export
+  +-- chengfeng-videocut-report-bug (支持入口)
+  +-- chengfeng-videocut-check-updates (支持入口)
   +-- references/ (内部合同，不是 Skill)
   +-- show_workflow_confirmation (MCP App)
   |
@@ -211,12 +211,12 @@ chengfeng-videocut-skills/
 │   ├── scripts/
 │   ├── references/
 │   └── skills/
-│       ├── chengfeng-cut/
-│       ├── chengfeng-subtitle/
-│       ├── chengfeng-visual/
-│       ├── chengfeng-export/
-│       ├── chengfeng-report-bug/
-│       └── chengfeng-check-updates/
+│       ├── chengfeng-videocut-cut/
+│       ├── chengfeng-videocut-subtitle/
+│       ├── chengfeng-videocut-visual/
+│       ├── chengfeng-videocut-export/
+│       ├── chengfeng-videocut-report-bug/
+│       └── chengfeng-videocut-check-updates/
 ├── LICENSE
 ├── NOTICE.md
 └── CITATION.cff

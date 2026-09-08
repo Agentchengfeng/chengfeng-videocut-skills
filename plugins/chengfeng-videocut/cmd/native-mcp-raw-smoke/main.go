@@ -74,6 +74,24 @@ func main() {
 	}
 	decodeResult(listed, &toolsResult)
 	want := map[string]map[string]bool{
+		"runtime_project_config":     {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": false, "idempotentHint": false},
+		"runtime_media_get":          {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_media_import":       {"readOnlyHint": false, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_ingest_start":       {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": true, "idempotentHint": false},
+		"runtime_ingest_status":      {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_transcript_correct": {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": true, "idempotentHint": false},
+		"runtime_module_get":         {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_module_publish":     {"readOnlyHint": false, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_playback":           {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_cuts_put":           {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": false, "idempotentHint": false},
+		"runtime_subtitle_inputs":    {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": false, "idempotentHint": false},
+		"runtime_subtitle_submit":    {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": false, "idempotentHint": false},
+		"runtime_export_plan":        {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_export_start":       {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": false, "idempotentHint": false},
+		"runtime_export_job":         {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": false, "idempotentHint": false},
+		"runtime_connect":            {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_project":            {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
+		"runtime_visuals_put":        {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": false, "idempotentHint": false},
 		"show_workflow_confirmation": {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
 		"runtime_status":             {"readOnlyHint": true, "destructiveHint": false, "openWorldHint": false, "idempotentHint": false},
 		"runtime_install":            {"readOnlyHint": false, "destructiveHint": true, "openWorldHint": true, "idempotentHint": false},
@@ -99,7 +117,7 @@ func main() {
 		fatal(fmt.Errorf("tools=%v, want %d tools", seen, len(want)))
 	}
 	sort.Strings(seen)
-	fmt.Printf("PASS raw_protocol=%s explicit_annotation_boole=20 tools=%v\n", initialized.ProtocolVersion, seen)
+	fmt.Printf("PASS raw_protocol=%s explicit_annotation_boole=%d tools=%v\n", initialized.ProtocolVersion, len(want)*4, seen)
 }
 
 func request(enc *json.Encoder, id int, method string, params map[string]any) {

@@ -67,6 +67,7 @@ func NewServer(c Contract) *mcp.Server {
 		return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: TemplateURI, MIMEType: "text/html;profile=mcp-app", Text: pluginassets.ReviewHTML, Meta: mcp.Meta{"ui": map[string]any{"prefersBorder": true}, "openai/widgetDescription": "确认 chengfeng-videocut 的人工审核阶段或 Runtime 安装计划。", "openai/widgetPrefersBorder": true}}}}, nil
 	})
 	readOnly := &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: boolPtr(false), DestructiveHint: boolPtr(false), IdempotentHint: false}
+	addConnectionTools(server, c)
 	appsMeta := mcp.Meta{"ui": map[string]any{"resourceUri": TemplateURI}, "openai/outputTemplate": TemplateURI, "openai/toolInvocation/invoking": "正在打开确认卡片...", "openai/toolInvocation/invoked": "确认卡片已打开"}
 	mcp.AddTool(server, &mcp.Tool{Name: "show_workflow_confirmation", Title: "显示工作流或安装确认卡片", Description: "只显示并回传稳定 revision 或 approvalDigest；不直接剪切、导出或安装。安装确认摘要是 Agent/host 的确认门，不是用户身份的密码学认证。", Annotations: readOnly, Meta: appsMeta}, func(ctx context.Context, req *mcp.CallToolRequest, input ConfirmationInput) (*mcp.CallToolResult, map[string]any, error) {
 		output, err := confirmationOutput(c, input)

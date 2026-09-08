@@ -51,7 +51,7 @@ func main() {
 		byName[tool.Name] = tool
 	}
 	sort.Strings(names)
-	want := []string{"runtime_cli", "runtime_install", "runtime_repair", "runtime_status", "show_workflow_confirmation"}
+	want := []string{"runtime_cli", "runtime_connect", "runtime_cuts_put", "runtime_export_job", "runtime_export_plan", "runtime_export_start", "runtime_ingest_start", "runtime_ingest_status", "runtime_install", "runtime_module_get", "runtime_module_publish", "runtime_playback", "runtime_project", "runtime_repair", "runtime_status", "runtime_subtitle_inputs", "runtime_subtitle_submit", "runtime_transcript_correct", "runtime_visuals_put", "show_workflow_confirmation"}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		fatal(fmt.Errorf("tools=%v", names))
 	}

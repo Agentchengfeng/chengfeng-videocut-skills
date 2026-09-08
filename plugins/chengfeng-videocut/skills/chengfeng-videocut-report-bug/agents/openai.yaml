@@ -1,0 +1,6 @@
+interface:
+  display_name: "chengfeng-videocut · 上报 Bug"
+  short_description: "整理并脱敏问题，确认后创建 chengfeng-videocut GitHub Issue"
+  default_prompt: "使用 $chengfeng-videocut:chengfeng-videocut-report-bug 整理我刚遇到的问题，给我确认脱敏草稿后上报到 GitHub。"
+policy:
+  allow_implicit_invocation: true

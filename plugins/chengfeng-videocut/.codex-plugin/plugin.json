@@ -27,9 +27,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "使用 $chengfeng-videocut:chengfeng-cut 剪掉这条视频里的口误，审核后生成删词账本。",
-      "使用 $chengfeng-videocut:chengfeng-visual 给剪好的口播配画面：圈重点或整屏动画。",
-      "使用 $chengfeng-videocut:chengfeng-export 把这个项目导出成成片并抽帧验收。"
+      "使用 $chengfeng-videocut:chengfeng-videocut-cut 剪掉这条视频里的口误，审核后生成删词账本。",
+      "使用 $chengfeng-videocut:chengfeng-videocut-visual 给剪好的口播配画面：圈重点或整屏动画。",
+      "使用 $chengfeng-videocut:chengfeng-videocut-export 把这个项目导出成成片并抽帧验收。"
     ],
     "brandColor": "#16A37A"
   },

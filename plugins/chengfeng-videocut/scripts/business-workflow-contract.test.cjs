@@ -7,13 +7,13 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const contractPath = path.join(root, "references", "business-workflow-contract.md");
 const contract = fs.readFileSync(contractPath, "utf8");
-const cut = fs.readFileSync(path.join(root, "skills", "chengfeng-cut", "SKILL.md"), "utf8");
+const cut = fs.readFileSync(path.join(root, "skills", "chengfeng-videocut-cut", "SKILL.md"), "utf8");
 const checkUpdates = fs.readFileSync(
-  path.join(root, "skills", "chengfeng-check-updates", "SKILL.md"),
+  path.join(root, "skills", "chengfeng-videocut-check-updates", "SKILL.md"),
   "utf8",
 );
 const reportBug = fs.readFileSync(
-  path.join(root, "skills", "chengfeng-report-bug", "SKILL.md"),
+  path.join(root, "skills", "chengfeng-videocut-report-bug", "SKILL.md"),
   "utf8",
 );
 
@@ -73,14 +73,14 @@ assert.doesNotMatch(
 
 const skills = fs.readdirSync(path.join(root, "skills")).sort();
 assert.deepEqual(skills, [
-  "chengfeng-check-updates",
-  "chengfeng-cut",
-  "chengfeng-export",
-  "chengfeng-report-bug",
-  "chengfeng-subtitle",
+  "chengfeng-videocut-check-updates",
+  "chengfeng-videocut-cut",
+  "chengfeng-videocut-export",
+  "chengfeng-videocut-report-bug",
+  "chengfeng-videocut-subtitle",
   // 2026-07-28 加入的画面（分镜）段：剪口播 → 字幕 → 画面 → 导出。
   // 当时没进这张名单，07-29 对账补上。
-  "chengfeng-visual",
+  "chengfeng-videocut-visual",
 ], "the Plugin must expose exactly six task-facing Skills");
 console.log(JSON.stringify({
   sixTaskFacingSkillsRetained: true,

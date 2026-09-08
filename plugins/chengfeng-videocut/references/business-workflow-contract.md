@@ -1,6 +1,6 @@
 # 四个业务 Skill 的阶段合同
 
-`chengfeng-cut` 必须引用并按本合同执行。本文件是普通内部 reference，不是用户可调用的 Skill，不创建项目副本、播放器、素材库、上传会话或媒体写入能力。
+`chengfeng-videocut-cut` 必须引用并按本合同执行。本文件是普通内部 reference，不是用户可调用的 Skill，不创建项目副本、播放器、素材库、上传会话或媒体写入能力。
 
 ## 固定阶段
 
@@ -16,6 +16,19 @@ preflight
 ```
 
 阶段不得跳过、合并成“已经审核”，或用缓存、浏览器 DOM、HTTP 200 代替 Product readback。
+
+先完整读取[共享接入规则](plugin-access.md)，发现实际 Plugin 与所需能力，不把安装/加载/Runtime状态混为一谈。
+用户明确指定已有工作台时，剪口播/字幕/导出的连接与命令选择以
+[已有工作台接入](existing-workflow.md)为准；保持原语义判断、用户审核与回读纪律，
+不把受管canonical服务门与显式connection门混用，不自动回退到旧Runtime。
+
+显式已有工作台仅在local-development接入：runtime_connect门替代managed service门，
+有限白名单包含同源读取、cuts/visuals CAS、字幕候选提交与受确认快照约束的durable export。
+画面阶段另可在modulePublishApiVersion=1时交付有限、不可覆盖的模块包（见画面Skill），不赋予任意模块文件写入/ASR或其他动作能力，不代表受管安装/release ready；其余确认与验证纪律不变。
+
+下表 CLI 命令是受管分支表达；显式 connection 使用上文原生白名单对应操作，
+不执行 managed service 门。新 WAV 仅在 ingestApiVersion=1 时按 existing-workflow.md 的确认、源hash及精确operation查询接入，转录修字另需 transcriptCorrectionApiVersion=1；旧服务及新视频接入仍须报告能力缺失；
+不能因为用户给了 endpoint 就声称可转录建档。共享入口的安装/启用授权仍须遵守。
 
 | 阶段 | 必须做 | 失败时 |
 | --- | --- | --- |
