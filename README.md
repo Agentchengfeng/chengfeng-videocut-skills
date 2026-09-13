@@ -55,13 +55,11 @@ winget install Oven-sh.Bun OpenJS.NodeJS.LTS Gyan.FFmpeg Google.Chrome
 Skill 合同的行为（真实发生过：Runtime 缺失时 Agent 手搓了一个"审片台"，产出与产品
 完全不兼容）。遇到这种情况，把 Agent 的报错原文发 Issue。
 
-当前 `main` 候选 Plugin 是 `0.10.7`。内容提交 A 为
-`59f42c0901cbc85834a1617dc4a8c0e354f16298`，带 provenance 的 Marketplace
-快照 B 为 `5d299dc0eb07f02f085cbf6a63bf09b42638ed5e`；Bootstrap manifest 固定
-到 B。候选验证环境可使用 Codex Marketplace 安装：
+当前 `main` 候选 Plugin 是 `0.10.8`。候选验证与 Bootstrap manifest 统一固定到已核验提交
+`1487e02b1c0c39ea74d079e8ce45da56bf59bc32`。候选验证环境可使用 Codex Marketplace 安装：
 
 ```bash
-codex plugin marketplace add Agentchengfeng/chengfeng-videocut-skills --ref 5d299dc0eb07f02f085cbf6a63bf09b42638ed5e && codex plugin marketplace upgrade chengfeng-videocut --json && codex plugin add chengfeng-videocut@chengfeng-videocut
+codex plugin marketplace add Agentchengfeng/chengfeng-videocut-skills --ref 1487e02b1c0c39ea74d079e8ce45da56bf59bc32 && codex plugin marketplace upgrade chengfeng-videocut --json && codex plugin add chengfeng-videocut@chengfeng-videocut
 ```
 
 三段必须分开是 Codex 官方 CLI 的机制：`marketplace add --ref <SHA>` 先挂市场，
