@@ -68,6 +68,7 @@ function loadRuntimeContract(contractPath = CONTRACT_PATH) {
   }
   const capabilities = contract?.capabilities;
   const studioCapabilities = contract?.studioCapabilities;
+  const workbenchRequirements = contract?.workbenchRequirements;
   const valid = contract?.schemaVersion === 1 &&
     contract?.product === PRODUCT &&
     /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(contract?.repository || "") &&
@@ -80,6 +81,26 @@ function loadRuntimeContract(contractPath = CONTRACT_PATH) {
     contract?.versionedPortableAsset ===
       `chengfeng-videocut-${contract.releaseVersion}-portable.tar.gz` &&
     /^[A-Za-z0-9_.-]+$/.test(contract?.checksumAsset || "") &&
+    isPlainObject(workbenchRequirements) &&
+    parseSemver(workbenchRequirements.minimumRuntimeVersion) !== null &&
+    Array.isArray(workbenchRequirements.requiredCommand) &&
+    workbenchRequirements.requiredCommand.length === 2 &&
+    workbenchRequirements.requiredCommand[0] === "workbench" &&
+    workbenchRequirements.requiredCommand[1] === "commands" &&
+    Array.isArray(workbenchRequirements.requiredResponseFields) &&
+    workbenchRequirements.requiredResponseFields.length > 0 &&
+    workbenchRequirements.requiredResponseFields.every((field) =>
+      typeof field === "string" && /^[a-z][a-zA-Z0-9_]*$/.test(field)) &&
+    Array.isArray(workbenchRequirements.requiredOperationFields) &&
+    workbenchRequirements.requiredOperationFields.length > 0 &&
+    workbenchRequirements.requiredOperationFields.every((field) =>
+      typeof field === "string" && /^[a-z][a-zA-Z0-9_]*$/.test(field)) &&
+    /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(workbenchRequirements.releaseRepository || "") &&
+    /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(workbenchRequirements.releaseTag || "") &&
+    workbenchRequirements.releaseAvailable === false &&
+    Array.isArray(workbenchRequirements.supportedPlatforms) &&
+    workbenchRequirements.supportedPlatforms.length > 0 &&
+    workbenchRequirements.supportedPlatforms.every((platform) => ["darwin", "win32"].includes(platform)) &&
     isPlainObject(studioCapabilities) &&
     Array.isArray(studioCapabilities.topLevelViews) &&
     studioCapabilities.topLevelViews.length > 0 &&
@@ -515,6 +536,8 @@ module.exports = {
   managedRuntimeKind,
   parseSemver,
   resolveRuntimeInvocation,
+  run,
+  parseJson,
   supportsRequiredCapabilities,
   supportsRequiredVersion,
   verifyInstaller,

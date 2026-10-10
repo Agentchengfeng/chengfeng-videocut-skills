@@ -1,7 +1,7 @@
 {
   "name": "chengfeng-videocut",
   "version": "0.10.11",
-  "description": "Seven task-facing Skills, including a fixed-source workbench operation Skill. Workbench operations require Runtime 0.5.9+ and verified capabilities; the public Runtime 0.4.11 does not satisfy that requirement.",
+  "description": "Six default task-facing Skills plus one capability-gated, fixed-source workbench preview. Workbench operations require Runtime 0.5.9+ and verified capabilities; the public Runtime 0.4.11 does not satisfy that requirement.",
   "author": {
     "name": "Chengfeng",
     "url": "https://github.com/Agentchengfeng"
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "chengfeng-videocut",
-    "shortDescription": "剪口播、工作台操作、成片与维护",
-    "longDescription": "提供七项默认 Skill，包括固定同源的工作台操作方法。新工作台入口要求 Runtime 0.5.9+ 及实际命令能力；公开 0.4.11 不满足时停止，不自动升级。默认发现不等于业务可执行，更新不覆盖本地 cache 或 Product Runtime。",
+    "shortDescription": "剪口播、成片与受门禁的工作台操作",
+    "longDescription": "提供六项默认基础 Skill，以及一个固定同源、受能力门禁并先预检的工作台预发行 Skill。工作台要求 Runtime 0.5.9+ 及实际命令能力；公开 0.4.11 不满足时停止，不自动升级。随包不等于业务可执行，更新不覆盖本地 cache 或 Product Runtime。",
     "developerName": "Chengfeng",
     "category": "Design",
     "capabilities": [

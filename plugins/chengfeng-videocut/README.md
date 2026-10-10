@@ -26,11 +26,11 @@ $chengfeng-videocut:chengfeng-check-updates
 
 静态元数据、`agents/openai.yaml`、Plugin 首页 starter prompt 和 CLI 的 `$plugin:skill` 调用，不能单独证明 Desktop Slash/Plugin 群组已经在界面中展示；那一项必须由实际 Desktop UI 单独验收。
 
-既有六个 raw Skill 保留 `user-invocable: true`。新工作台 Skill 保留独立来源的标准 name/description 与 `allow_implicit_invocation: true`；默认发现依赖宿主支持，不添加只为满足旧测试的非必要字段。这些元数据不是群组显示、排序或可见性的公开保证。
+既有六个 raw Skill 保留 `user-invocable: true`。新工作台 Skill 保留独立来源的标准 name/description；由于宿主仍可能隐式发现它，任何实际调用都必须先通过只读预检。默认发现依赖宿主支持，不添加只为满足旧测试的非必要字段。这些元数据不是群组显示、排序或可见性的公开保证。
 
-## 工作台操作（0.10.11 预发行）
+## 工作台操作（0.10.11 能力门禁预发行）
 
-使用 `$chengfeng-videocut:chengfeng-videocut-workbench` 查看工程、定位词句、覆盖画面或操作已有片段。它默认随本 Plugin 提供，但必须使用 **Runtime >=0.5.9**，并逐项验证 `workbench commands`、连接身份及所需 capability。当前公开下载仍固定 v0.4.11，缺少本入口要求的 `workbench` CLI；缺能力时停止，不能把安装 Plugin 说成工作台操作已经可用，也不能自动安装旧 Runtime 或发布开发 Runtime。
+使用 `$chengfeng-videocut:chengfeng-videocut-workbench` 查看工程、定位词句、覆盖画面或操作已有片段。它随本 Plugin 打包；任何实际调用前先运行 `node "<Plugin 根目录>/scripts/workbench-preflight.cjs" --json`。该入口必须使用 **Runtime >=0.5.9**，并逐项验证 `workbench commands`、连接身份及所需 capability。当前公开下载仍固定 v0.4.11，缺少本入口要求的 `workbench` CLI；缺能力时停止，不能把安装 Plugin 说成工作台操作已经可用，也不能自动安装旧 Runtime 或发布开发 Runtime。
 
 方法唯一来源为 [独立工作台 Skill](https://github.com/Agentchengfeng/chengfeng-videocut-workbench)，本包 `workbench-skill.lock.json` 固定其完整 commit、包内路径和逐文件摘要。构建只把 `agents/openai.yaml` 的默认提示变为 Plugin 命名空间；方法正文逐字节保留。当前发行采用固定来源快照，不代表已实现整套业务 Skills 的远端按需下载。
 

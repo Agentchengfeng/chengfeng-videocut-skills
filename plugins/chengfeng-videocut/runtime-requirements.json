@@ -9,6 +9,29 @@
   "portableAsset": "chengfeng-videocut-portable.tar.gz",
   "versionedPortableAsset": "chengfeng-videocut-0.4.11-portable.tar.gz",
   "checksumAsset": "SHA256SUMS.txt",
+  "workbenchRequirements": {
+    "minimumRuntimeVersion": "0.5.9",
+    "requiredCommand": [
+      "workbench",
+      "commands"
+    ],
+    "requiredResponseFields": [
+      "operations"
+    ],
+    "requiredOperationFields": [
+      "mode",
+      "fields",
+      "required",
+      "capability"
+    ],
+    "releaseRepository": "Agentchengfeng/chengfeng-videocut",
+    "releaseTag": "v0.5.9",
+    "releaseAvailable": false,
+    "supportedPlatforms": [
+      "darwin",
+      "win32"
+    ]
+  },
   "studioCapabilities": {
     "topLevelViews": [
       "storyboard",
