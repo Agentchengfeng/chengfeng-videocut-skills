@@ -37,7 +37,7 @@ ensure-runtime
                                       停止，不回退旧剪辑链
 ```
 
-- Plugin package `0.10.11` 消费的机器可读基础 Runtime compatibility contract 是 `runtime-requirements.json`：`releaseTag=v0.4.11`、`releaseVersion=0.4.11`、最低 Runtime 为 `0.4.10`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。该文件同时声明工作台独立要求 `>=0.5.9`、`workbench commands` 和跨平台发布状态；两份合同不能互相替代。
+- Plugin package `0.10.12` 消费的机器可读基础 Runtime compatibility contract 是 `runtime-requirements.json`：`releaseTag=v0.4.11`、`releaseVersion=0.4.11`、最低 Runtime 为 `0.4.10`，并声明 Runtime EDL、Studio 与跨平台用户服务能力集合。该文件同时声明工作台独立要求 `>=0.5.9`、`workbench commands` 和跨平台发布状态；两份合同不能互相替代。
 - 缺失时只从 `v0.4.11` 的精确 Release 下载 `install.cjs` 与 `SHA256SUMS.txt`；先校验安装器本身，并要求清单包含 stable `chengfeng-videocut-portable.tar.gz` 与版本化 `chengfeng-videocut-0.4.11-portable.tar.gz`。安装器只消费 stable portable tarball，不得下载 Desktop DMG/EXE；它收到同一个精确 Release 地址，不得访问 `latest`。
 - 桌面安装是另一条受支持的 Product 分发入口：App 首启把随包 Runtime、Bun、
   FFmpeg、FFprobe 写入相同受管根并执行同一个 `service ensure`。成功后只读探测
@@ -123,7 +123,7 @@ Product open 返回项目 URL
 ## 当前 Runtime 兼容门禁
 
 - 低于 0.4.10 的 Runtime 不具备本 Plugin 发布所绑定的完整更新事务与当前 EDL / Studio compatibility contract，必须被版本门禁拒绝，直到用户明确确认升级。
-- Runtime `v0.4.11` Release 必须先于 Plugin package `0.10.11` 发布，并至少包含 `install.cjs`、stable `chengfeng-videocut-portable.tar.gz`、版本化 `chengfeng-videocut-0.4.11-portable.tar.gz`、版本化/稳定名 tgz，以及覆盖这些资产和安装器的 `SHA256SUMS.txt`；桌面 DMG/EXE 不是 Skills 安装输入。工作台的 v0.5.9 发行另行验收，不得用本条资产冒充。
+- Runtime `v0.4.11` Release 必须先于 Plugin package `0.10.12` 发布，并至少包含 `install.cjs`、stable `chengfeng-videocut-portable.tar.gz`、版本化 `chengfeng-videocut-0.4.11-portable.tar.gz`、版本化/稳定名 tgz，以及覆盖这些资产和安装器的 `SHA256SUMS.txt`；桌面 DMG/EXE 不是 Skills 安装输入。工作台的 v0.5.9 发行另行验收，不得用本条资产冒充。
 - `v0.4.11` 必须提供正式原视频云端转录命令；缺少时以 `missing_cloud_transcription_adapter` 停止，禁止回退本地 ASR。
 - `v0.4.11` 必须内置可用 renderer；新版 Skill 不得把旧 renderer 重新打包。
 - 没有 HyperFrames 顶层 `koubo` 视图或 capability manifest 的历史 Studio 必须被能力门禁拒绝，不能再作为审核界面回退。
@@ -279,7 +279,7 @@ Release assets + SHA256SUMS（含 install.cjs）
 隔离环境首次安装 + doctor + Studio capability 验收
       |
       v
-Plugin 0.10.11 内容提交
+Plugin 0.10.12 内容提交
       |
       +------------------------------> contentRevision A
       |
@@ -295,4 +295,4 @@ Plugin 0.10.11 内容提交
 用户确认后固定安装 --ref B
 ```
 
-Plugin package 0.10.11 可以先形成候选，但在 Product Runtime v0.4.11 Release 的 portable 资产通过公开下载、安装和基础 Skills 共用服务验收之前不得推进 `stable`；工作台还必须等待 v0.5.9 的 macOS/Windows 正式或 portable 发行与 capability 验收。这段空窗期的预期行为是基础能力按旧合同运行、工作台显式预检安全失败，而不是安装旧 Runtime 或桌面安装包。
+Plugin package 0.10.12 可以先形成候选，但在 Product Runtime v0.4.11 Release 的 portable 资产通过公开下载、安装和基础 Skills 共用服务验收之前不得推进 `stable`；工作台还必须等待 v0.5.9 的 macOS/Windows 正式或 portable 发行与 capability 验收。这段空窗期的预期行为是基础能力按旧合同运行、工作台显式预检安全失败，而不是安装旧 Runtime 或桌面安装包。

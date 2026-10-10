@@ -28,7 +28,7 @@ $chengfeng-videocut:chengfeng-check-updates
 
 既有六个 raw Skill 保留 `user-invocable: true`。新工作台 Skill 保留独立来源的标准 name/description；由于宿主仍可能隐式发现它，任何实际调用都必须先通过只读预检。默认发现依赖宿主支持，不添加只为满足旧测试的非必要字段。这些元数据不是群组显示、排序或可见性的公开保证。
 
-## 工作台操作（0.10.11 能力门禁预发行）
+## 工作台操作（0.10.12 能力门禁预发行）
 
 使用 `$chengfeng-videocut:chengfeng-videocut-workbench` 查看工程、定位词句、覆盖画面或操作已有片段。它随本 Plugin 打包；任何实际调用前先运行 `node "<Plugin 根目录>/scripts/workbench-preflight.cjs" --json`。该入口必须使用 **Runtime >=0.5.9**，并逐项验证 `workbench commands`、连接身份及所需 capability。当前公开下载仍固定 v0.4.11，缺少本入口要求的 `workbench` CLI；缺能力时停止，不能把安装 Plugin 说成工作台操作已经可用，也不能自动安装旧 Runtime 或发布开发 Runtime。
 
@@ -57,7 +57,7 @@ npm run test:workbench-source
 
 共同边界只存在于 `references/runtime-and-product-contract.md` 与 `references/business-workflow-contract.md`。普通 reference 没有 `SKILL.md`、公开 ID 或 UI 卡片，不占用用户入口。
 
-既有六项 Skill 共用 `scripts/ensure-runtime.cjs`、`scripts/ensure-running.cjs` 和 `runtime-requirements.json`。Plugin package `0.10.11` 保留它们的 Runtime compatibility contract `0.4.10`：只接受 Runtime 0.4.10+ 与声明的 EDL、常驻 service 能力；缺失时从精确的 `v0.4.11` Release 获取 `install.cjs` 和校验清单。安装器只消费 Runtime portable `chengfeng-videocut-portable.tar.gz`；清单必须同时声明该资产和版本化 `chengfeng-videocut-0.4.11-portable.tar.gz`，不下载 Desktop DMG/EXE。校验后安装并执行 doctor。已有低版本 Runtime 只有在用户明确确认升级时才原子替换程序目录，项目数据不动。随后由 Product `service ensure --json` 幂等安装或恢复 macOS launchd / Windows Task Scheduler 用户服务；Plugin 不直接使用操作系统进程管理命令或 foreground 后台进程。Release 不存在、资产不完整或服务身份不匹配时安全停止。Studio 只在人工审核状态且通过 `ensure-studio.cjs` 顶层视图能力门禁后打开。新工作台操作 Skill 不使用这套旧版准备流程；它按自身 >=0.5.9 与 capability 门槛只读核验，缺能力时停止。
+既有六项 Skill 共用 `scripts/ensure-runtime.cjs`、`scripts/ensure-running.cjs` 和 `runtime-requirements.json`。Plugin package `0.10.12` 保留它们的 Runtime compatibility contract `0.4.10`：只接受 Runtime 0.4.10+ 与声明的 EDL、常驻 service 能力；缺失时从精确的 `v0.4.11` Release 获取 `install.cjs` 和校验清单。安装器只消费 Runtime portable `chengfeng-videocut-portable.tar.gz`；清单必须同时声明该资产和版本化 `chengfeng-videocut-0.4.11-portable.tar.gz`，不下载 Desktop DMG/EXE。校验后安装并执行 doctor。已有低版本 Runtime 只有在用户明确确认升级时才原子替换程序目录，项目数据不动。随后由 Product `service ensure --json` 幂等安装或恢复 macOS launchd / Windows Task Scheduler 用户服务；Plugin 不直接使用操作系统进程管理命令或 foreground 后台进程。Release 不存在、资产不完整或服务身份不匹配时安全停止。Studio 只在人工审核状态且通过 `ensure-studio.cjs` 顶层视图能力门禁后打开。新工作台操作 Skill 不使用这套旧版准备流程；它按自身 >=0.5.9 与 capability 门槛只读核验，缺能力时停止。
 
 桌面 App 与纯 CLI 不是两套 Runtime。App 首次启动把随包 Runtime、Bun、FFmpeg 和
 FFprobe 安装到 `~/.chengfeng-videocut` 的版本化目录，并由同一个稳定 launcher
@@ -114,7 +114,7 @@ Marketplace/Plugin 后，先以 manifest 的 exact 40-hex ref 执行 Marketplace
 Plugin add；后续失败则按本次实际创建的状态执行 Plugin remove → Marketplace
 remove，并再次复读确认。
 
-Plugin 是独立的 `0.10.11` 版本；`runtime-requirements.json` 将既有入口缺失时的下载固定到 Product Runtime `v0.4.11`，原兼容下限仍为 `0.4.10`。新工作台操作要求 >=0.5.9 及实际能力；Plugin 版本与 Runtime 版本不能互相替代。
+Plugin 是独立的 `0.10.12` 版本；`runtime-requirements.json` 将既有入口缺失时的下载固定到 Product Runtime `v0.4.11`，原兼容下限仍为 `0.4.10`。新工作台操作要求 >=0.5.9 及实际能力；Plugin 版本与 Runtime 版本不能互相替代。
 
 本次仅发布 Skill 与 Plugin 方法包装，不发布 Runtime、DMG 或 EXE。既有 v0.4.11 CLI/portable 安装修复的验证边界保持不变：安装器启动需要 Node 或已有 Bun；缺 Bun 的自动准备仅覆盖已核验的 macOS arm64 固定官方资产和 SHA-256。常驻服务、媒体依赖、宿主加载与完整剪辑必须分别验收，不能从本次 Skill 文件校验推断通过。
 

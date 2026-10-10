@@ -11,7 +11,8 @@ const script = path.join(root, "scripts", "workbench-preflight.cjs");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "videocut-workbench-preflight-"));
 
 function writeRuntime(name, version, commandsPayload) {
-  const file = path.join(tmp, name, "chengfeng-videocut");
+  const runtimeDir = path.join(tmp, name);
+  const file = path.join(runtimeDir, process.platform === "win32" ? "chengfeng-videocut.cjs" : "chengfeng-videocut");
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const doctor = JSON.stringify({
     ok: true,
@@ -28,6 +29,15 @@ function writeRuntime(name, version, commandsPayload) {
     "",
   ].join("\n");
   fs.writeFileSync(file, body, { mode: 0o755 });
+  if (process.platform === "win32") {
+    const launcher = path.join(runtimeDir, "chengfeng-videocut.cmd");
+    fs.writeFileSync(
+      launcher,
+      `@"${process.execPath}" "%~dp0chengfeng-videocut.cjs" %*\r\n`,
+      "utf8",
+    );
+    return launcher;
+  }
   return file;
 }
 

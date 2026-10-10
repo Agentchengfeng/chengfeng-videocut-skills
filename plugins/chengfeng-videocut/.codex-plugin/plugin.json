@@ -1,6 +1,6 @@
 {
   "name": "chengfeng-videocut",
-  "version": "0.10.11",
+  "version": "0.10.12",
   "description": "Six default task-facing Skills plus one capability-gated, fixed-source workbench preview. Workbench operations require Runtime 0.5.9+ and verified capabilities; the public Runtime 0.4.11 does not satisfy that requirement.",
   "author": {
     "name": "Chengfeng",
