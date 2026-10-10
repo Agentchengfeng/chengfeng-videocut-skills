@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 title: chengfeng-videocut
-version: 0.10.11
+version: 0.10.12
 message: "If you use this project, please cite the original repository."
 authors:
   - name: chengfeng / AI产品自由
