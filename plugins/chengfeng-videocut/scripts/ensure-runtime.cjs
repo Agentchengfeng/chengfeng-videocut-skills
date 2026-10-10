@@ -95,9 +95,14 @@ function loadRuntimeContract(contractPath = CONTRACT_PATH) {
     workbenchRequirements.requiredOperationFields.length > 0 &&
     workbenchRequirements.requiredOperationFields.every((field) =>
       typeof field === "string" && /^[a-z][a-zA-Z0-9_]*$/.test(field)) &&
+    Array.isArray(workbenchRequirements.requiredOperations) &&
+    workbenchRequirements.requiredOperations.length > 0 &&
+    workbenchRequirements.requiredOperations.every((operation) =>
+      typeof operation === "string" && /^[a-z][a-z0-9-]*$/.test(operation)) &&
+    new Set(workbenchRequirements.requiredOperations).size === workbenchRequirements.requiredOperations.length &&
     /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(workbenchRequirements.releaseRepository || "") &&
     /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(workbenchRequirements.releaseTag || "") &&
-    workbenchRequirements.releaseAvailable === false &&
+    typeof workbenchRequirements.releaseAvailable === "boolean" &&
     Array.isArray(workbenchRequirements.supportedPlatforms) &&
     workbenchRequirements.supportedPlatforms.length > 0 &&
     workbenchRequirements.supportedPlatforms.every((platform) => ["darwin", "win32"].includes(platform)) &&

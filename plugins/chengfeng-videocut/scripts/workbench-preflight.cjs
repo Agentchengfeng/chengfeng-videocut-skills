@@ -51,16 +51,21 @@ function inspectWorkbench() {
     runtimeVersion,
     WORKBENCH.minimumRuntimeVersion,
   );
-  const operationSpecs = Object.values(commands?.data?.operations || {});
+  const operations = commands?.data?.operations || {};
+  const operationSpecs = Object.values(operations);
+  const missingOperations = WORKBENCH.requiredOperations.filter((name) =>
+    !Object.prototype.hasOwnProperty.call(operations, name));
   const commandCompatible = commandsResult.status === 0 &&
     commands?.ok === true &&
     commands?.data &&
     WORKBENCH.requiredResponseFields.every((field) =>
       Object.prototype.hasOwnProperty.call(commands.data, field)) &&
-    operationSpecs.length > 0 &&
+    missingOperations.length === 0 &&
     operationSpecs.every((operation) =>
       WORKBENCH.requiredOperationFields.every((field) =>
-        Object.prototype.hasOwnProperty.call(operation, field)));
+        Object.prototype.hasOwnProperty.call(operation, field)) &&
+      typeof operation.capability === "string" &&
+      operation.capability.trim().length > 0);
   const compatible = healthy && versionCompatible && commandCompatible;
 
   return {
@@ -76,6 +81,8 @@ function inspectWorkbench() {
       commandCompatible,
       requiredMinimumRuntimeVersion: WORKBENCH.minimumRuntimeVersion,
       requiredCommand: WORKBENCH.requiredCommand,
+      requiredOperations: WORKBENCH.requiredOperations,
+      missingOperations,
       releaseAvailable: WORKBENCH.releaseAvailable,
     },
     diagnostics: {

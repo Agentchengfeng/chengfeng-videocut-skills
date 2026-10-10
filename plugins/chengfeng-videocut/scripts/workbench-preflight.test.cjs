@@ -42,6 +42,23 @@ function run(runtime) {
   });
 }
 
+const requiredOperations = [
+  "connect", "workflow-get", "edit-list-get", "playback", "visuals-get",
+  "visuals-put", "subtitles-get", "sources-get", "media-import", "media-get",
+  "edit-list-patch", "config-get", "config-set", "operation-get",
+  "operation-recover", "word-cuts-plan", "word-cuts-commit",
+  "segment-cuts-plan", "segment-cuts-commit",
+];
+
+function compatibleOperations() {
+  return Object.fromEntries(requiredOperations.map((name) => [name, {
+    mode: "read",
+    fields: [],
+    required: [],
+    capability: "workbench",
+  }]));
+}
+
 try {
   const oldRuntime = writeRuntime("old", "0.4.11", {
     ok: false,
@@ -57,14 +74,7 @@ try {
   const readyRuntime = writeRuntime("ready", "0.5.9", {
     ok: true,
     data: {
-      operations: {
-        connect: {
-          mode: "read",
-          fields: [],
-          required: [],
-          capability: "workbench",
-        },
-      },
+      operations: compatibleOperations(),
     },
   });
   const ready = run(readyRuntime);
@@ -73,6 +83,18 @@ try {
   assert.equal(readyPayload.ok, true);
   assert.equal(readyPayload.runtime.state, "ready");
   assert.equal(readyPayload.runtime.compatibility.commandCompatible, true);
+
+  const incompleteRuntime = writeRuntime("incomplete", "0.5.9", {
+    ok: true,
+    data: {
+      operations: { connect: compatibleOperations().connect },
+    },
+  });
+  const incomplete = run(incompleteRuntime);
+  assert.equal(incomplete.status, 14, incomplete.stderr);
+  const incompletePayload = JSON.parse(incomplete.stdout);
+  assert.equal(incompletePayload.error.code, "workbench_capability_missing");
+  assert.ok(incompletePayload.error.details.compatibility.missingOperations.includes("workflow-get"));
 
   console.log(JSON.stringify({ oldRuntimeBlocked: true, compatibleWorkbenchAccepted: true }));
 } finally {
