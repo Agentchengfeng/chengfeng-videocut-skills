@@ -6,25 +6,25 @@ Plugin 提供给 Agent 的方法和确认工具；Runtime 执行工程操作并�
 
 ## 本次默认 Skill 预发行
 
-Plugin **0.10.11** / bootstrap **0.5.3** 默认增加「工作台操作」Skill：定位词句、覆盖或移除画面、删除明确片段、拆分裁剪移动已有片段、画布适配及回读。方法来自[独立仓库](https://github.com/Agentchengfeng/chengfeng-videocut-workbench)的固定版本，不在 Plugin 中另写一套。
+Plugin **0.10.12** / bootstrap **0.5.3** 随包提供「工作台操作」Skill：定位词句、覆盖或移除画面、删除明确片段、拆分裁剪移动已有片段、画布适配及回读。它是受能力门禁的预发行入口，首次使用必须先通过只读预检；方法来自[独立仓库](https://github.com/Agentchengfeng/chengfeng-videocut-workbench)的固定版本，不在 Plugin 中另写一套。
 
-**兼容提醒：新 Skill 要求 Runtime >=0.5.9 且实际 workbench 能力匹配。当前公开下载仍是 v0.4.11，不满足新命令要求。** 缺能力时只报告并停止，不自动安装、升级或修改工程。此次发布的是方法和默认入口，不是新的 Runtime 发行。
+**兼容提醒：新 Skill 要求 Runtime >=0.5.9 且实际 workbench 能力匹配。当前公开下载仍是 v0.4.11，不满足新命令要求。** 使用工作台前运行 `node "<Plugin 根目录>/scripts/workbench-preflight.cjs" --json` 做只读预检；缺能力时只报告并停止，不自动安装、升级或修改工程。此次发布的是方法和默认入口，不是新的 Runtime 发行。
 
 ### 本次固定身份
 
 | 对象 | 固定身份 |
 |---|---|
-| Plugin | 0.10.11 |
-| Plugin 内容提交 | `d4580d8a0cef4fa34558b068945575d03e4c63ee` |
-| 带来源回执的安装快照 | `6d798efb9940946c994d1f3e59f8ff2ea7446c31` |
+| Plugin | 0.10.12 |
+| Plugin 内容提交 | `54a303cdcab40d6fda1df082520fd59199cb49bf` |
+| 带来源回执的安装快照 | `5b497e9c518ae829729c11819b52e588dc491796` |
 | 工作台操作方法 | `v0.1.0-beta.1` / `e9e78e0f3aefca1c38a1157817cc411e9757bb12` |
 | 配套 Runtime | [v0.4.11](https://github.com/Agentchengfeng/chengfeng-videocut/releases/tag/v0.4.11) |
 
 `installer-manifest.json` 同时固定 marketplaceRef 和 pluginRef；bootstrap 自己的提交与 Plugin 快照不是同一个概念。安装时不跟随 main/stable 漂移，也不重写已发布标签或同版本内容。
 
-本次 bootstrap 修订单独形成发布提交；对应完整 SHA 由 [v0.10.11 预发行回执](https://github.com/Agentchengfeng/chengfeng-videocut-skills/releases/tag/v0.10.11) 提供，不把 Plugin 安装快照误当成 bootstrap 提交。`stable` 是可变发现入口，不能代替上表安装身份。**本轮不推进 stable**，不移动旧标签，也不替换用户已安装的 Plugin 或 Runtime。
+本次 bootstrap 修订单独形成发布提交；对应完整 SHA 会在本候选合并后继续保持不变，不把 Plugin 安装快照误当成 bootstrap 提交。`stable` 是可变发现入口，不能代替上表安装身份。**本轮不推进 stable**，不移动旧标签，也不替换用户已安装的 Plugin 或 Runtime。
 
-默认提供的七个入口：剪口播、字幕、画面、导出、上报 Bug、检查更新，以及新加入的工作台操作。前六项是当前发行保留的入口，不等于未来功能合并后的产品名单。工作台操作可由 `$chengfeng-videocut:chengfeng-videocut-workbench` 选择；安装和新任务发现仍分别验证，默认提供不保证现有桌面会话热加载。
+随包的七个入口分为六项默认基础入口（剪口播、字幕、画面、导出、上报 Bug、检查更新）和一个受能力门禁的工作台预发行入口。工作台操作可由 `$chengfeng-videocut:chengfeng-videocut-workbench` 选择；安装、预检和新任务发现仍分别验证，随包不保证现有桌面会话热加载。
 
 ## 安装与检查
 

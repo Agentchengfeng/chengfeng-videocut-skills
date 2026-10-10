@@ -9,6 +9,50 @@
   "portableAsset": "chengfeng-videocut-portable.tar.gz",
   "versionedPortableAsset": "chengfeng-videocut-0.4.11-portable.tar.gz",
   "checksumAsset": "SHA256SUMS.txt",
+  "workbenchRequirements": {
+    "minimumRuntimeVersion": "0.5.9",
+    "requiredCommand": [
+      "workbench",
+      "commands"
+    ],
+    "requiredResponseFields": [
+      "operations"
+    ],
+    "requiredOperationFields": [
+      "mode",
+      "fields",
+      "required",
+      "capability"
+    ],
+    "requiredOperations": [
+      "connect",
+      "workflow-get",
+      "edit-list-get",
+      "playback",
+      "visuals-get",
+      "visuals-put",
+      "subtitles-get",
+      "sources-get",
+      "media-import",
+      "media-get",
+      "edit-list-patch",
+      "config-get",
+      "config-set",
+      "operation-get",
+      "operation-recover",
+      "word-cuts-plan",
+      "word-cuts-commit",
+      "segment-cuts-plan",
+      "segment-cuts-commit"
+    ],
+    "releaseRepository": "Agentchengfeng/chengfeng-videocut",
+    "releaseTag": "v0.5.9",
+    "releaseAvailable": false,
+    "supportedPlatforms": [
+      "darwin",
+      "win32"
+    ]
+  },
   "studioCapabilities": {
     "topLevelViews": [
       "storyboard",

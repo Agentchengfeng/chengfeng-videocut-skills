@@ -6733,14 +6733,14 @@ var review_confirm_default = `<!doctype html>
 // package.json
 var package_default = {
   name: "chengfeng-videocut-codex-plugin",
-  version: "0.10.11",
+  version: "0.10.12",
   private: true,
   type: "module",
   scripts: {
     "check:workbench-source": "node scripts/import-workbench-skill.cjs --check",
     "test:workbench-source": "node --test scripts/workbench-source.test.cjs",
     build: "bun build server.mjs --target=node --format=esm --outfile=dist/server.mjs",
-    test: "node --test scripts/workbench-source.test.cjs && node scripts/runtime-preflight.test.cjs && node scripts/ensure-running.test.cjs && node scripts/studio-capability.test.cjs && node scripts/bug-report.test.cjs && node scripts/skill-paths.test.cjs && node scripts/business-workflow-contract.test.cjs && node scripts/update-provenance.test.cjs && node scripts/check-plugin-update.test.cjs && node scripts/check-plugin-update-windows-shim.test.cjs && node scripts/mcp-cache-release-windows.test.cjs && node scripts/mcp-smoke-test.mjs"
+    test: "node --test scripts/workbench-source.test.cjs && node scripts/runtime-preflight.test.cjs && node scripts/workbench-preflight.test.cjs && node scripts/ensure-running.test.cjs && node scripts/studio-capability.test.cjs && node scripts/bug-report.test.cjs && node scripts/skill-paths.test.cjs && node scripts/business-workflow-contract.test.cjs && node scripts/update-provenance.test.cjs && node scripts/check-plugin-update.test.cjs && node scripts/check-plugin-update-windows-shim.test.cjs && node scripts/mcp-cache-release-windows.test.cjs && node scripts/mcp-smoke-test.mjs"
   },
   dependencies: {
     "@modelcontextprotocol/ext-apps": "1.0.1",

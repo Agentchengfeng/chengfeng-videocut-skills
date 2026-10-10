@@ -115,6 +115,13 @@ try {
     runtimeContract.versionedPortableAsset,
     `chengfeng-videocut-${runtimeContract.releaseVersion}-portable.tar.gz`,
   );
+  assert.equal(runtimeContract.workbenchRequirements.minimumRuntimeVersion, "0.5.9");
+  assert.deepEqual(runtimeContract.workbenchRequirements.requiredCommand, ["workbench", "commands"]);
+  assert.deepEqual(runtimeContract.workbenchRequirements.requiredResponseFields, ["operations"]);
+  assert.deepEqual(runtimeContract.workbenchRequirements.requiredOperationFields, ["mode", "fields", "required", "capability"]);
+  assert.equal(runtimeContract.workbenchRequirements.requiredOperations.length, 19);
+  assert.equal(new Set(runtimeContract.workbenchRequirements.requiredOperations).size, 19);
+  assert.equal(runtimeContract.workbenchRequirements.releaseAvailable, false);
   assert.doesNotMatch(runtimeContract.portableAsset, /\.(dmg|exe)$/i);
   assert.doesNotMatch(runtimeContract.versionedPortableAsset, /\.(dmg|exe)$/i);
 
