@@ -1,0 +1,5 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Common compute · passive module</title><style>html,body,#art{margin:0;width:100%;height:100%;background:#07111a;overflow:hidden}svg{width:100%;height:100%;display:block}</style><div id="art"></div><script type="module">
+import {renderGallery,DURATION} from './examples.mjs';
+window.seekTo=async value=>{const t=Number(value);if(!Number.isFinite(t))throw Error('Finite seek required');const time=Math.max(0,Math.min(DURATION-1/60,t));document.querySelector('#art').innerHTML=renderGallery(time,{width:1080,height:1920});return time};
+window.addEventListener('message',e=>{if(e.data?.type==='videocut:seek')window.seekTo(e.data.time).catch(error=>{window.seekError=String(error);document.querySelector('#art').innerHTML=''})});window.ready=window.seekTo(0);
+</script></html>

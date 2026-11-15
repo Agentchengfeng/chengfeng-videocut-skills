@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>辅助驾驶 · 标准开头 1</title>
+<style>:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}#stage{height:100%;width:100%;display:grid;place-items:center}svg{display:block;width:100%;height:100%;object-fit:contain}</style></head>
+<body><div id="stage"></div><script src="scene.js"></script><script>
+'use strict';
+let config, pending=0;
+const configUrl=new URL('config.json',location.href);
+window.ready=fetch(configUrl).then(r=>{if(!r.ok)throw Error('config.json unavailable');return r.json()}).then(c=>AdasIntro.prepareImages(c,async src=>{
+  const r=await fetch(new URL(src,configUrl));if(!r.ok)throw Error(`Image unavailable: ${src}`);
+  const mime=/\.png$/i.test(src)?'image/png':/\.webp$/i.test(src)?'image/webp':'image/jpeg';
+  const bytes=new Uint8Array(await r.arrayBuffer());let binary='';
+  for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);
+  return `data:${mime};base64,${btoa(binary)}`;
+})).then(c=>{config=c;window.seekTo(pending);return document.fonts.ready});
+window.seekTo=t=>{pending=Math.max(0,Number(t)||0);if(config)document.getElementById('stage').innerHTML=AdasIntro.render(pending,config)};
+window.addEventListener('message',event=>{const d=event.data;if(d?.type==='videocut:seek')window.seekTo(d.time)});
+window.ready.catch(e=>{document.getElementById('stage').textContent=e.message;console.error(e)});
+// No autoplay or internal clock. The host owns time; arbitrary backward seek is safe.
+</script></body></html>

@@ -1,0 +1,434 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "vehicle.sedan.side",
+      "name": "通用轿车侧视",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "vehicles",
+      "file": "assets/vehicle.sedan.side.svg",
+      "sha256": "65942993aadfcb70c8dbfc1fdf91a8deb9c28b44b50dd4c1bd94841d5d0ee1b0",
+      "width": 1000,
+      "height": 420,
+      "tags": [
+        "汽车",
+        "整车",
+        "侧视",
+        "sedan",
+        "轿车"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "drive",
+        "suspension",
+        "wheel-rotate"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "rig": {
+        "body": "vehicle.sedan.body",
+        "wheel": "part.wheel",
+        "viewBox": [
+          1000,
+          420
+        ],
+        "wheelCenters": [
+          [
+            245,
+            325
+          ],
+          [
+            755,
+            325
+          ]
+        ],
+        "wheelRadius": 70
+      },
+      "snapshot": "assets/vehicle.sedan.side-1.0.0-65942993aa.svg"
+    },
+    {
+      "id": "vehicle.sedan.body",
+      "name": "通用轿车车身分层",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "rig-parts",
+      "file": "assets/vehicle.sedan.body.svg",
+      "sha256": "5b15cfb9f357acffce6ed202d730256af9f609693f73e43934a316b3d8a4832f",
+      "width": 1000,
+      "height": 420,
+      "tags": [
+        "车身",
+        "分层",
+        "sedan"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/vehicle.sedan.body-1.0.0-5b15cfb9f3.svg"
+    },
+    {
+      "id": "part.wheel",
+      "name": "八辐车轮",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.wheel.svg",
+      "sha256": "15dc6cb86b65e7cb6a3b656797d8687efd8a67214c6f32a94649abc607108f4b",
+      "width": 200,
+      "height": 200,
+      "tags": [
+        "车轮",
+        "轮胎",
+        "轮毂",
+        "旋转",
+        "wheel"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "rotate"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "anchors": {
+        "center": [
+          100,
+          100
+        ]
+      },
+      "snapshot": "assets/part.wheel-1.0.0-15dc6cb86b.svg"
+    },
+    {
+      "id": "part.spring",
+      "name": "悬架弹簧",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.spring.svg",
+      "sha256": "1940b2094ada82fdbca218e3201d35438e2b7aa752fcce9bc2055438694c4249",
+      "width": 180,
+      "height": 420,
+      "tags": [
+        "悬架",
+        "弹簧",
+        "减振",
+        "spring"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "compress"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "anchors": {
+        "top": [
+          90,
+          20
+        ],
+        "bottom": [
+          90,
+          400
+        ]
+      },
+      "snapshot": "assets/part.spring-1.0.0-1940b2094a.svg"
+    },
+    {
+      "id": "part.chassis.top",
+      "name": "通用电驱底盘俯视",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.chassis.top.svg",
+      "sha256": "a3b6b67dbbff3ccd607e218a89ce049c5519f895d101ecad6984e282414a1165",
+      "width": 1000,
+      "height": 1200,
+      "tags": [
+        "底盘",
+        "电驱",
+        "电池",
+        "俯视",
+        "chassis"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "top",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/part.chassis.top-1.0.0-a3b6b67dbb.svg"
+    },
+    {
+      "id": "part.battery",
+      "name": "电池包俯视示意",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.battery.svg",
+      "sha256": "2edc313a7ca7f16f5f2221fcc43a0701a66be5cb7d822feb9209352accf13837",
+      "width": 600,
+      "height": 320,
+      "tags": [
+        "电池",
+        "电池包",
+        "电驱",
+        "能量",
+        "battery"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "top",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/part.battery-1.0.0-2edc313a7c.svg"
+    },
+    {
+      "id": "part.motor",
+      "name": "电机示意",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.motor.svg",
+      "sha256": "3affcba51420f21e70c3718d3ad6cbc6f505a5eb50410761f8b4a5484a6a59ba",
+      "width": 400,
+      "height": 300,
+      "tags": [
+        "电机",
+        "电驱",
+        "动力",
+        "motor"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/part.motor-1.0.0-3affcba514.svg"
+    },
+    {
+      "id": "vehicle.top",
+      "name": "通用车辆俯视",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "vehicles",
+      "file": "assets/vehicle.top.svg",
+      "sha256": "402983b6b1dbc932aec5b01ba2e0c1a6c4cb4966793727a7ffc2b0918e4713ce",
+      "width": 400,
+      "height": 720,
+      "tags": [
+        "汽车",
+        "俯视",
+        "感知",
+        "扫描",
+        "车辆"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "top",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/vehicle.top-1.0.0-402983b6b1.svg"
+    },
+    {
+      "id": "part.sensor",
+      "name": "传感器示意",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.sensor.svg",
+      "sha256": "df19df7925d622f61a018e1e8d0ca0b90a42a77b345755d04bb81adaa4fe9763",
+      "width": 400,
+      "height": 300,
+      "tags": [
+        "传感器",
+        "雷达",
+        "摄像头",
+        "感知",
+        "sensor"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/part.sensor-1.0.0-df19df7925.svg"
+    },
+    {
+      "id": "vehicle.suv.side",
+      "name": "通用SUV侧视",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "vehicles",
+      "file": "assets/vehicle.suv.side.svg",
+      "sha256": "12be845e707f2ababf5322dbaeee0c07275210696fd4ffbb4a1dfaf532dc0e1e",
+      "width": 1000,
+      "height": 420,
+      "tags": [
+        "汽车",
+        "整车",
+        "侧视",
+        "suv",
+        "SUV"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "drive",
+        "suspension",
+        "wheel-rotate"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "rig": {
+        "body": "vehicle.suv.body",
+        "wheel": "part.wheel",
+        "viewBox": [
+          1000,
+          420
+        ],
+        "wheelCenters": [
+          [
+            245,
+            325
+          ],
+          [
+            755,
+            325
+          ]
+        ],
+        "wheelRadius": 70
+      },
+      "snapshot": "assets/vehicle.suv.side-1.0.0-12be845e70.svg"
+    },
+    {
+      "id": "vehicle.suv.body",
+      "name": "通用SUV车身分层",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "rig-parts",
+      "file": "assets/vehicle.suv.body.svg",
+      "sha256": "a94dca93ab8b90ee275bcaab72b221bf6ac7ea49419e313979e036b9e85fad51",
+      "width": 1000,
+      "height": 420,
+      "tags": [
+        "车身",
+        "分层",
+        "suv"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/vehicle.suv.body-1.0.0-a94dca93ab.svg"
+    }
+  ]
+}

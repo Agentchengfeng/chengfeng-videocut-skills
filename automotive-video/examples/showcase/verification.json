@@ -1,0 +1,30 @@
+{
+  "output": "/Users/I564407/Documents/githubAI/chengfeng-videocut-skills/automotive-video/review/showcase.mp4",
+  "sha256": "07fd9e0f5318e45d77919fd44ab5934ed9b5611be9a2ef5492469e071ca51218",
+  "media": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "duration": 24,
+    "containerDuration": 24,
+    "frames": 720,
+    "hasAudio": false,
+    "codec": "h264"
+  },
+  "planned": {
+    "duration": 24,
+    "fps": 30,
+    "width": 1280,
+    "height": 720
+  },
+  "masterPreserved": false,
+  "technicalVerification": "PASS",
+  "visualVerification": "UNVERIFIED",
+  "humanListening": "UNVERIFIED",
+  "soundEffects": "not-added",
+  "warnings": [
+    "覆盖层重叠：suspension-demo / energy-demo，后者在上层",
+    "覆盖层重叠：energy-demo / sensor-demo，后者在上层",
+    "覆盖层重叠：sensor-demo / compare-demo，后者在上层"
+  ]
+}

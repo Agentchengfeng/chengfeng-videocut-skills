@@ -1,0 +1,12 @@
+node_modules/
+.cache/
+review/
+projects/
+library/inbox/
+library/user/
+examples/**/assets/
+examples/**/media/
+examples/**/assets.lock.json
+examples/**/resolved-props.json
+examples/**/verification.json
+*.log

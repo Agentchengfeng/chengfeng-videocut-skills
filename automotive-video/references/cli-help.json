@@ -1,0 +1,42 @@
+{
+  "usage": "node bin/auto-video.mjs <command>",
+  "commands": [
+    "catalog [--port 3211]",
+    "list",
+    "search <关键词> [--category parts] [--brand Tesla] [--view side]",
+    "import <文件> --id <ID> --name <名称> --tags <逗号分隔>",
+    "batch-import <目录>",
+    "fetch <素材直链> --id <ID> --name <名称> --tags <标签>",
+    "rig-create --id <ID> --body <车身ID> --wheel <车轮ID> --front <x,y> --rear <x,y> --radius <半径>",
+    "init --video <粗剪视频> [--srt <同步字幕>] --out <项目目录>",
+    "transcribe <project.json>",
+    "captions <project.json> --srt <字幕>",
+    "prepare <project.json> [--refresh-lock]",
+    "render <project.json> [--out <MP4>] [--frame <帧号>] [--transparent] [--overwrite]",
+    "inspect-render <project.json> [--video <实际输出>] [--out <抽帧目录>]",
+    "motion-project <动效ID> --out <目录> [见 motionOptions]",
+    "demo [--out <目录>]",
+    "previews",
+    "validate [--project <project.json>]",
+    "doctor"
+  ],
+  "motionOptions": {
+    "--width": "偶数像素，默认 1280",
+    "--height": "偶数像素，默认 720",
+    "--fps": "帧率，默认 30",
+    "--duration": "秒，默认 6",
+    "--theme": "graphite / ice / paper",
+    "--color": "#RRGGBB",
+    "--density": "粒子数量 8–200，默认 80",
+    "--intensity": "强度 0–1，默认 0.6",
+    "--speed": "速度倍率 0.05–10，默认 1",
+    "--seed": "固定随机布局的字符串",
+    "--asset-id": "聚散或轮廓效果的目标图片/SVG ID",
+    "--transparent": "创建透明项目；导出时还需 --transparent，使用 WebM"
+  },
+  "references": [
+    "references/components.md",
+    "references/project-contract.md",
+    "references/asset-sourcing.md"
+  ]
+}

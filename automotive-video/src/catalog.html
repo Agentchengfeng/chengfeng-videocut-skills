@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>汽车视觉组件库 · AUTO / WORKSHOP</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b1015;
+        --panel: #121a22;
+        --line: #29353e;
+        --text: #edf3f5;
+        --muted: #8da0ab;
+        --accent: #c8f76b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button,
+      a {
+        touch-action: manipulation;
+      }
+      button {
+        cursor: pointer;
+      }
+      header {
+        height: 94px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 44px;
+        border-bottom: 1px solid var(--line);
+      }
+      .wordmark {
+        font-family: "DIN Alternate", "Arial Narrow", sans-serif;
+        letter-spacing: 3px;
+        font-size: 21px;
+      }
+      .wordmark b {
+        color: var(--accent);
+      }
+      .eyebrow {
+        font-family: "DIN Alternate", monospace;
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: var(--muted);
+      }
+      .status {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      main {
+        max-width: 1600px;
+        margin: auto;
+        padding: 35px 44px;
+      }
+      .intro {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 30px;
+      }
+      h1 {
+        font-size: 31px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        margin: 9px 0 10px;
+      }
+      .intro p {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0;
+      }
+      .count {
+        font-family: "DIN Alternate", monospace;
+        color: var(--accent);
+        font-size: 35px;
+      }
+      .count small {
+        font-size: 12px;
+        color: var(--muted);
+        margin-left: 10px;
+      }
+      .workbench {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 290px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+      }
+      .stage-wrap {
+        min-width: 0;
+        position: relative;
+        background: #070e16;
+      }
+      .stage-label {
+        position: absolute;
+        left: 22px;
+        top: 18px;
+        z-index: 1;
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: #8395a0;
+      }
+      .stage {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16/9;
+        object-fit: contain;
+      }
+      .stage[data-ratio="portrait"] {
+        aspect-ratio: auto;
+        height: min(68vh, 690px);
+      }
+      #slot-fields {
+        display: contents;
+      }
+      .field[hidden] {
+        display: none;
+      }
+      .transport {
+        height: 55px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 0 22px;
+        border-top: 1px solid var(--line);
+      }
+      button {
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--text);
+        padding: 8px 13px;
+        border-radius: 3px;
+      }
+      .play {
+        border: 0;
+        color: var(--accent);
+        padding: 8px;
+      }
+      .transport input {
+        flex: 1;
+        accent-color: var(--accent);
+      }
+      .clock {
+        font: 11px monospace;
+        color: var(--muted);
+        min-width: 75px;
+      }
+      .inspector {
+        border-left: 1px solid var(--line);
+        padding: 24px 22px;
+      }
+      .inspector h2 {
+        font-size: 20px;
+        margin: 13px 0 10px;
+        font-weight: 500;
+      }
+      .desc {
+        font-size: 12px;
+        line-height: 1.8;
+        color: var(--muted);
+        min-height: 65px;
+      }
+      .field {
+        display: block;
+        margin-top: 22px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .field span {
+        float: right;
+        color: var(--text);
+      }
+      .field input[type="range"] {
+        width: 100%;
+        margin: 12px 0 0;
+        accent-color: var(--accent);
+      }
+      select {
+        background: #17242e;
+        color: var(--text);
+        border: 1px solid var(--line);
+        padding: 8px;
+        width: 100%;
+        margin-top: 9px;
+      }
+      #copy {
+        width: 100%;
+        margin-top: 22px;
+        color: #10170a;
+        background: var(--accent);
+        border-color: var(--accent);
+        font-size: 12px;
+      }
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin: 33px 0 20px;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+      }
+      .tabs button {
+        border: 0;
+        color: var(--muted);
+        padding: 10px 18px;
+      }
+      .tabs button.active {
+        background: #233126;
+        color: var(--accent);
+      }
+      #search {
+        max-width: 340px;
+        width: 40%;
+        border: 1px solid var(--line);
+        background: #111a22;
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 3px;
+        outline: none;
+      }
+      #search:focus {
+        border-color: var(--accent);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .card {
+        display: block;
+        text-align: left;
+        padding: 0;
+        border: 1px solid var(--line);
+        background: #101922;
+        overflow: hidden;
+      }
+      .card.selected {
+        border-color: var(--accent);
+      }
+      .card:hover {
+        border-color: #687d8a;
+      }
+      .thumb {
+        width: 100%;
+        aspect-ratio: 16/9;
+        display: block;
+        object-fit: contain;
+        background: #0a1420;
+      }
+      .asset-thumb {
+        padding: 25px;
+      }
+      .card-body {
+        padding: 15px;
+      }
+      .card-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .card-id {
+        display: block;
+        font: 10px monospace;
+        color: var(--muted);
+        margin-top: 7px;
+      }
+      .badge {
+        float: right;
+        font-size: 9px;
+        color: var(--accent);
+        border: 1px solid #354a31;
+        padding: 3px 5px;
+      }
+      footer {
+        margin-top: 32px;
+        padding: 24px 0;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 11px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .empty {
+        padding: 70px;
+        color: var(--muted);
+        grid-column: 1/-1;
+        text-align: center;
+      }
+      details {
+        margin-top: 14px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      summary {
+        cursor: pointer;
+      }
+      #recipe {
+        white-space: pre-wrap;
+        word-break: break-all;
+        font: 10px monospace;
+        color: var(--muted);
+        line-height: 1.6;
+        margin-top: 15px;
+      }
+      a {
+        color: var(--accent);
+      }
+      @media (max-width: 1000px) {
+        main {
+          padding: 25px 22px;
+        }
+        header {
+          padding: 0 22px;
+        }
+        .workbench {
+          grid-template-columns: minmax(0, 1fr) 245px;
+        }
+        .inspector {
+          padding: 18px;
+        }
+        .grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 700px) {
+        header {
+          height: 72px;
+        }
+        .status {
+          display: none;
+        }
+        .intro {
+          align-items: start;
+        }
+        .count {
+          font-size: 24px;
+        }
+        .workbench {
+          grid-template-columns: 1fr;
+        }
+        .inspector {
+          border-left: 0;
+          border-top: 1px solid var(--line);
+        }
+        .desc {
+          min-height: 0;
+        }
+        .field {
+          margin-top: 12px;
+        }
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .toolbar {
+          flex-direction: column;
+        }
+        #search {
+          width: 100%;
+          max-width: none;
+        }
+        .tabs button {
+          padding: 9px 12px;
+        }
+        h1 {
+          font-size: 25px;
+        }
+        .intro p {
+          max-width: 235px;
+          line-height: 1.7;
+        }
+        footer {
+          gap: 20px;
+          line-height: 1.7;
+        }
+      }
+      @media (min-width: 701px) and (max-width: 1000px) {
+        .workbench {
+          grid-template-columns: 1fr;
+        }
+        .inspector {
+          border-left: 0;
+          border-top: 1px solid var(--line);
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+        }
+        .inspector .eyebrow,
+        .inspector details {
+          grid-column: 1 / -1;
+        }
+        .inspector h2 {
+          margin: 0;
+        }
+        .inspector .desc {
+          grid-column: 2 / -1;
+          min-height: 0;
+          margin: 0;
+        }
+        .inspector .field {
+          margin-top: 0;
+        }
+        #copy {
+          margin-top: 0;
+          align-self: end;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wordmark">AUTO <b>/</b> WORKSHOP</div>
+      <div class="status">
+        <span class="dot"></span>本地视觉组件库 <span>·</span> 2D / FRAME SYNC
+      </div>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <div class="eyebrow">YOUR REUSABLE VISUAL SYSTEM</div>
+          <h1>汽车视觉组件库</h1>
+          <p>选对象，定动作，把每一次制作变成下一次的起点。</p>
+        </div>
+        <div class="count" id="count">—<small>可复用资源</small></div>
+      </section>
+      <section class="workbench">
+        <div class="stage-wrap">
+          <div class="stage-label">LIVE PREVIEW / 可拖动预览</div>
+          <img id="stage" class="stage" alt="组件实时预览" /><video
+            id="stage-video"
+            class="stage"
+            controls
+            style="display: none"
+            aria-label="视频素材预览"
+          ></video>
+          <div class="transport" id="transport">
+            <button class="play" id="play" aria-label="播放预览">▶</button
+            ><input
+              id="time"
+              type="range"
+              min="0"
+              max="5.99"
+              step="0.01"
+              value="2"
+              aria-label="预览时间"
+            /><span class="clock" id="clock">02.00 / 06.00</span>
+          </div>
+        </div>
+        <aside class="inspector">
+          <div class="eyebrow" id="kindLabel">SCENE / 场景组件</div>
+          <h2 id="name">加载中</h2>
+          <p class="desc" id="description"></p>
+          <label class="field" id="preset-field" hidden
+            >镜头预设<select id="preset"></select
+          ></label>
+          <label class="field" id="ratio-field" hidden
+            >画幅<select id="ratio">
+              <option value="landscape">横屏 16:9</option>
+              <option value="portrait">竖屏 9:16</option>
+            </select></label
+          >
+          <label class="field" id="safe-field" hidden
+            >字幕安全区<select id="safe-bottom">
+              <option value="false">完整画面</option>
+              <option value="true">预留两行字幕</option>
+            </select></label
+          >
+          <div id="slot-fields"></div>
+          <label class="field"
+            >视觉主题<select id="theme">
+              <option value="graphite">石墨青柠</option>
+              <option value="ice">冰蓝工程</option>
+              <option value="paper">白底技术</option>
+            </select></label
+          ><label class="field"
+            >目标图形<select id="target" aria-label="目标图形" disabled>
+              <option value="">默认形状</option>
+            </select></label
+          ><label class="field"
+            >粒子数量<span id="densityValue">80</span
+            ><input
+              id="density"
+              type="range"
+              min="8"
+              max="200"
+              value="80" /></label
+          ><label class="field"
+            >运动速度<span id="speedValue">1.0</span
+            ><input
+              id="speed"
+              type="range"
+              min="0.2"
+              max="3"
+              step="0.1"
+              value="1" /></label
+          ><label class="field"
+            >视觉强度<span id="intensityValue">0.5</span
+            ><input
+              id="intensity"
+              type="range"
+              min="0.1"
+              max="1"
+              step="0.1"
+              value="0.5" /></label
+          ><button id="copy">复制组件配置</button>
+          <details id="recipe-details">
+            <summary>查看组件配置</summary>
+            <div id="recipe"></div>
+          </details>
+        </aside>
+      </section>
+      <div class="toolbar">
+        <nav class="tabs" aria-label="资源分类">
+          <button class="active" data-tab="scenes">场景组件</button
+          ><button data-tab="motions">粒子与动效</button
+          ><button data-tab="assets">对象与素材</button>
+        </nav>
+        <input
+          id="search"
+          placeholder="搜索：车轮、电池、Logo、粒子…"
+          aria-label="搜索资源"
+        />
+      </div>
+      <section class="grid" id="grid"></section>
+      <footer>
+        <span>通用示意与真实车型分别标记。品牌字形保留来源信息。</span
+        ><span>固定组件 · 参数复用 · 项目版本留存</span>
+      </footer>
+    </main>
+    <script>
+      let data,
+        tab = "scenes",
+        selected = { kind: "scenes", id: "sensor" },
+        playing = false,
+        time = 2,
+        busy = false,
+        pending = false,
+        last = 0;
+      const $ = (id) => document.getElementById(id);
+      const currentPreset = () =>
+        selected.kind === "scenes"
+          ? data.presets.find(
+              (preset) =>
+                preset.type === selected.id && preset.id === $("preset").value,
+            )
+          : undefined;
+      const safe = (s) =>
+        String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      function config() {
+        const preset = currentPreset();
+        if (preset)
+          return {
+            id: preset.id,
+            kind: "scene",
+            type: preset.type,
+            preset: preset.id,
+            start: 0,
+            end: 6,
+            assetSlots: Object.fromEntries(
+              preset.slots.map(({ name }) => [name, $("slot-" + name).value]),
+            ),
+          };
+        return {
+          type:
+            selected.kind === "motions"
+              ? "motion"
+              : selected.kind === "assets"
+                ? "asset"
+                : selected.id,
+          ...(selected.kind === "motions"
+            ? { motion: selected.id }
+            : selected.kind === "assets"
+              ? { assetId: selected.id }
+              : {}),
+          ...(selected.kind === "motions" &&
+          ["dissolve", "outline"].includes(selected.id) &&
+          $("target").value
+            ? { assetId: $("target").value }
+            : {}),
+          theme: $("theme").value,
+          params: {
+            density: Number($("density").value),
+            speed: Number($("speed").value),
+            intensity: Number($("intensity").value),
+            seed: "catalog-fixed",
+          },
+        };
+      }
+      function url(item, t, useSelection = false) {
+        const preset = useSelection
+          ? currentPreset()
+          : item.kind === "scenes" &&
+            data.presets.find((p) => p.type === item.id);
+        const portrait =
+          useSelection && preset && $("ratio").value === "portrait";
+        return (
+          "/api/preview?" +
+          new URLSearchParams({
+            kind: item.kind,
+            id: item.id,
+            time: t ?? (preset ? preset.previewTime : 2),
+            ...(preset
+              ? {
+                  preset: preset.id,
+                  ...(useSelection
+                    ? {
+                        assetSlots: JSON.stringify(config().assetSlots),
+                        safeBottom: $("safe-bottom").value,
+                      }
+                    : {}),
+                  ...(portrait ? { width: 540, height: 960 } : {}),
+                }
+              : {}),
+            theme: $("theme").value,
+            density: $("density").value,
+            speed: $("speed").value,
+            intensity: $("intensity").value,
+            ...(item.kind === "motions" &&
+            ["dissolve", "outline"].includes(item.id) &&
+            $("target").value
+              ? { assetId: $("target").value }
+              : {}),
+          })
+        );
+      }
+      async function update() {
+        if (busy) {
+          pending = true;
+          return;
+        }
+        busy = true;
+        try {
+          const a =
+            selected.kind === "assets"
+              ? data.assets.find((x) => x.id === selected.id)
+              : null;
+          if (a?.kind === "video") {
+            $("stage").style.display = "none";
+            $("stage-video").style.display = "block";
+            $("transport").style.display = "none";
+            const src = "/asset?id=" + encodeURIComponent(a.id);
+            if ($("stage-video").getAttribute("src") !== src)
+              $("stage-video").src = src;
+            $("recipe").textContent = JSON.stringify(config(), null, 2);
+            return;
+          } else {
+            $("stage").style.display = "block";
+            $("stage-video").pause();
+            $("stage-video").style.display = "none";
+            $("transport").style.display = "flex";
+          }
+          const selection = selected;
+          const response = await fetch(url(selection, time, true));
+          if (!response.ok) throw Error(await response.text());
+          const blob = await response.blob();
+          if (selection !== selected) return;
+          const old = $("stage").src;
+          $("stage").src = URL.createObjectURL(blob);
+          if (old.startsWith("blob:")) URL.revokeObjectURL(old);
+          $("clock").textContent =
+            time.toFixed(2).padStart(5, "0") + " / 06.00";
+          $("time").value = time;
+          for (const f of ["density", "speed", "intensity"])
+            $(f + "Value").textContent = $(f).value;
+          $("recipe").textContent = JSON.stringify(config(), null, 2);
+        } catch (e) {
+          $("description").textContent = "预览失败：" + e.message;
+        } finally {
+          busy = false;
+          if (pending) {
+            pending = false;
+            update();
+          }
+        }
+      }
+      function choose(kind, id) {
+        selected = { kind, id };
+        $("target").disabled = !(
+          kind === "motions" && ["dissolve", "outline"].includes(id)
+        );
+        const entry = data[kind].find((x) => x.id === id);
+        $("name").textContent = entry.name;
+        $("description").textContent =
+          entry.description ||
+          (entry.representation === "schematic"
+            ? "通用原理示意，可用于解释；不代表具体车型。"
+            : entry.brand || entry.category);
+        $("kindLabel").textContent = {
+          scenes: "SCENE / 场景组件",
+          motions: "MOTION / 粒子与动效",
+          assets: "ASSET / 对象素材",
+        }[kind];
+        const presets =
+          kind === "scenes" ? data.presets.filter((p) => p.type === id) : [];
+        $("preset").replaceChildren(
+          ...presets.map((p) => new Option(p.name, p.id)),
+        );
+        const hasPreset = presets.length > 0;
+        for (const key of ["preset-field", "ratio-field", "safe-field"])
+          $(key).hidden = !hasPreset;
+        for (const key of ["theme", "target", "density", "speed", "intensity"])
+          $(key).closest("label").hidden = hasPreset;
+        configurePreset();
+        time = currentPreset()?.previewTime ?? 2;
+        renderList();
+        update();
+      }
+      function configurePreset() {
+        const preset = currentPreset();
+        $("stage").dataset.ratio = preset ? $("ratio").value : "landscape";
+        $("slot-fields").replaceChildren();
+        if (!preset) return;
+        $("description").textContent = preset.description;
+        for (const slot of preset.slots) {
+          const field = document.createElement("label");
+          field.className = "field";
+          field.textContent = slot.label;
+          const select = document.createElement("select");
+          select.id = "slot-" + slot.name;
+          select.replaceChildren(
+            ...slot.choices.map(
+              ({ id, name }) =>
+                new Option(
+                  name,
+                  id,
+                  id === slot.defaultId,
+                  id === slot.defaultId,
+                ),
+            ),
+          );
+          select.oninput = update;
+          field.append(select);
+          $("slot-fields").append(field);
+        }
+      }
+      function renderList() {
+        const q = $("search").value.toLowerCase();
+        const entries = data[tab].filter((x) =>
+          [x.name, x.id, x.brand, x.model, ...(x.tags || [])]
+            .join(" ")
+            .toLowerCase()
+            .includes(q),
+        );
+        $("grid").innerHTML = entries.length
+          ? entries
+              .map(
+                (x) =>
+                  `<button class="card ${selected.kind === tab && selected.id === x.id ? "selected" : ""}" data-id="${safe(x.id)}"><img loading="lazy" class="thumb ${tab === "assets" ? "asset-thumb" : ""}" src="${tab === "assets" ? (x.kind === "video" ? "/thumbnail?id=" + encodeURIComponent(x.id) : "/asset?id=" + encodeURIComponent(x.id)) : url({ kind: tab, id: x.id })}" alt="${safe(x.name)}"><div class="card-body"><span class="badge">${tab === "assets" ? (x.representation === "schematic" ? "示意" : x.category === "logos" ? "品牌" : "素材") : tab === "motions" ? "2D 动效" : "可替换"}</span><span class="card-name">${safe(x.name)}</span><span class="card-id">${safe(x.id)}</span></div></button>`,
+              )
+              .join("")
+          : '<div class="empty">暂无匹配资源。新素材入库后会出现在这里。</div>';
+        document
+          .querySelectorAll(".card")
+          .forEach((el) => (el.onclick = () => choose(tab, el.dataset.id)));
+      }
+      document.querySelectorAll("[data-tab]").forEach(
+        (el) =>
+          (el.onclick = () => {
+            tab = el.dataset.tab;
+            document
+              .querySelectorAll("[data-tab]")
+              .forEach((b) => b.classList.toggle("active", b === el));
+            renderList();
+          }),
+      );
+      $("search").oninput = renderList;
+      $("preset").oninput = () => {
+        configurePreset();
+        time = currentPreset().previewTime;
+        update();
+      };
+      $("ratio").oninput = () => {
+        $("stage").dataset.ratio = $("ratio").value;
+        update();
+      };
+      $("safe-bottom").oninput = update;
+      for (const key of ["theme", "target", "density", "speed", "intensity"])
+        $(key).oninput = () => {
+          update();
+        };
+      $("time").oninput = () => {
+        time = Number($("time").value);
+        update();
+      };
+      $("play").onclick = () => {
+        playing = !playing;
+        $("play").textContent = playing ? "Ⅱ" : "▶";
+        $("play").setAttribute("aria-label", playing ? "暂停预览" : "播放预览");
+      };
+      $("copy").onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(
+            JSON.stringify(config(), null, 2),
+          );
+          $("copy").textContent = "已复制组件配置";
+        } catch {
+          $("recipe").textContent = JSON.stringify(config(), null, 2);
+          $("copy").textContent = "配置已显示在下方";
+          $("recipe-details").open = true;
+        }
+      };
+      async function tick(ts) {
+        if (playing && ts - last > 100 && !busy) {
+          time = (time + 0.1) % 6;
+          last = ts;
+          await update();
+        }
+        requestAnimationFrame(tick);
+      }
+      fetch("/api/catalog")
+        .then((r) => r.json())
+        .then((d) => {
+          data = d;
+          $("target").innerHTML =
+            '<option value="">默认形状</option>' +
+            d.assets
+              .filter((a) => a.kind !== "video" && a.category !== "rig-parts")
+              .map(
+                (a) =>
+                  '<option value="' +
+                  safe(a.id) +
+                  '">' +
+                  safe(a.name) +
+                  "</option>",
+              )
+              .join("");
+          $("count").innerHTML =
+            d.assets.length +
+            d.motions.length +
+            d.scenes.length +
+            "<small>可复用资源</small>";
+          choose("scenes", "sensor");
+          requestAnimationFrame(tick);
+        });
+    </script>
+  </body>
+</html>

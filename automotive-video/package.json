@@ -1,0 +1,34 @@
+{
+  "name": "automotive-video-kit",
+  "version": "1.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "description": "Reusable 2D automotive assets, motion scenes and rough-cut video finishing tools.",
+  "scripts": {
+    "studio": "remotion studio src/index.jsx --no-open --port 3210",
+    "catalog": "node bin/auto-video.mjs catalog",
+    "seed": "node bin/seed.mjs",
+    "test": "node --test test/*.test.mjs",
+    "validate": "node bin/auto-video.mjs validate",
+    "demo": "node bin/auto-video.mjs demo",
+    "install:skills": "node bin/install-skills.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.540",
+    "@remotion/cli": "4.0.540",
+    "@remotion/media": "4.0.540",
+    "@remotion/renderer": "4.0.540",
+    "@resvg/resvg-js": "2.6.2",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.540",
+    "simple-icons": "16.36.0"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

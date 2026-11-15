@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "id": "component-showcase",
+  "title": "汽车视觉组件库",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "duration": 24,
+  "preserveMaster": true,
+  "captions": [],
+  "clips": [
+    {
+      "id": "suspension-demo",
+      "kind": "scene",
+      "type": "suspension",
+      "start": 0,
+      "end": 6,
+      "title": "车轮运动，车身响应",
+      "subtitle": "分层部件 · 连续动作 · 通用原理示意",
+      "motion": "ambient",
+      "theme": "graphite",
+      "transition": "cut"
+    },
+    {
+      "id": "energy-demo",
+      "kind": "scene",
+      "type": "energy",
+      "start": 5.7,
+      "end": 12,
+      "title": "让能量路径看得见",
+      "subtitle": "对象与粒子共享同一时间轴",
+      "motion": "grid",
+      "theme": "graphite",
+      "transition": "wipe"
+    },
+    {
+      "id": "sensor-demo",
+      "kind": "scene",
+      "type": "sensor",
+      "start": 11.7,
+      "end": 18,
+      "title": "从对象到感知范围",
+      "subtitle": "二维扫描 · 可调整速度与颜色",
+      "motion": "network",
+      "theme": "ice",
+      "transition": "fade"
+    },
+    {
+      "id": "compare-demo",
+      "kind": "scene",
+      "type": "compare",
+      "start": 17.7,
+      "end": 24,
+      "title": "换素材，复用场景",
+      "subtitle": "同一构图 · 不同车型素材",
+      "motion": "ambient",
+      "theme": "graphite",
+      "labels": [
+        "通用轿车示意",
+        "通用 SUV 示意"
+      ],
+      "transition": "fade"
+    }
+  ],
+  "soundEffects": []
+}

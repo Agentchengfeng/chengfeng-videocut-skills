@@ -1,0 +1,510 @@
+{
+  "project": {
+    "schemaVersion": 1,
+    "id": "component-showcase",
+    "title": "汽车视觉组件库",
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "duration": 24,
+    "preserveMaster": true,
+    "captions": [],
+    "clips": [
+      {
+        "id": "suspension-demo",
+        "kind": "scene",
+        "type": "suspension",
+        "start": 0,
+        "end": 6,
+        "title": "车轮运动，车身响应",
+        "subtitle": "分层部件 · 连续动作 · 通用原理示意",
+        "motion": "ambient",
+        "theme": "graphite",
+        "transition": "cut"
+      },
+      {
+        "id": "energy-demo",
+        "kind": "scene",
+        "type": "energy",
+        "start": 5.7,
+        "end": 12,
+        "title": "让能量路径看得见",
+        "subtitle": "对象与粒子共享同一时间轴",
+        "motion": "grid",
+        "theme": "graphite",
+        "transition": "wipe"
+      },
+      {
+        "id": "sensor-demo",
+        "kind": "scene",
+        "type": "sensor",
+        "start": 11.7,
+        "end": 18,
+        "title": "从对象到感知范围",
+        "subtitle": "二维扫描 · 可调整速度与颜色",
+        "motion": "network",
+        "theme": "ice",
+        "transition": "fade"
+      },
+      {
+        "id": "compare-demo",
+        "kind": "scene",
+        "type": "compare",
+        "start": 17.7,
+        "end": 24,
+        "title": "换素材，复用场景",
+        "subtitle": "同一构图 · 不同车型素材",
+        "motion": "ambient",
+        "theme": "graphite",
+        "labels": [
+          "通用轿车示意",
+          "通用 SUV 示意"
+        ],
+        "transition": "fade"
+      }
+    ],
+    "soundEffects": []
+  },
+  "assets": {
+    "vehicle.sedan.side": {
+      "id": "vehicle.sedan.side",
+      "name": "通用轿车侧视",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "vehicles",
+      "file": "assets/vehicle.sedan.side.svg",
+      "sha256": "65942993aadfcb70c8dbfc1fdf91a8deb9c28b44b50dd4c1bd94841d5d0ee1b0",
+      "width": 1000,
+      "height": 420,
+      "tags": [
+        "汽车",
+        "整车",
+        "侧视",
+        "sedan",
+        "轿车"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "drive",
+        "suspension",
+        "wheel-rotate"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "rig": {
+        "body": "vehicle.sedan.body",
+        "wheel": "part.wheel",
+        "viewBox": [
+          1000,
+          420
+        ],
+        "wheelCenters": [
+          [
+            245,
+            325
+          ],
+          [
+            755,
+            325
+          ]
+        ],
+        "wheelRadius": 70
+      },
+      "snapshot": "assets/vehicle.sedan.side-1.0.0-65942993aa.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAwIDQyMCIgZmlsbD0ibm9uZSI+PGcgaWQ9ImJvZHkiPjxwYXRoIGQ9Ik0xMDAgMjk3IEwxMTggMjM5IFExMjkgMjE1IDIxMCAyMDQgTDMwMyAxNDkgUTMyNSAxMjcgMzg4IDEyNiBMNTk2IDEyNiBRNjM0IDEyNyA3MDcgMTkwIEw4NTUgMjEyIFE5MDEgMjIyIDkxMCAyNTggTDkyNCAyOTYgTDkwNiAzMjggTDgzMCAzMjggUTgyNSAyNTMgNzU1IDI1MyBRNjgxIDI1MyA2NzUgMzI4IEwzMjUgMzI4IFEzMTkgMjUzIDI0NSAyNTMgUTE3MyAyNTMgMTY5IDMyOCBMMTA4IDMyOCBaIiBmaWxsPSIjMjk0MzU0IiBzdHJva2U9IiNjNWQ0ZGMiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik0yNjcgMjAyIEwzMjYgMTU2IEw1ODYgMTUyIFE2MTUgMTUxIDY3MSAxOTggWiIgZmlsbD0iIzBiMWQyZCIgc3Ryb2tlPSIjODBhZWJmIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNNDU4IDE0OSBMNDU4IDE5OSBNNjg0IDIxNCBMNjg0IDI2MCBNMzYzIDIxNiBMMzYzIDMwNSBNMzc1IDMwNiBMNjYxIDMwNiIgc3Ryb2tlPSIjODRhOGI0IiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNMTI4IDI0NiBMMTgxIDI0MiBNODYxIDI0MSBMOTAxIDI1MiIgc3Ryb2tlPSIjYzhmNzZiIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNNDgzIDIyMyBINTE4IE03MDEgMjI4IEg3MjgiIHN0cm9rZT0iI2Q3ZTZlNiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMTE3IDMyMyBIMTY4IE04MjkgMzI0IEg5MTAiIHN0cm9rZT0iIzBiMTcyMiIgc3Ryb2tlLXdpZHRoPSIxMyIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNzUgMjU1KSBzY2FsZSguNykiPjxnIGlkPSJ3aGVlbCI+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI4NCIgZmlsbD0iIzExMWIyNSIgc3Ryb2tlPSIjOTNhN2I3IiBzdHJva2Utd2lkdGg9IjUiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjU3Ljk1OTk5OTk5OTk5OTk5NCIgZmlsbD0iIzI0Mzk0YSIgc3Ryb2tlPSIjZTFlY2VkIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgwIDEwMCAxMDApIi8+PHBhdGggZD0iTTEwMCA4OCBMMTE0IDUwLjQ0MDAwMDAwMDAwMDAwNSBMOTMgNDcuOTIgWiIgZmlsbD0iI2JmY2VkNCIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSg5MCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDEzNSAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDE4MCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDIyNSAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDI3MCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDMxNSAxMDAgMTAwKSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTYiIGZpbGw9IiMwYzE5MjUiIHN0cm9rZT0iI2M4Zjc2YiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9nPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2ODUgMjU1KSBzY2FsZSguNykiPjxnIGlkPSJ3aGVlbCI+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI4NCIgZmlsbD0iIzExMWIyNSIgc3Ryb2tlPSIjOTNhN2I3IiBzdHJva2Utd2lkdGg9IjUiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjU3Ljk1OTk5OTk5OTk5OTk5NCIgZmlsbD0iIzI0Mzk0YSIgc3Ryb2tlPSIjZTFlY2VkIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgwIDEwMCAxMDApIi8+PHBhdGggZD0iTTEwMCA4OCBMMTE0IDUwLjQ0MDAwMDAwMDAwMDAwNSBMOTMgNDcuOTIgWiIgZmlsbD0iI2JmY2VkNCIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSg5MCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDEzNSAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDE4MCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDIyNSAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDI3MCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDMxNSAxMDAgMTAwKSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTYiIGZpbGw9IiMwYzE5MjUiIHN0cm9rZT0iI2M4Zjc2YiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9nPjwvZz48L3N2Zz4="
+    },
+    "vehicle.sedan.body": {
+      "id": "vehicle.sedan.body",
+      "name": "通用轿车车身分层",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "rig-parts",
+      "file": "assets/vehicle.sedan.body.svg",
+      "sha256": "5b15cfb9f357acffce6ed202d730256af9f609693f73e43934a316b3d8a4832f",
+      "width": 1000,
+      "height": 420,
+      "tags": [
+        "车身",
+        "分层",
+        "sedan"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/vehicle.sedan.body-1.0.0-5b15cfb9f3.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAwIDQyMCIgZmlsbD0ibm9uZSI+PGcgaWQ9ImJvZHkiPjxwYXRoIGQ9Ik0xMDAgMjk3IEwxMTggMjM5IFExMjkgMjE1IDIxMCAyMDQgTDMwMyAxNDkgUTMyNSAxMjcgMzg4IDEyNiBMNTk2IDEyNiBRNjM0IDEyNyA3MDcgMTkwIEw4NTUgMjEyIFE5MDEgMjIyIDkxMCAyNTggTDkyNCAyOTYgTDkwNiAzMjggTDgzMCAzMjggUTgyNSAyNTMgNzU1IDI1MyBRNjgxIDI1MyA2NzUgMzI4IEwzMjUgMzI4IFEzMTkgMjUzIDI0NSAyNTMgUTE3MyAyNTMgMTY5IDMyOCBMMTA4IDMyOCBaIiBmaWxsPSIjMjk0MzU0IiBzdHJva2U9IiNjNWQ0ZGMiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik0yNjcgMjAyIEwzMjYgMTU2IEw1ODYgMTUyIFE2MTUgMTUxIDY3MSAxOTggWiIgZmlsbD0iIzBiMWQyZCIgc3Ryb2tlPSIjODBhZWJmIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNNDU4IDE0OSBMNDU4IDE5OSBNNjg0IDIxNCBMNjg0IDI2MCBNMzYzIDIxNiBMMzYzIDMwNSBNMzc1IDMwNiBMNjYxIDMwNiIgc3Ryb2tlPSIjODRhOGI0IiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNMTI4IDI0NiBMMTgxIDI0MiBNODYxIDI0MSBMOTAxIDI1MiIgc3Ryb2tlPSIjYzhmNzZiIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNNDgzIDIyMyBINTE4IE03MDEgMjI4IEg3MjgiIHN0cm9rZT0iI2Q3ZTZlNiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMTE3IDMyMyBIMTY4IE04MjkgMzI0IEg5MTAiIHN0cm9rZT0iIzBiMTcyMiIgc3Ryb2tlLXdpZHRoPSIxMyIvPjwvZz48L3N2Zz4="
+    },
+    "part.wheel": {
+      "id": "part.wheel",
+      "name": "八辐车轮",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.wheel.svg",
+      "sha256": "15dc6cb86b65e7cb6a3b656797d8687efd8a67214c6f32a94649abc607108f4b",
+      "width": 200,
+      "height": 200,
+      "tags": [
+        "车轮",
+        "轮胎",
+        "轮毂",
+        "旋转",
+        "wheel"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "rotate"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "anchors": {
+        "center": [
+          100,
+          100
+        ]
+      },
+      "snapshot": "assets/part.wheel-1.0.0-15dc6cb86b.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiBmaWxsPSJub25lIj48ZyBpZD0id2hlZWwiPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iODQiIGZpbGw9IiMxMTFiMjUiIHN0cm9rZT0iIzkzYTdiNyIgc3Ryb2tlLXdpZHRoPSI1Ii8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI1Ny45NTk5OTk5OTk5OTk5OTQiIGZpbGw9IiMyNDM5NGEiIHN0cm9rZT0iI2UxZWNlZCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTEwMCA4OCBMMTE0IDUwLjQ0MDAwMDAwMDAwMDAwNSBMOTMgNDcuOTIgWiIgZmlsbD0iI2JmY2VkNCIgdHJhbnNmb3JtPSJyb3RhdGUoMCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDEwMCAxMDApIi8+PHBhdGggZD0iTTEwMCA4OCBMMTE0IDUwLjQ0MDAwMDAwMDAwMDAwNSBMOTMgNDcuOTIgWiIgZmlsbD0iI2JmY2VkNCIgdHJhbnNmb3JtPSJyb3RhdGUoOTAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgxMzUgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgxODAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgyMjUgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgyNzAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgzMTUgMTAwIDEwMCkiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjE2IiBmaWxsPSIjMGMxOTI1IiBzdHJva2U9IiNjOGY3NmIiIHN0cm9rZS13aWR0aD0iNCIvPjwvZz48L3N2Zz4="
+    },
+    "part.spring": {
+      "id": "part.spring",
+      "name": "悬架弹簧",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.spring.svg",
+      "sha256": "1940b2094ada82fdbca218e3201d35438e2b7aa752fcce9bc2055438694c4249",
+      "width": 180,
+      "height": 420,
+      "tags": [
+        "悬架",
+        "弹簧",
+        "减振",
+        "spring"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "compress"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "anchors": {
+        "top": [
+          90,
+          20
+        ],
+        "bottom": [
+          90,
+          400
+        ]
+      },
+      "snapshot": "assets/part.spring-1.0.0-1940b2094a.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNDIwIiBmaWxsPSJub25lIj48cGF0aCBkPSJNOTAgMjAgVjQ1IEw0MCA3MCBMMTQwIDExMCBMNDAgMTUwIEwxNDAgMTkwIEw0MCAyMzAgTDE0MCAyNzAgTDQwIDMxMCBMMTQwIDM1MCBMOTAgMzc1IFY0MDAiIHN0cm9rZT0iI2M4Zjc2YiIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+"
+    },
+    "part.chassis.top": {
+      "id": "part.chassis.top",
+      "name": "通用电驱底盘俯视",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.chassis.top.svg",
+      "sha256": "a3b6b67dbbff3ccd607e218a89ce049c5519f895d101ecad6984e282414a1165",
+      "width": 1000,
+      "height": 1200,
+      "tags": [
+        "底盘",
+        "电驱",
+        "电池",
+        "俯视",
+        "chassis"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "top",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/part.chassis.top-1.0.0-a3b6b67dbb.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAwIDEyMDAiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0yMzAgNTUgSDc3MCBMODI0IDEyMCBWMTA1MCBMNzcwIDExMzAgSDIzMCBMMTc2IDEwNTAgVjEyMCBaIiBmaWxsPSIjMTMyYTM2IiBzdHJva2U9IiM2NjhiOWMiIHN0cm9rZS13aWR0aD0iNyIvPjxwYXRoIGQ9Ik0yNDAgMTcwIEg3NjAgTTI0MCAxMDEwIEg3NjAgTTI1NSAxODAgVjEwMDAgTTc0NSAxODAgVjEwMDAiIHN0cm9rZT0iIzlhYjRiZiIgc3Ryb2tlLXdpZHRoPSIxMiIvPjxyZWN0IHg9IjI5MCIgeT0iMzAwIiB3aWR0aD0iNDIwIiBoZWlnaHQ9IjUyMCIgcng9IjI2IiBmaWxsPSIjMjQ0YzQ0IiBzdHJva2U9IiNjOGY3NmIiIHN0cm9rZS13aWR0aD0iNSIvPjxwYXRoIGQ9Ik0zMTAgMzgwIEg2OTAgTTMxMCA0NjAgSDY5MCBNMzEwIDU0MCBINjkwIE0zMTAgNjIwIEg2OTAgTTMxMCA3MDAgSDY5MCIgc3Ryb2tlPSIjNjM5NzdkIiBzdHJva2Utd2lkdGg9IjMiLz48cmVjdCB4PSIzMzAiIHk9IjE2MCIgd2lkdGg9IjM0MCIgaGVpZ2h0PSIxMDAiIHJ4PSIyOCIgZmlsbD0iIzM3NjI3NiIvPjxyZWN0IHg9IjMzMCIgeT0iOTAwIiB3aWR0aD0iMzQwIiBoZWlnaHQ9IjEwMCIgcng9IjI4IiBmaWxsPSIjMzc2Mjc2Ii8+PC9zdmc+"
+    },
+    "part.battery": {
+      "id": "part.battery",
+      "name": "电池包俯视示意",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.battery.svg",
+      "sha256": "2edc313a7ca7f16f5f2221fcc43a0701a66be5cb7d822feb9209352accf13837",
+      "width": 600,
+      "height": 320,
+      "tags": [
+        "电池",
+        "电池包",
+        "电驱",
+        "能量",
+        "battery"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "top",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/part.battery-1.0.0-2edc313a7c.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgMzIwIiBmaWxsPSJub25lIj48cmVjdCB4PSIyOCIgeT0iMjQiIHdpZHRoPSI1NDQiIGhlaWdodD0iMjcyIiByeD0iMjQiIGZpbGw9IiMxODM2M2MiIHN0cm9rZT0iI2M4Zjc2YiIgc3Ryb2tlLXdpZHRoPSI1Ii8+PHJlY3QgeD0iNTIiIHk9IjQ4IiB3aWR0aD0iNjkiIGhlaWdodD0iOTgiIHJ4PSI4IiBmaWxsPSIjMzE1OTRhIiBzdHJva2U9IiM4YWE5ODEiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjEzNiIgeT0iNDgiIHdpZHRoPSI2OSIgaGVpZ2h0PSI5OCIgcng9IjgiIGZpbGw9IiMzMTU5NGEiIHN0cm9rZT0iIzhhYTk4MSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMjIwIiB5PSI0OCIgd2lkdGg9IjY5IiBoZWlnaHQ9Ijk4IiByeD0iOCIgZmlsbD0iIzMxNTk0YSIgc3Ryb2tlPSIjOGFhOTgxIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSIzMDQiIHk9IjQ4IiB3aWR0aD0iNjkiIGhlaWdodD0iOTgiIHJ4PSI4IiBmaWxsPSIjMzE1OTRhIiBzdHJva2U9IiM4YWE5ODEiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjM4OCIgeT0iNDgiIHdpZHRoPSI2OSIgaGVpZ2h0PSI5OCIgcng9IjgiIGZpbGw9IiMzMTU5NGEiIHN0cm9rZT0iIzhhYTk4MSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iNDcyIiB5PSI0OCIgd2lkdGg9IjY5IiBoZWlnaHQ9Ijk4IiByeD0iOCIgZmlsbD0iIzMxNTk0YSIgc3Ryb2tlPSIjOGFhOTgxIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSI1MiIgeT0iMTY4IiB3aWR0aD0iNjkiIGhlaWdodD0iOTgiIHJ4PSI4IiBmaWxsPSIjMzE1OTRhIiBzdHJva2U9IiM4YWE5ODEiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjEzNiIgeT0iMTY4IiB3aWR0aD0iNjkiIGhlaWdodD0iOTgiIHJ4PSI4IiBmaWxsPSIjMzE1OTRhIiBzdHJva2U9IiM4YWE5ODEiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjIyMCIgeT0iMTY4IiB3aWR0aD0iNjkiIGhlaWdodD0iOTgiIHJ4PSI4IiBmaWxsPSIjMzE1OTRhIiBzdHJva2U9IiM4YWE5ODEiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjMwNCIgeT0iMTY4IiB3aWR0aD0iNjkiIGhlaWdodD0iOTgiIHJ4PSI4IiBmaWxsPSIjMzE1OTRhIiBzdHJva2U9IiM4YWE5ODEiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjM4OCIgeT0iMTY4IiB3aWR0aD0iNjkiIGhlaWdodD0iOTgiIHJ4PSI4IiBmaWxsPSIjMzE1OTRhIiBzdHJva2U9IiM4YWE5ODEiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjQ3MiIgeT0iMTY4IiB3aWR0aD0iNjkiIGhlaWdodD0iOTgiIHJ4PSI4IiBmaWxsPSIjMzE1OTRhIiBzdHJva2U9IiM4YWE5ODEiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0yNzQgMTI5IEwzMTQgOTQgTDMwMCAxNDUgSDMzNSBMMjgyIDIwNCBMMjk1IDE1NCBIMjcwIFoiIGZpbGw9IiNjOGY3NmIiLz48L3N2Zz4="
+    },
+    "part.motor": {
+      "id": "part.motor",
+      "name": "电机示意",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.motor.svg",
+      "sha256": "3affcba51420f21e70c3718d3ad6cbc6f505a5eb50410761f8b4a5484a6a59ba",
+      "width": 400,
+      "height": 300,
+      "tags": [
+        "电机",
+        "电驱",
+        "动力",
+        "motor"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/part.motor-1.0.0-3affcba514.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIiBmaWxsPSJub25lIj48cmVjdCB4PSI2MCIgeT0iNTUiIHdpZHRoPSIyNTAiIGhlaWdodD0iMTkwIiByeD0iNzAiIGZpbGw9IiMyNDQ5NWIiIHN0cm9rZT0iIzhkZGNlZiIgc3Ryb2tlLXdpZHRoPSI1Ii8+PHJlY3QgeD0iMTUiIHk9IjExMCIgd2lkdGg9IjcwIiBoZWlnaHQ9IjgwIiByeD0iOCIgZmlsbD0iIzI1Mzk0ZCIgc3Ryb2tlPSIjYTljMmNlIiBzdHJva2Utd2lkdGg9IjQiLz48cmVjdCB4PSIyODgiIHk9IjEyMyIgd2lkdGg9Ijk1IiBoZWlnaHQ9IjU0IiByeD0iOSIgZmlsbD0iIzdjOWFhOCIvPjxwYXRoIGQ9Ik0xMzUgODUgVjIxNSBNMTcwIDgwIFYyMjAgTTIwNSA4MiBWMjE4IE0yNDAgOTAgVjIxMCIgc3Ryb2tlPSIjNTljOGRmIiBzdHJva2Utd2lkdGg9IjgiLz48L3N2Zz4="
+    },
+    "vehicle.top": {
+      "id": "vehicle.top",
+      "name": "通用车辆俯视",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "vehicles",
+      "file": "assets/vehicle.top.svg",
+      "sha256": "402983b6b1dbc932aec5b01ba2e0c1a6c4cb4966793727a7ffc2b0918e4713ce",
+      "width": 400,
+      "height": 720,
+      "tags": [
+        "汽车",
+        "俯视",
+        "感知",
+        "扫描",
+        "车辆"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "top",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/vehicle.top-1.0.0-402983b6b1.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgNzIwIiBmaWxsPSJub25lIj48cmVjdCB4PSI3NSIgeT0iNDAiIHdpZHRoPSIyNTAiIGhlaWdodD0iNjMwIiByeD0iMTEwIiBmaWxsPSIjMjk0MzU0IiBzdHJva2U9IiNjMmQ1ZGYiIHN0cm9rZS13aWR0aD0iNSIvPjxwYXRoIGQ9Ik0xMDUgMjIwIFEyMDAgMTY1IDI5NSAyMjAgTDI4MCAzMzAgSDEyMCBaIE0xMjAgNDgwIEgyODAgTDI5NCA1NjAgUTIwMCA2MDAgMTA2IDU2MCBaIiBmaWxsPSIjMGIxZTJjIiBzdHJva2U9IiM3ZWIzYzYiIHN0cm9rZS13aWR0aD0iMyIvPjxyZWN0IHg9IjExNSIgeT0iMzUwIiB3aWR0aD0iMTcwIiBoZWlnaHQ9IjEwMCIgcng9IjMwIiBmaWxsPSIjMzU1NjZiIi8+PC9zdmc+"
+    },
+    "part.sensor": {
+      "id": "part.sensor",
+      "name": "传感器示意",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "parts",
+      "file": "assets/part.sensor.svg",
+      "sha256": "df19df7925d622f61a018e1e8d0ca0b90a42a77b345755d04bb81adaa4fe9763",
+      "width": 400,
+      "height": 300,
+      "tags": [
+        "传感器",
+        "雷达",
+        "摄像头",
+        "感知",
+        "sensor"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/part.sensor-1.0.0-df19df7925.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIiBmaWxsPSJub25lIj48cGF0aCBkPSJNNzAgMTU1IEwxMDQgNzAgSDI5NiBMMzMwIDE1NSBWMjMwIEg3MCBaIiBmaWxsPSIjMjU0NjViIiBzdHJva2U9IiM4YWQ0ZGYiIHN0cm9rZS13aWR0aD0iNSIvPjxyZWN0IHg9IjExNSIgeT0iMTAwIiB3aWR0aD0iMTcwIiBoZWlnaHQ9Ijg1IiByeD0iMzYiIGZpbGw9IiMwYjIxMzAiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSIxNDIiIHI9IjI3IiBmaWxsPSIjMTYzZjRhIiBzdHJva2U9IiNjOGY3NmIiIHN0cm9rZS13aWR0aD0iNSIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE0MiIgcj0iMTAiIGZpbGw9IiNjOGY3NmIiLz48L3N2Zz4="
+    },
+    "vehicle.suv.side": {
+      "id": "vehicle.suv.side",
+      "name": "通用SUV侧视",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "vehicles",
+      "file": "assets/vehicle.suv.side.svg",
+      "sha256": "12be845e707f2ababf5322dbaeee0c07275210696fd4ffbb4a1dfaf532dc0e1e",
+      "width": 1000,
+      "height": 420,
+      "tags": [
+        "汽车",
+        "整车",
+        "侧视",
+        "suv",
+        "SUV"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "drive",
+        "suspension",
+        "wheel-rotate"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "rig": {
+        "body": "vehicle.suv.body",
+        "wheel": "part.wheel",
+        "viewBox": [
+          1000,
+          420
+        ],
+        "wheelCenters": [
+          [
+            245,
+            325
+          ],
+          [
+            755,
+            325
+          ]
+        ],
+        "wheelRadius": 70
+      },
+      "snapshot": "assets/vehicle.suv.side-1.0.0-12be845e70.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAwIDQyMCIgZmlsbD0ibm9uZSI+PGcgaWQ9ImJvZHkiPjxwYXRoIGQ9Ik0xMDAgMjk3IEwxMTggMjM5IFExMjkgMjE1IDIxMCAyMDQgTDI5MiAxMTIgUTMwNSA5NiAzNTAgOTYgTDY2OSA5OSBRNzA3IDEwMyA3NTEgMTY0IEw4NTUgMjEyIFE5MDEgMjIyIDkxMCAyNTggTDkyNCAyOTYgTDkwNiAzMjggTDgzMCAzMjggUTgyNSAyNTMgNzU1IDI1MyBRNjgxIDI1MyA2NzUgMzI4IEwzMjUgMzI4IFEzMTkgMjUzIDI0NSAyNTMgUTE3MyAyNTMgMTY5IDMyOCBMMTA4IDMyOCBaIiBmaWxsPSIjMjk0MzU0IiBzdHJva2U9IiNjNWQ0ZGMiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik0yNjcgMjAyIEwzMjYgMTI4IEw2NTcgMTI3IEw3MTUgMTkzIFoiIGZpbGw9IiMwYjFkMmQiIHN0cm9rZT0iIzgwYWViZiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHBhdGggZD0iTTQ1OCAxNDkgTDQ1OCAxOTkgTTY4NCAyMTQgTDY4NCAyNjAgTTM2MyAyMTYgTDM2MyAzMDUgTTM3NSAzMDYgTDY2MSAzMDYiIHN0cm9rZT0iIzg0YThiNCIgc3Ryb2tlLXdpZHRoPSIzIi8+PHBhdGggZD0iTTEyOCAyNDYgTDE4MSAyNDIgTTg2MSAyNDEgTDkwMSAyNTIiIHN0cm9rZT0iI2M4Zjc2YiIgc3Ryb2tlLXdpZHRoPSIxMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTQ4MyAyMjMgSDUxOCBNNzAxIDIyOCBINzI4IiBzdHJva2U9IiNkN2U2ZTYiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTExNyAzMjMgSDE2OCBNODI5IDMyNCBIOTEwIiBzdHJva2U9IiMwYjE3MjIiIHN0cm9rZS13aWR0aD0iMTMiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTc1IDI1NSkgc2NhbGUoLjcpIj48ZyBpZD0id2hlZWwiPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iODQiIGZpbGw9IiMxMTFiMjUiIHN0cm9rZT0iIzkzYTdiNyIgc3Ryb2tlLXdpZHRoPSI1Ii8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI1Ny45NTk5OTk5OTk5OTk5OTQiIGZpbGw9IiMyNDM5NGEiIHN0cm9rZT0iI2UxZWNlZCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTEwMCA4OCBMMTE0IDUwLjQ0MDAwMDAwMDAwMDAwNSBMOTMgNDcuOTIgWiIgZmlsbD0iI2JmY2VkNCIgdHJhbnNmb3JtPSJyb3RhdGUoMCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDEwMCAxMDApIi8+PHBhdGggZD0iTTEwMCA4OCBMMTE0IDUwLjQ0MDAwMDAwMDAwMDAwNSBMOTMgNDcuOTIgWiIgZmlsbD0iI2JmY2VkNCIgdHJhbnNmb3JtPSJyb3RhdGUoOTAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgxMzUgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgxODAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgyMjUgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgyNzAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgzMTUgMTAwIDEwMCkiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjE2IiBmaWxsPSIjMGMxOTI1IiBzdHJva2U9IiNjOGY3NmIiIHN0cm9rZS13aWR0aD0iNCIvPjwvZz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjg1IDI1NSkgc2NhbGUoLjcpIj48ZyBpZD0id2hlZWwiPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iODQiIGZpbGw9IiMxMTFiMjUiIHN0cm9rZT0iIzkzYTdiNyIgc3Ryb2tlLXdpZHRoPSI1Ii8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI1Ny45NTk5OTk5OTk5OTk5OTQiIGZpbGw9IiMyNDM5NGEiIHN0cm9rZT0iI2UxZWNlZCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTEwMCA4OCBMMTE0IDUwLjQ0MDAwMDAwMDAwMDAwNSBMOTMgNDcuOTIgWiIgZmlsbD0iI2JmY2VkNCIgdHJhbnNmb3JtPSJyb3RhdGUoMCAxMDAgMTAwKSIvPjxwYXRoIGQ9Ik0xMDAgODggTDExNCA1MC40NDAwMDAwMDAwMDAwMDUgTDkzIDQ3LjkyIFoiIGZpbGw9IiNiZmNlZDQiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDEwMCAxMDApIi8+PHBhdGggZD0iTTEwMCA4OCBMMTE0IDUwLjQ0MDAwMDAwMDAwMDAwNSBMOTMgNDcuOTIgWiIgZmlsbD0iI2JmY2VkNCIgdHJhbnNmb3JtPSJyb3RhdGUoOTAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgxMzUgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgxODAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgyMjUgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgyNzAgMTAwIDEwMCkiLz48cGF0aCBkPSJNMTAwIDg4IEwxMTQgNTAuNDQwMDAwMDAwMDAwMDA1IEw5MyA0Ny45MiBaIiBmaWxsPSIjYmZjZWQ0IiB0cmFuc2Zvcm09InJvdGF0ZSgzMTUgMTAwIDEwMCkiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjE2IiBmaWxsPSIjMGMxOTI1IiBzdHJva2U9IiNjOGY3NmIiIHN0cm9rZS13aWR0aD0iNCIvPjwvZz48L2c+PC9zdmc+"
+    },
+    "vehicle.suv.body": {
+      "id": "vehicle.suv.body",
+      "name": "通用SUV车身分层",
+      "version": "1.0.0",
+      "kind": "svg",
+      "category": "rig-parts",
+      "file": "assets/vehicle.suv.body.svg",
+      "sha256": "a94dca93ab8b90ee275bcaab72b221bf6ac7ea49419e313979e036b9e85fad51",
+      "width": 1000,
+      "height": 420,
+      "tags": [
+        "车身",
+        "分层",
+        "suv"
+      ],
+      "representation": "schematic",
+      "brand": "",
+      "model": "",
+      "view": "side",
+      "capabilities": [
+        "display",
+        "translate",
+        "scale",
+        "fade"
+      ],
+      "colorPolicy": "preserve",
+      "source": {
+        "type": "original",
+        "usage": "project-original",
+        "description": "为汽车科技二维解释绘制的通用示意；不代表具体品牌、车型或结构尺寸"
+      },
+      "snapshot": "assets/vehicle.suv.body-1.0.0-a94dca93ab.svg",
+      "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAwIDQyMCIgZmlsbD0ibm9uZSI+PGcgaWQ9ImJvZHkiPjxwYXRoIGQ9Ik0xMDAgMjk3IEwxMTggMjM5IFExMjkgMjE1IDIxMCAyMDQgTDI5MiAxMTIgUTMwNSA5NiAzNTAgOTYgTDY2OSA5OSBRNzA3IDEwMyA3NTEgMTY0IEw4NTUgMjEyIFE5MDEgMjIyIDkxMCAyNTggTDkyNCAyOTYgTDkwNiAzMjggTDgzMCAzMjggUTgyNSAyNTMgNzU1IDI1MyBRNjgxIDI1MyA2NzUgMzI4IEwzMjUgMzI4IFEzMTkgMjUzIDI0NSAyNTMgUTE3MyAyNTMgMTY5IDMyOCBMMTA4IDMyOCBaIiBmaWxsPSIjMjk0MzU0IiBzdHJva2U9IiNjNWQ0ZGMiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik0yNjcgMjAyIEwzMjYgMTI4IEw2NTcgMTI3IEw3MTUgMTkzIFoiIGZpbGw9IiMwYjFkMmQiIHN0cm9rZT0iIzgwYWViZiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHBhdGggZD0iTTQ1OCAxNDkgTDQ1OCAxOTkgTTY4NCAyMTQgTDY4NCAyNjAgTTM2MyAyMTYgTDM2MyAzMDUgTTM3NSAzMDYgTDY2MSAzMDYiIHN0cm9rZT0iIzg0YThiNCIgc3Ryb2tlLXdpZHRoPSIzIi8+PHBhdGggZD0iTTEyOCAyNDYgTDE4MSAyNDIgTTg2MSAyNDEgTDkwMSAyNTIiIHN0cm9rZT0iI2M4Zjc2YiIgc3Ryb2tlLXdpZHRoPSIxMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTQ4MyAyMjMgSDUxOCBNNzAxIDIyOCBINzI4IiBzdHJva2U9IiNkN2U2ZTYiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTExNyAzMjMgSDE2OCBNODI5IDMyNCBIOTEwIiBzdHJva2U9IiMwYjE3MjIiIHN0cm9rZS13aWR0aD0iMTMiLz48L2c+PC9zdmc+"
+    }
+  }
+}

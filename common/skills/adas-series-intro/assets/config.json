@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "styleVersion": 2,
+  "tierPresentation": "chips",
+  "id": "adas-standard-opening-01",
+  "title": "辅助驾驶系列 · 标准开头 1",
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "duration": 16.333,
+  "captions": true,
+  "openingSlots": [
+    {"label":"车型 01","image":null},
+    {"label":"车型 02","image":null},
+    {"label":"车型 03","image":null},
+    {"label":"车型 04","image":null}
+  ],
+  "tierEntries": [],
+  "currentEpisode": {"name":"","revealed":false,"tier":null,"position":null},
+  "colors": {"background": "#050b12", "cyan": "#78dafa", "amber": "#ffbd72", "mint": "#84dfc7", "purple": "#beb9ff"},
+  "cues": [
+    {"id":"intro-01","start":0,"end":2.466,"text":"同样花几十万买高阶辅助驾驶"},
+    {"id":"intro-02","start":2.466,"end":3.2,"text":"两年之后"},
+    {"id":"intro-03","start":3.2,"end":4.766,"text":"有的车还能继续升级"},
+    {"id":"intro-04","start":4.766,"end":6.366,"text":"而有的可能先被硬件"},
+    {"id":"intro-05","start":6.366,"end":7.866,"text":"传感器这些硬件卡住"},
+    {"id":"intro-06","start":7.866,"end":8.4,"text":"这个系列"},
+    {"id":"intro-07","start":8.4,"end":10.333,"text":"我们结合最新的辅助驾驶论文"},
+    {"id":"intro-08","start":10.333,"end":13.333,"text":"从芯片感知算法执行四个维度"},
+    {"id":"intro-09","start":13.333,"end":14.666,"text":"把国内各家车企的"},
+    {"id":"intro-10","start":14.666,"end":16.333,"text":"辅助驾驶等级分成5档"}
+  ],
+  "disclaimer": "本系列五档评价框架 · 非实测分数"
+}

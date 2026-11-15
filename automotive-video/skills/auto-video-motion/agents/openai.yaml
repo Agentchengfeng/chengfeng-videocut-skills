@@ -1,0 +1,6 @@
+interface:
+  display_name: "汽车科技 · 二维动效"
+  short_description: "复用粒子、背景、转场和汽车原理场景，生成跟随口播的可控二维动画素材"
+  default_prompt: "使用 $auto-video-motion 从组件库制作这段汽车讲解需要的二维动效和背景。"
+policy:
+  allow_implicit_invocation: true

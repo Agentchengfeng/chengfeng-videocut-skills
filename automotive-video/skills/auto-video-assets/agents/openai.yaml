@@ -1,0 +1,6 @@
+interface:
+  display_name: "汽车科技 · 素材库"
+  short_description: "搜集并核对汽车视频、品牌图标和部件素材，整理为可检索、可复用的本地库"
+  default_prompt: "使用 $auto-video-assets 整理这些汽车素材，并按车型、视角和用途入库供后续视频复用。"
+policy:
+  allow_implicit_invocation: true

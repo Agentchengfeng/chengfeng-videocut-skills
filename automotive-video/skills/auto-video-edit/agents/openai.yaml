@@ -1,0 +1,6 @@
+interface:
+  display_name: "汽车科技 · 精剪成片"
+  short_description: "把已粗剪的汽车口播配好素材、字幕与二维动效，保留主轨并交付成片预览"
+  default_prompt: "使用 $auto-video-edit 完成这条粗剪汽车科技口播的素材、字幕、二维动画与成片包装。"
+policy:
+  allow_implicit_invocation: true

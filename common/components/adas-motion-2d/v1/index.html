@@ -1,0 +1,7 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body,#root{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1020}svg{width:100%;height:100%}</style></head><body><div id="root"></div><script type="module">
+import {renderKitDemoSVG} from './examples.mjs';
+const root=document.getElementById('root');
+window.seekTo=seconds=>{if(!Number.isFinite(seconds))return;root.innerHTML=renderKitDemoSVG(Math.round(Math.max(0,Math.min(15.983333,seconds))*60));};
+window.addEventListener('message',e=>{if(e.data?.type==='videocut:seek')window.seekTo(e.data.time??e.data.seconds);});
+window.seekTo(0);await document.fonts.ready;window.ready=true;
+</script></body></html>

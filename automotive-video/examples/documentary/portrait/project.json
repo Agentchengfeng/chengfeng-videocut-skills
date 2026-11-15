@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "documentary-cut-in-portrait",
+  "title": "并线感知 · 竖屏字幕安全区",
+  "width": 720,
+  "height": 1280,
+  "fps": 30,
+  "duration": 6,
+  "preserveMaster": true,
+  "clips": [
+    {
+      "id": "cut-in",
+      "kind": "scene",
+      "type": "sensor",
+      "preset": "sensor.cut-in.v1",
+      "start": 0,
+      "end": 6
+    }
+  ],
+  "captions": [
+    {
+      "id": "sample-caption",
+      "start": 1,
+      "end": 6,
+      "text": "旁车开始向自车车道并入\n进入感知区域后，识别框跟随目标"
+    }
+  ],
+  "soundEffects": []
+}

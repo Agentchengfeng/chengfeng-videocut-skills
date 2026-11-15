@@ -1,0 +1,68 @@
+[
+  {
+    "id": "orin",
+    "name": "NVIDIA DRIVE Orin",
+    "page": "https://nvidianews.nvidia.com/file/nvidia-drive-orin-image",
+    "url": "https://iprsoftwaremedia.com/219/files/20240/659a513a3d6332f60b032963_nvidia-drive-orin-image/nvidia-drive-orin-image_0c848c04-1e23-4542-b90a-8114a65747b1-prv.jpg?v=0c848c04-1e23-4542-b90a-8114a65747b1",
+    "width": 1920,
+    "height": 1440,
+    "viewBox": [
+      280,
+      180,
+      1280,
+      1010
+    ],
+    "polygon": "300,201 1345,210 1540,1152 400,1160",
+    "note": "官方 DRIVE Orin 宣传图，用于 Orin X/双 Orin X 的系列识别，不证明具体板卡或车载配置。",
+    "original": "originals/orin.jpg",
+    "derived": "orin.png",
+    "originalSha256": "7d7f659ea474fcd9a76c2b7d4dfb81f2b9e508f289072862d31657f5806ae6b5",
+    "representation": "official-promotional-image",
+    "retrieved": "2026-11-10",
+    "usage": "用户请求的视频编辑素材；原图片版权归 NVIDIA / XPENG；未声明开放授权。"
+  },
+  {
+    "id": "thor",
+    "name": "NVIDIA DRIVE Thor",
+    "page": "https://blogs.nvidia.com/blog/drive-thor/",
+    "url": "https://blogs.nvidia.com/wp-content/uploads/2022/09/auto-embedded-corp-blog-thor-soc-1280x680-1.jpg",
+    "width": 1280,
+    "height": 680,
+    "viewBox": [
+      545,
+      166,
+      195,
+      188
+    ],
+    "polygon": null,
+    "note": "由官方 DRIVE Thor 板卡宣传图裁取中央 SoC 封装区域，不冒称实物拆机照或具体 Thor 子型号。",
+    "original": "originals/thor.jpg",
+    "derived": "thor.png",
+    "originalSha256": "dfbb830dc7b03c2e1370f004e3d612aea0e059fba5ecfe5d8e674904b4e51bb4",
+    "representation": "official-promotional-image",
+    "retrieved": "2026-11-10",
+    "usage": "用户请求的视频编辑素材；原图片版权归 NVIDIA / XPENG；未声明开放授权。"
+  },
+  {
+    "id": "turing",
+    "name": "XPENG Turing AI Chip",
+    "page": "https://www.xiaopeng.com/turingaichip.html",
+    "url": "https://s.xiaopeng.com/xp-fe/mainsite/2025/AIChip/p1.jpg",
+    "width": 3840,
+    "height": 1920,
+    "viewBox": [
+      1440,
+      620,
+      1080,
+      1250
+    ],
+    "polygon": "1490,650 2470,780 2470,1835 1490,1835",
+    "note": "小鹏官方图灵芯片宣传图，保留 XPENG/TURING 字样。双图灵复用两枚，不构造内部实现图。",
+    "original": "originals/turing.jpg",
+    "derived": "turing.png",
+    "originalSha256": "7e2c8e66aa83d34328ee049fd809b1800203226e3dc2888c83e810e4a77500ef",
+    "representation": "official-promotional-image",
+    "retrieved": "2026-11-10",
+    "usage": "用户请求的视频编辑素材；原图片版权归 NVIDIA / XPENG；未声明开放授权。"
+  }
+]

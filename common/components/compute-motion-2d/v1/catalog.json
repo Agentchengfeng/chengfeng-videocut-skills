@@ -1,0 +1,79 @@
+{
+  "version": "1.0.0",
+  "units": {
+    "geometry": "SVG logical pixels",
+    "time": "host seconds = frame/fps",
+    "states": "normalized visual metaphor, not measured performance"
+  },
+  "representation": "original generic orthographic 2D SVG",
+  "pureFrame": true,
+  "runtimeRegistration": false,
+  "components": [
+    {
+      "id": "compute.cpu.v1",
+      "export": "cpu",
+      "name": "CPU",
+      "purpose": "large cores, shared cache; active/waiting"
+    },
+    {
+      "id": "compute.gpu.v1",
+      "export": "gpu",
+      "name": "GPU",
+      "purpose": "parallel array; active/waiting"
+    },
+    {
+      "id": "compute.chipPackage.v1",
+      "export": "chipPackage",
+      "name": "芯片",
+      "purpose": "label, pins, substrate, animated silicon"
+    },
+    {
+      "id": "compute.memoryBank.v1",
+      "export": "memoryBank",
+      "name": "存储",
+      "purpose": "board groups"
+    },
+    {
+      "id": "compute.cacheBuffer.v1",
+      "export": "cacheBuffer",
+      "name": "缓存",
+      "purpose": "normalized visual fill"
+    },
+    {
+      "id": "compute.computeTile.v1",
+      "export": "computeTile",
+      "name": "计算单元",
+      "purpose": "activity and compact geometry"
+    },
+    {
+      "id": "compute.dataBus.v1",
+      "export": "dataBus",
+      "name": "数据通路",
+      "purpose": "arc-length packets, direction and activity"
+    },
+    {
+      "id": "compute.modelNetwork.v1",
+      "export": "modelNetwork",
+      "name": "模型网络",
+      "purpose": "feature nodes and paths"
+    },
+    {
+      "id": "compute.cameraSensor.v1",
+      "export": "cameraSensor",
+      "name": "摄像头",
+      "purpose": "lens and sensor body"
+    },
+    {
+      "id": "compute.memoryWall.v1",
+      "export": "memoryWall",
+      "name": "内存墙组合",
+      "purpose": "storage/cache/CPU/GPU/data movement"
+    },
+    {
+      "id": "compute.dataflowFabric.v1",
+      "export": "dataflowFabric",
+      "name": "数据流组合",
+      "purpose": "planning/compute/reuse"
+    }
+  ]
+}

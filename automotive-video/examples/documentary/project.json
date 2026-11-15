@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "id": "component-showcase",
+  "title": "汽车视觉组件库",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "duration": 24,
+  "preserveMaster": true,
+  "captions": [],
+  "clips": [
+    {
+      "id": "sensor-demo",
+      "kind": "scene",
+      "type": "sensor",
+      "preset": "sensor.cut-in.v1",
+      "start": 0,
+      "end": 6,
+      "transition": "cut"
+    },
+    {
+      "id": "suspension-demo",
+      "kind": "scene",
+      "type": "suspension",
+      "preset": "suspension.bump.v1",
+      "start": 5.7,
+      "end": 12,
+      "transition": "fade"
+    },
+    {
+      "id": "energy-demo",
+      "kind": "scene",
+      "type": "energy",
+      "preset": "energy.drive.v1",
+      "start": 11.7,
+      "end": 18,
+      "transition": "fade"
+    },
+    {
+      "id": "compare-demo",
+      "kind": "scene",
+      "type": "compare",
+      "preset": "compare.baseline.v1",
+      "start": 17.7,
+      "end": 24,
+      "labels": ["通用轿车示意", "通用 SUV 示意"],
+      "transition": "fade"
+    }
+  ],
+  "soundEffects": []
+}
